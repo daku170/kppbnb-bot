@@ -1,15 +1,15 @@
+import os
 import asyncio
 import nest_asyncio
 import logging
+from aiohttp import web
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
 nest_asyncio.apply()
 
-# Token Bot Telegram Faiz
 BOT_TOKEN = "8938997589:AAHac3AbBUvhxTBTq6nj8UQkV-2K2MUB-qc"
 
-# Setup logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -50,7 +50,6 @@ def get_back_to_main_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard)
 
-# Handler untuk Command /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = (
         "🌾 *SELAMAT DATANG KE BOT RASMI KPPbNB*\n"
@@ -62,7 +61,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif update.callback_query:
         await update.callback_query.edit_message_text(welcome_text, parse_mode='Markdown', reply_markup=get_main_keyboard())
 
-# Handler untuk Button Callbacks
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -71,7 +69,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if data == 'menu_utama':
         await start(update, context)
 
-    # 1. MENU PERJANJIAN BERSAMA (CA-7)
     elif data == 'menu_ca':
         text = (
             "📑 *PERJANJIAN BERSAMA KE-7 (2026 – 2028)*\n"
@@ -188,7 +185,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_back_to_ca_keyboard())
 
-    # 2. MENU ADUAN & PERATURAN KILANAN
     elif data == 'menu_aduan':
         text = (
             "⚠️ *SALURAN ADUAN & TATACARA KILANAN (ARTIKEL 15)*\n\n"
@@ -205,7 +201,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_back_to_main_keyboard())
 
-    # 3. MENU AKTA KERJA & PERATURAN
     elif data == 'menu_akta':
         text = (
             "⚖️ *AKTA KERJA 1955 & PERATURAN PERHUBUNGAN PERUSAHAAN*\n\n"
@@ -219,7 +214,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_back_to_main_keyboard())
 
-    # 4. MENU KEBAJIKAN
     elif data == 'menu_kebajikan':
         text = (
             "🤝 *TABUNG KEBAJIKAN AHLI KESATUAN (KPPbNB)*\n\n"
@@ -232,7 +226,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_back_to_main_keyboard())
 
-    # 5. MENU INFO TERKINI
     elif data == 'menu_info':
         text = (
             "📢 *INFO TERKINI & MAKLUMAN KESATUAN*\n\n"
@@ -243,29 +236,40 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_back_to_main_keyboard())
 
-async def run_bot():
-    print("Bot KPPbNB sedang berjalan...")
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+async def web_handler(request):
+    return web.Response(text="Bot KPPbNB is Alive and Running 24/7!")
+
+async def start_webserver():
+    app = web.Application()
+    app.router.add_get("/", web_handler)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.environ.get("PORT", 8080))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    print(f"Web server berjalan di port {port}")
+
+async def main_async():
+    print("Memulakan Bot KPPbNB...")
+    await start_webserver()
     
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
     
     await app.initialize()
     await app.start()
     await app.updater.start_polling()
+    print("Bot KPPbNB kini aktif!")
     
-    # Kekal aktif
     while True:
         await asyncio.sleep(3600)
 
-def main():
+if __name__ == '__main__':
     try:
         loop = asyncio.get_event_loop()
     except RuntimeError:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-    
-    loop.run_until_complete(run_bot())
-
-if __name__ == '__main__':
-    main()
+        
+    loop.run_until_complete(main_async())

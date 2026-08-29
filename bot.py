@@ -1,4 +1,5 @@
 import os
+import asyncio
 import threading
 import http.server
 import socketserver
@@ -24,9 +25,13 @@ def run_web_server():
         def log_message(self, format, *args):
             return
 
-    with socketserver.TCPServer(("", port), SimpleHandler) as httpd:
-        print(f"Web server aktif di port {port}")
-        httpd.serve_forever()
+    socketserver.TCPServer.allow_reuse_address = True
+    try:
+        with socketserver.TCPServer(("", port), SimpleHandler) as httpd:
+            print(f"Web server aktif di port {port}")
+            httpd.serve_forever()
+    except Exception as e:
+        print(f"Web server note: {e}")
 
 def get_main_keyboard():
     keyboard = [
@@ -249,14 +254,23 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_back_to_main_keyboard())
 
-def main():
+async def async_main():
     threading.Thread(target=run_web_server, daemon=True).start()
-    
     print("Bot KPPbNB sedang dijalankan...")
+    
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
-    app.run_polling()
+    
+    async with app:
+        await app.start()
+        await app.updater.start_polling()
+        print("Bot KPPbNB LIVE dan bersedia menerima arahan!")
+        while True:
+            await asyncio.sleep(3600)
+
+def main():
+    asyncio.run(async_main())
 
 if __name__ == '__main__':
     main()

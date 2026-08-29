@@ -1,6 +1,10 @@
+import asyncio
+import nest_asyncio
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+
+nest_asyncio.apply()
 
 # Token Bot Telegram Faiz
 BOT_TOKEN = "8938997589:AAHac3AbBUvhxTBTq6nj8UQkV-2K2MUB-qc"
@@ -239,14 +243,29 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_back_to_main_keyboard())
 
-def main():
+async def run_bot():
     print("Bot KPPbNB sedang berjalan...")
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
     
-    app.run_polling()
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()
+    
+    # Kekal aktif
+    while True:
+        await asyncio.sleep(3600)
+
+def main():
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    
+    loop.run_until_complete(run_bot())
 
 if __name__ == '__main__':
     main()

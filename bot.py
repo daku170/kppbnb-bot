@@ -1,12 +1,10 @@
 import os
-import asyncio
-import nest_asyncio
+import threading
+import http.server
+import socketserver
 import logging
-from aiohttp import web
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
-
-nest_asyncio.apply()
 
 BOT_TOKEN = "8938997589:AAHac3AbBUvhxTBTq6nj8UQkV-2K2MUB-qc"
 
@@ -14,6 +12,21 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
+
+def run_web_server():
+    port = int(os.environ.get("PORT", 8080))
+    class SimpleHandler(http.server.SimpleHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(b"Bot KPPbNB is Alive!")
+        def log_message(self, format, *args):
+            return
+
+    with socketserver.TCPServer(("", port), SimpleHandler) as httpd:
+        print(f"Web server aktif di port {port}")
+        httpd.serve_forever()
 
 def get_main_keyboard():
     keyboard = [
@@ -236,40 +249,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_back_to_main_keyboard())
 
-async def web_handler(request):
-    return web.Response(text="Bot KPPbNB is Alive and Running 24/7!")
-
-async def start_webserver():
-    app = web.Application()
-    app.router.add_get("/", web_handler)
-    runner = web.AppRunner(app)
-    await runner.setup()
-    port = int(os.environ.get("PORT", 8080))
-    site = web.TCPSite(runner, "0.0.0.0", port)
-    await site.start()
-    print(f"Web server berjalan di port {port}")
-
-async def main_async():
-    print("Memulakan Bot KPPbNB...")
-    await start_webserver()
+def main():
+    threading.Thread(target=run_web_server, daemon=True).start()
     
+    print("Bot KPPbNB sedang dijalankan...")
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
-    
-    await app.initialize()
-    await app.start()
-    await app.updater.start_polling()
-    print("Bot KPPbNB kini aktif!")
-    
-    while True:
-        await asyncio.sleep(3600)
+    app.run_polling()
 
 if __name__ == '__main__':
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
-    loop.run_until_complete(main_async())
+    main()

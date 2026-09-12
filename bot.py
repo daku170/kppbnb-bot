@@ -96,7 +96,11 @@ def query_groq_ai(user_question: str) -> str:
     except Exception as err_init:
         return f"⚠️ Ralat Inisialisasi Groq: {str(err_init)}"
 
-    candidate_models = ["llama-3.1-8b-instant", "llama3-8b-8192"]
+    # Model rasmi yang aktif di Groq
+    candidate_models = [
+        "openai/gpt-oss-20b",
+        "openai/gpt-oss-120b"
+    ]
     last_err = ""
 
     for m in candidate_models:

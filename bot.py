@@ -21,14 +21,13 @@ from telegram.ext import (
 )
 
 BOT_TOKEN = "8938997589:AAHac3AbBUvhxTBTq6nj8UQkV-2K2MUB-qc"
-GEMINI_API_KEY = "AQ.Ab8RN6Lb9-pprFdQWR8jhKkRc8IZItoNYxdj3TwoGicWHT_9A"
+GEMINI_API_KEY = "AQ.Ab8RN6Lb9-pprFdQWR8jhKkRc8IZltoNYxdj3TwoOgicWHT_9A"
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 
-# States untuk ConversationHandler
 (
     STATE_GRADE, 
     STATE_SCHEDULE, 
@@ -93,14 +92,11 @@ Panduan Jawapan:
 
 def query_gemini_ai(user_question: str) -> str:
     clean_key = GEMINI_API_KEY.strip()
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent"
     
-    # URL rasmi REST API Google Gemini
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
-    
-    # Standard header rasmi untuk kunci AQ.
     headers = {
         'Content-Type': 'application/json',
-        'x-goog-api-key': clean_key
+        'X-goog-api-key': clean_key
     }
     
     payload = {
@@ -110,11 +106,7 @@ def query_gemini_ai(user_question: str) -> str:
                     {"text": f"{AI_SYSTEM_PROMPT}\n\nSoalan daripada ahli kesatuan: {user_question}"}
                 ]
             }
-        ],
-        "generationConfig": {
-            "temperature": 0.3,
-            "maxOutputTokens": 800
-        }
+        ]
     }
     
     try:

@@ -15,7 +15,6 @@ from telegram.ext import (
     filters
 )
 
-# Token Bot Telegram Faiz
 BOT_TOKEN = "8938997589:AAHac3AbBUvhxTBTq6nj8UQkV-2K2MUB-qc"
 
 logging.basicConfig(
@@ -23,10 +22,8 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-# States untuk ConversationHandler Kalkulator OT
-STATE_SCHEDULE, STATE_DAY_TYPE, STATE_SALARY, STATE_HOURS = range(4)
+STATE_GRADE, STATE_SCHEDULE, STATE_DAY_TYPE, STATE_SALARY, STATE_HOURS, STATE_GRED_S_HOURS = range(6)
 
-# Web server ringan supaya Render tidak shutdown
 def run_web_server():
     port = int(os.environ.get("PORT", 8080))
     class SimpleHandler(http.server.SimpleHTTPRequestHandler):
@@ -50,7 +47,7 @@ def run_web_server():
 
 def get_main_keyboard():
     keyboard = [
-        [InlineKeyboardButton("🧮 Kalkulator OT (Kira Bayaran)", callback_data='menu_kalkulator')],
+        [InlineKeyboardButton("🧮 Semakan OT & Cuti Gantian", callback_data='menu_kalkulator')],
         [InlineKeyboardButton("📑 Perjanjian Bersama (CA-7)", callback_data='menu_ca')],
         [InlineKeyboardButton("⚖️ Akta Kerja & Peraturan", callback_data='menu_akta')],
         [InlineKeyboardButton("🤝 Tuntutan Kebajikan", callback_data='menu_kebajikan')],
@@ -74,7 +71,7 @@ def get_ca_keyboard():
 def get_akta_keyboard():
     keyboard = [
         [InlineKeyboardButton("📘 AWOL, Disiplin & Show Cause", callback_data='akta_awol')],
-        [InlineKeyboardButton("⏰ Had Waktu Kerja 45 Jam & OT", callback_data='akta_waktu')],
+        [InlineKeyboardButton("⏰ Had Waktu Kerja 45 Jam & OT (Termasuk Gaji >RM4k)", callback_data='akta_waktu')],
         [InlineKeyboardButton("🏥 Peraturan Cuti Sakit (MC) & Wad", callback_data='akta_mc')],
         [InlineKeyboardButton("🦺 OSHA: Hak Tolak Kerja Bahaya", callback_data='akta_osha')],
         [InlineKeyboardButton("🛡️ PERKESO: Kemalangan Perjalanan", callback_data='akta_perkeso')],
@@ -108,33 +105,109 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = (
         "🌾 *SELAMAT DATANG KE BOT RASMI KPPbNB*\n"
         "_Kesatuan Pekerja-pekerja Padiberas Nasional Berhad (BERNAS) Semenanjung Malaysia_\n\n"
-        "Sila pilih menu di bawah untuk semakan maklumat, kiraan OT, hak akta, kebajikan dan aduan:"
+        "Sila pilih menu di bawah untuk semakan maklumat, pengiraan OT/Cuti Gantian, hak akta, kebajikan dan aduan:"
     )
     if update.message:
         await update.message.reply_text(welcome_text, parse_mode='Markdown', reply_markup=get_main_keyboard())
     elif update.callback_query:
         await update.callback_query.edit_message_text(welcome_text, parse_mode='Markdown', reply_markup=get_main_keyboard())
 
-# ==================== MODUL KALKULATOR OT ====================
+# ==================== MODUL KALKULATOR OT & CUTI GANTIAN ====================
 
 async def start_calc(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     
     keyboard = [
-        [InlineKeyboardButton("📍 Zon A (Kedah, Kelantan, Trg, Johor)", callback_data='sch_zona')],
-        [InlineKeyboardButton("📍 Zon B (P.Pinang, Perak, Selangor, dll)", callback_data='sch_zonb')],
-        [InlineKeyboardButton("🔄 Pekerja Syif (Ikut Jadual Giliran)", callback_data='sch_syif')],
+        [InlineKeyboardButton("🔧 Gred T (Teknikal/Operasi) - Bayaran Tunai", callback_data='grade_t')],
+        [InlineKeyboardButton("💼 Gred S (Sokongan/Admin) - Cuti Gantian & Elaun", callback_data='grade_s')],
         [InlineKeyboardButton("🔙 Batal & Menu Utama", callback_data='menu_utama')]
     ]
     text = (
-        "🧮 *KALKULATOR PENGIRAAN KERJA LEBIH MASA (OT)*\n"
+        "🧮 *SEMAKAN KERJA LEBIH MASA (OT) & CUTI GANTIAN*\n"
         "_(Selaras Artikel 31 CA-7 & Akta Kerja 1955)_\n\n"
+        "Sila pilih **Kategori Gred** jawatan anda:"
+    )
+    await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
+    return STATE_GRADE
+
+async def calc_grade_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    choice = query.data
+
+    if choice == 'grade_s':
+        text = (
+            "💼 *KATEGORI GRED S (SOKONGAN / PENTADBIRAN)*\n"
+            "_(Artikel 31.5 CA-7 - Cuti Gantian & Tuntutan Elaun)_\n\n"
+            "Bagi Gred S, kerja lebih masa layak digantikan dengan **Cuti Gantian (Time-Off-In-Lieu)** serta tuntutan **Elaun-Elaun Berkaitan**.\n\n"
+            "👉 Sila taip **Jumlah Jam Kerja Lebih Masa** yang dilakukan:\n"
+            "_Contoh: 4 atau 8_"
+        )
+        await query.edit_message_text(text, parse_mode='Markdown')
+        return STATE_GRED_S_HOURS
+
+    # Jika Gred T dipilih:
+    keyboard = [
+        [InlineKeyboardButton("📍 Zon A (Kedah, Kelantan, Trg, Johor)", callback_data='sch_zona')],
+        [InlineKeyboardButton("📍 Zon B (P.Pinang, Perak, Selangor, dll)", callback_data='sch_zonb')],
+        [InlineKeyboardButton("🔄 Pekerja Syif (Ikut Giliran)", callback_data='sch_syif')],
+        [InlineKeyboardButton("🔙 Batal", callback_data='menu_utama')]
+    ]
+    text = (
+        "🔧 *KATEGORI GRED T (TEKNIKAL & OPERASI)*\n"
+        "_(Layak Tuntutan OT Tunai Termasuk Bergaji >RM4k Selaras CA-7)_\n\n"
         "Sila pilih *Zon Lokasi / Jadual Kerja* anda:"
     )
     await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
     return STATE_SCHEDULE
 
+# Aliran Gred S (Cuti Gantian + Elaun)
+async def calc_gred_s_hours_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = update.message.text.strip()
+    try:
+        hours = float(msg)
+        if hours <= 0:
+            raise ValueError()
+    except ValueError:
+        await update.message.reply_text("⚠️ Sila masukkan angka jam yang sah (contoh: 4 atau 8):")
+        return STATE_GRED_S_HOURS
+
+    # Pengiraan Cuti Gantian Artikel 31.5
+    if hours >= 6:
+        cuti_desc = "*1 Hari Penuh Cuti Gantian*"
+    elif hours >= 4:
+        cuti_desc = "*1/2 Hari Cuti Gantian (Half Day)*"
+    else:
+        cuti_desc = f"*{hours} Jam* (Boleh dikumpul sehingga mencukupi 4 atau 6-8 jam untuk cuti gantian)"
+
+    result_text = (
+        "💼 *KEPUTUSAN KELAYAKAN CUTI GANTIAN & ELAUN (GRED S)*\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        f"⏱️ *Masa Bertugas:* {hours} Jam\n"
+        f"🏖️ *Kelayakan Cuti Gantian (Art 31.5):* {cuti_desc}\n"
+        "_(Cuti gantian boleh dikumpul dan digunakan dalam tempoh 6 bulan)_\n\n"
+        "💰 *ELAUN-ELAUN YANG TETAP LAYAK DITUNTUT:*\n"
+        "Walaupun tidak menuntut OT tunai, anda **TETAP LAYAK** menuntut elaun berikut sekiranya memenuhi syarat tugas:\n\n"
+        "1️⃣ *Elaun Makan Lebih Masa:* Layak dituntut jika bertugas lebih masa berterusan atau dipanggil tugas luar.\n"
+        "2️⃣ *Tuntutan Perbatuan (Mileage - Art 63):* Jika dipanggil bertugas (Call-out):\n"
+        "   • Kereta: *RM0.75 / km*\n"
+        "   • Motosikal: *RM0.50 / km*\n"
+        "   • Tol & Parking: Tuntutan berasaskan resit sebenar.\n"
+        "3️⃣ *Elaun Panggilan Bertugas (Call-Out / Standby):* Bayaran minimum khas bagi yang dipanggil kecemasan di luar jadual kerja biasa.\n"
+        "4️⃣ *Elaun Syif (Art 72):* RM6.50 (Syif 2) / RM7.00 (Syif 3) jika menggantikan syif operasi fizikal.\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        "_Pastikan borang tuntutan perbatuan/elaun dan rekod perakam waktu dikemukakan kepada penyelia._"
+    )
+
+    keyboard = [
+        [InlineKeyboardButton("🔄 Kira Semula", callback_data='menu_kalkulator')],
+        [InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')]
+    ]
+    await update.message.reply_text(result_text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
+    return ConversationHandler.END
+
+# Aliran Gred T (OT Tunai)
 async def calc_schedule_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -195,7 +268,7 @@ async def calc_day_type_selected(update: Update, context: ContextTypes.DEFAULT_T
     text = (
         f"📌 *Kategori Hari:* {context.user_data['day_label']}\n\n"
         "👉 Sila taip **Gaji Pokok Bulanan** anda (Nombor sahaja tanpa perkataan RM):\n"
-        "_Contoh: 2400_"
+        "_Contoh: 2400 atau 4300_"
     )
     await query.edit_message_text(text, parse_mode='Markdown')
     return STATE_SALARY
@@ -208,7 +281,7 @@ async def calc_salary_received(update: Update, context: ContextTypes.DEFAULT_TYP
             raise ValueError()
         context.user_data['salary'] = salary
     except ValueError:
-        await update.message.reply_text("⚠️ Sila masukkan angka gaji yang sah (contoh: 2400):")
+        await update.message.reply_text("⚠️ Sila masukkan angka gaji yang sah (contoh: 2400 atau 4300):")
         return STATE_SALARY
 
     text = (
@@ -235,9 +308,6 @@ async def calc_hours_received(update: Update, context: ContextTypes.DEFAULT_TYPE
     day_label = context.user_data['day_label']
     zone_name = context.user_data['zone_name']
 
-    # Formula Akta Kerja & CA-7:
-    # ORP = Gaji / 26
-    # HRP = ORP / Jam Kerja Biasa
     orp = salary / 26.0
     hrp = orp / normal_hours
 
@@ -251,8 +321,12 @@ async def calc_hours_received(update: Update, context: ContextTypes.DEFAULT_TYPE
     total_ot = rate_multiplier * hrp * hours
     formula_desc = f"{rate_multiplier} × (RM {hrp:.2f}/jam) × {hours} jam"
 
+    extra_note = ""
+    if salary > 4000:
+        extra_note = "\n\n💡 _Nota Gaji >RM4k: Layak menuntut bayaran OT selaras Artikel 31 & Lampiran I Perjanjian Bersama (CA-7) KPPbNB._"
+
     result_text = (
-        "📊 *KEPUTUSAN PENGIRAAN OT (KASAR)*\n"
+        "📊 *KEPUTUSAN PENGIRAAN OT TUNAI (GRED T)*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
         f"📍 *Zon / Jadual:* {zone_name}\n"
         f"💵 *Gaji Pokok:* RM {salary:,.2f}\n"
@@ -262,7 +336,8 @@ async def calc_hours_received(update: Update, context: ContextTypes.DEFAULT_TYPE
         f"📐 *Formula:* {formula_desc}\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
         f"💰 *ANGGARAN BAYARAN OT: RM {total_ot:,.2f}*\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
+        "━━━━━━━━━━━━━━━━━━━━"
+        f"{extra_note}\n\n"
         "_Nota: Tuntutan OT tertakluk kepada pengesahan perakam waktu dan kelulusan majikan mengikut Artikel 31 CA-7._"
     )
 
@@ -323,13 +398,15 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "📌 *Waktu Bekerja (Artikel 29):*\n"
             "• *Bukan Syif:* Purata 39 jam seminggu.\n"
             "• *Kerja Syif:* Purata 42 jam seminggu (Maksimum 45 jam mengikut Akta Kerja).\n\n"
-            "📌 *Formula Bayaran OT (Artikel 31):*\n"
+            "📌 *Formula Bayaran OT Gred T (Artikel 31):*\n"
             "• *(Gaji Bulanan / 26) × 1.5 × (Jam OT / Jam Kerja Biasa)*\n"
-            "• Had maksimum OT sebulan: *104 jam* (tidak termasuk OT hari rehat/cuti am).\n\n"
-            "📌 *Cuti Gantian Lebih Masa (Artikel 31.5):*\n"
+            "• Had maksimum OT sebulan: *104 jam* (tidak termasuk OT hari rehat/cuti am).\n"
+            "• *Pekerja Bergaji >RM4,000 (Gred T):* Tetap layak menuntut bayaran OT selagi dalam skop gred CA-7.\n\n"
+            "📌 *Cuti Gantian Gred S (Artikel 31.5):*\n"
             "• 6 - 8 jam kerja OT = *1 hari cuti gantian*\n"
             "• ≤ 4 - 5 jam kerja OT = *1/2 hari cuti gantian*\n"
-            "• Boleh dikumpul dan diguna dalam tempoh 6 bulan."
+            "• Boleh dikumpul dan diguna dalam tempoh 6 bulan.\n"
+            "• *Elaun Layak Dituntut:* Elaun makan kerja lebih masa, mileage (perjalanan) RM0.75/km kereta, RM0.50/km motor, tol dan elaun panggilan bertugas (call-out)."
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_back_to_ca_keyboard())
 
@@ -379,7 +456,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "• Syif 2 (4.00 ptg - 12.00 mlm): *RM6.50*\n"
             "• Syif 3 (12.00 mlm - 8.00 pagi): *RM7.00*\n"
             "• Syif Malam (12 jam: 8.00 mlm - 8.00 pagi): *RM7.00*\n\n"
-            "📌 *Tugas Luar Kawasan (Outstation):*\n"
+            "📌 *Tugas Luar Kawasan (Outstation) & Call-Out:*\n"
             "• *Elaun Perjalanan (Art 63):* Kereta (RM0.75/km), Motor (RM0.50/km) + Tol/Parking berasaskan resit.\n"
             "• *Elaun Makan (Art 64):* RM115.00 sehari (melebihi 50km & > 8 jam).\n"
             "• *Penginapan Hotel (Art 65):* Hotel 4 Bintang (Twin Sharing) atau *Elaun Lojing RM100.00 semalam* (tanpa resit).\n"
@@ -431,17 +508,17 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == 'akta_waktu':
         text = (
-            "⏰ *PANDUAN PERUNDANGAN: HAD WAKTU BEKERJA & KERJA LEBIH MASA*\n\n"
+            "⏰ *PANDUAN PERUNDANGAN: HAD WAKTU BEKERJA & BAYARAN OT*\n\n"
             "📌 *1. Had Waktu Kerja Statutori (Seksyen 60A Akta Kerja)*\n"
             "• *Maksimum Jam Seminggu:* **45 jam seminggu** (Pindaan 2022).\n"
             "• *Maksimum Jam Sehari:* Tidak melebihi **8 jam sehari** (atau 9 jam bagi kerja 5 hari seminggu).\n"
-            "• *Waktu Rehat Wajib:* Pekerja tidak boleh diarahkan bekerja berterusan melebihi **5 jam** tanpa rehat sekurang-kurangnya 30 minit.\n\n"
-            "📌 *2. Had Maksimum Kerja Lebih Masa (OT)*\n"
-            "• Mengikut *Employment (Limitation of Overtime Work) Regulations 1980*, had OT bulanan ialah **104 jam sebulan**.\n"
-            "• Kerja pada Hari Rehat (*Rest Day*) dan Hari Kelepasan Am (*Public Holiday*) **tidak termasuk** dalam kiraan had 104 jam tersebut.\n\n"
-            "📌 *3. Perlindungan CA-7 BERNAS (Artikel 29 & 31)*\n"
-            "• Pekerja Bukan Syif hanya bertugas purata **39 jam seminggu** (faedah lebih baik daripada Akta).\n"
-            "• Bayaran OT dikira berasaskan formula harian 26 hari dan kadar jam kerja sebenar."
+            "• *Waktu Rehat Wajib:* Tidak boleh bekerja berterusan melebihi **5 jam** tanpa rehat sekurang-kurangnya 30 minit.\n"
+            "• *Had Maksimum OT Bulanan:* **104 jam sebulan** (tidak termasuk kerja pada Hari Rehat & Cuti Am).\n\n"
+            "📌 *2. Isu Pekerja Bergaji Melebihi RM4,000/Bulan*\n"
+            "• *Di Bawah Akta Kerja 1955 (Jadual Pertama Pindaan 2022):* Hak OT statutori dihadkan kepada pekerja bergaji $\le$RM4,000 sebulan (kecuali pekerja buruh manual/jentera).\n"
+            "• *Perlindungan Di Bawah CA-7 BERNAS:* **Semua pekerja dalam skop kesatuan** (termasuk Gred T5 Penyelia II & T4 Chargeman dengan tangga gaji sehingga RM6,300) **tetap layak mendapat bayaran OT sepenuhnya** mengikut formula Artikel 31 CA-7!\n\n"
+            "📌 *3. Gred S & Cuti Gantian (Artikel 31.5)*\n"
+            "• Kakitangan Gred S layak menuntut Cuti Gantian serta elaun berkaitan (Elaun Makan Lebih Masa, Perbatuan/Mileage Kereta RM0.75/km Motor RM0.50/km, dan Call-out)."
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_back_to_akta_keyboard())
 
@@ -542,10 +619,24 @@ async def async_main():
     calc_conv = ConversationHandler(
         entry_points=[CallbackQueryHandler(start_calc, pattern='^menu_kalkulator$')],
         states={
-            STATE_SCHEDULE: [CallbackQueryHandler(calc_schedule_selected, pattern='^sch_')],
-            STATE_DAY_TYPE: [CallbackQueryHandler(calc_day_type_selected, pattern='^day_')],
-            STATE_SALARY: [MessageHandler(filters.TEXT & ~filters.COMMAND, calc_salary_received)],
-            STATE_HOURS: [MessageHandler(filters.TEXT & ~filters.COMMAND, calc_hours_received)],
+            STATE_GRADE: [
+                CallbackQueryHandler(calc_grade_selected, pattern='^grade_')
+            ],
+            STATE_SCHEDULE: [
+                CallbackQueryHandler(calc_schedule_selected, pattern='^sch_')
+            ],
+            STATE_DAY_TYPE: [
+                CallbackQueryHandler(calc_day_type_selected, pattern='^day_')
+            ],
+            STATE_SALARY: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, calc_salary_received)
+            ],
+            STATE_HOURS: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, calc_hours_received)
+            ],
+            STATE_GRED_S_HOURS: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, calc_gred_s_hours_received)
+            ],
         },
         fallbacks=[
             CallbackQueryHandler(calc_cancel, pattern='^menu_utama$'),

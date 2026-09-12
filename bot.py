@@ -21,13 +21,14 @@ from telegram.ext import (
 )
 
 BOT_TOKEN = "8938997589:AAHac3AbBUvhxTBTq6nj8UQkV-2K2MUB-qc"
-GEMINI_API_KEY = "AQ.Ab8RN6Lb9-pprFdQWR8jhKkRc8IZltoNYxdj3TwoOgicWHT_9A"
+GROQ_API_KEY = "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"
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 
+# States untuk ConversationHandler
 (
     STATE_GRADE, 
     STATE_SCHEDULE, 
@@ -60,11 +61,11 @@ def run_web_server():
     except Exception as e:
         print(f"Web server note: {e}")
 
-# ==================== ENJIN AI GEMINI ====================
+# ==================== ENJIN AI GROQ ====================
 
 AI_SYSTEM_PROMPT = """
 Anda adalah Penasihat Pintar Kesatuan Pekerja-pekerja Padiberas Nasional Berhad (KPPbNB BERNAS Semenanjung Malaysia).
-Tugas anda adalah menjawab soalan ahli berkaitan hak pekerja, undang-undang perburuhan dan Perjanjian Bersama (CA-7) BERNAS dengan tepat, tegas, dan profesional.
+Tugas anda adalah menjawab soalan ahli berkaitan hak pekerja, undang-undang perburuhan dan Perjanjian Bersama (CA-7) BERNAS dengan tepat, tegas, membela hak pekerja, dan profesional.
 
 Rujukan Utama:
 1. Perjanjian Bersama Ke-7 (CA-7 BERNAS: 2026-2028):
@@ -87,47 +88,40 @@ Panduan Jawapan:
 - Berikan jawapan dalam Bahasa Melayu yang mesra, tersusun kemas, dan tegas.
 - Nyatakan seksyen akta atau nombor artikel CA-7 yang berkenaan.
 - Tegaskan faedah CA-7 BERNAS mengatasi Akta jika lebih menguntungkan pekerja (Seksyen 7 Akta Kerja 1955).
-- Sampaikan isi dengan padat dan jelas.
+- Sampaikan jawapan yang padat dan jelas.
 """
 
-def query_gemini_ai(user_question: str) -> str:
-    clean_key = GEMINI_API_KEY.strip()
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent"
-    
+def query_groq_ai(user_question: str) -> str:
+    url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
-        'Content-Type': 'application/json',
-        'X-goog-api-key': clean_key
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {GROQ_API_KEY.strip()}"
     }
-    
     payload = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": f"{AI_SYSTEM_PROMPT}\n\nSoalan daripada ahli kesatuan: {user_question}"}
-                ]
-            }
-        ]
+        "model": "llama-3.3-70b-versatile",
+        "messages": [
+            {"role": "system", "content": AI_SYSTEM_PROMPT},
+            {"role": "user", "content": user_question}
+        ],
+        "temperature": 0.3,
+        "max_tokens": 900
     }
-    
+
     try:
-        encoded_data = json.dumps(payload).encode('utf-8')
-        req = urllib.request.Request(url, data=encoded_data, headers=headers, method='POST')
-        
+        data = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(url, data=data, headers=headers, method='POST')
         with urllib.request.urlopen(req, timeout=25) as response:
             result = json.loads(response.read().decode('utf-8'))
-            candidates = result.get("candidates", [])
-            if candidates:
-                parts = candidates[0].get("content", {}).get("parts", [])
-                if parts:
-                    return parts[0].get("text", "Tiada jawapan dijana.")
-            return "Maaf, jawapan tidak dapat dihasilkan."
-            
+            choices = result.get("choices", [])
+            if choices:
+                return choices[0].get("message", {}).get("content", "Tiada jawapan dihasilkan.")
+            return "Maaf, sistem tidak dapat memproses jawapan pada masa ini."
     except urllib.error.HTTPError as e:
-        raw_err = e.read().decode('utf-8', errors='ignore')
-        logging.error(f"Gemini API HTTPError {e.code}: {raw_err}")
-        return f"⚠️ Ralat Sambungan AI (HTTP {e.code}): {raw_err[:150]}"
+        err_msg = e.read().decode('utf-8', errors='ignore')
+        logging.error(f"Groq HTTPError {e.code}: {err_msg}")
+        return f"⚠️ Ralat Sambungan AI (Kod {e.code}): {err_msg[:120]}"
     except Exception as e:
-        logging.error(f"Gemini General Error: {e}")
+        logging.error(f"Groq General Error: {e}")
         return f"⚠️ Ralat Sistem: {str(e)}"
 
 # ==================== KEYBOARDS MENU V1 ====================
@@ -771,7 +765,7 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_back_button())
 
-# ==================== PENGENDALI MESEJ TEKS AI BIASA ====================
+# ==================== PENGENDALI MESEJ TEKS AI ====================
 
 async def handle_ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
@@ -784,7 +778,7 @@ async def handle_ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
     
     loop = asyncio.get_running_loop()
-    ai_response = await loop.run_in_executor(None, query_gemini_ai, user_text)
+    ai_response = await loop.run_in_executor(None, query_groq_ai, user_text)
 
     response_text = (
         "🤖 JAWAPAN PENASIHAT KESATUAN (AI)\n"

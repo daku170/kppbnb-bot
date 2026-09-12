@@ -88,11 +88,11 @@ Panduan Jawapan:
 - Berikan jawapan dalam Bahasa Melayu yang mesra, tersusun kemas, dan tegas.
 - Nyatakan seksyen akta atau nombor artikel CA-7 yang berkenaan.
 - Jika ada perbezaan antara faedah Akta dengan CA-7, tegaskan bahawa peruntukan CA-7 BERNAS mengatasi Akta jika lebih berfaedah (Seksyen 7 Akta Kerja 1955).
-- Pastikan jawapan padat, kemas dengan bullet points, dan mudah difahami pekerja tapak.
+- Pastikan jawapan padat, kemas dan mudah difahami pekerja tapak.
 """
 
 def query_gemini_ai(user_question: str) -> str:
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     headers = {'Content-Type': 'application/json'}
     payload = {
         "contents": [
@@ -104,7 +104,7 @@ def query_gemini_ai(user_question: str) -> str:
         ],
         "generationConfig": {
             "temperature": 0.3,
-            "maxOutputTokens": 1000
+            "maxOutputTokens": 800
         }
     }
     
@@ -118,9 +118,13 @@ def query_gemini_ai(user_question: str) -> str:
                 if parts:
                     return parts[0].get("text", "Maaf, jawapan tidak dapat dijana.")
             return "Maaf, sistem tidak dapat memproses jawapan pada masa ini."
+    except urllib.error.HTTPError as e:
+        err_msg = e.read().decode('utf-8')
+        logging.error(f"Gemini API HTTPError {e.code}: {err_msg}")
+        return f"⚠️ Ralat sambungan AI (Kod {e.code}). Sila pastikan API Key aktif atau cuba sebentar lagi."
     except Exception as e:
-        logging.error(f"Gemini API error: {e}")
-        return "⚠️ Maaf, talian perkhidmatan AI sedang sibuk seketika. Sila cuba hantar soalan sekali lagi sebentar lagi atau rujuk menu panduan manual."
+        logging.error(f"Gemini API Error: {e}")
+        return "⚠️ Talian AI sibuk seketika. Sila cuba hantar soalan sekali lagi sebentar lagi."
 
 # ==================== KEYBOARDS MENU V1 ====================
 
@@ -186,8 +190,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "━━━━━━━━━━━━━━━━━━━━\n"
         "🏛️ *Pusat Maklumat & Perkhidmatan Ahli KPPbNB*\n"
         "_Kesatuan Pekerja-pekerja Padiberas Nasional Berhad (Semenanjung Malaysia)_\n\n"
-        "💬 *Ada soalan Akta atau CA-7?* Anda boleh terus **taip soalan anda di ruangan sembang ini bila-bila masa** dan AI Kesatuan akan menjawabnya serta-merta!\n\n"
-        "Atau sila pilih perkhidmatan daripada menu butang di bawah:"
+        "💬 *Ada soalan Akta atau CA-7?*\n"
+        "Anda boleh terus **taip soalan anda di ruangan ini** dan AI Kesatuan akan menjawabnya secara terperinci!\n\n"
+        "Atau sila pilih perkhidmatan daripada butang di bawah:"
     )
     if update.message:
         await update.message.reply_text(welcome_text, parse_mode='Markdown', reply_markup=get_main_keyboard())
@@ -205,7 +210,7 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = (
             "📖 *1. AKTA & PERATURAN KERJA MALAYSIA*\n\n"
             "Fokus panduan statutori berkaitan hak harian pekerja.\n"
-            "Sila pilih topik di bawah atau terus taip soalan perundangan anda di ruangan chat:"
+            "Sila pilih topik di bawah atau terus taip soalan perundangan anda di ruangan sembang:"
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
 
@@ -765,25 +770,28 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
 # ==================== PENGENDALI MESEJ TEKS AI BIASA ====================
 
 async def handle_ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message or not update.message.text:
+        return
+        
     user_text = update.message.text.strip()
     if user_text.startswith('/'):
         return
 
-    # Hantar indikator sedang menaip
+    # Tunjuk status sedang menaip
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
     
-    # Dapatkan jawapan daripada AI Gemini
     loop = asyncio.get_running_loop()
     ai_response = await loop.run_in_executor(None, query_gemini_ai, user_text)
 
     response_text = (
-        "🤖 *JAWAPAN PENASIHAT KESATUAN (AI)*\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
+        "🤖 JAWAPAN PENASIHAT KESATUAN (AI)\n"
+        "━━━━━━━━━━━━━━━━━━━━\n\n"
         f"{ai_response}\n\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        "💡 _Jawapan ini berasaskan CA-7 BERNAS & Akta Kerja 1955. Untuk tindakan rasmi kilanan, rujuk AJK Cawangan._"
+        "💡 Jawapan berasaskan CA-7 BERNAS & Akta Kerja 1955. Untuk tindakan kilanan rasmi, sila rujuk AJK Cawangan."
     )
-    await update.message.reply_text(response_text, parse_mode='Markdown', reply_markup=get_back_button())
+    # Hantar sebagai teks biasa tanpa parse_mode Markdown agar bebas daripada masalah rendering
+    await update.message.reply_text(response_text, reply_markup=get_back_button())
 
 async def cancel_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await start(update, context)
@@ -835,7 +843,7 @@ async def async_main():
     app.add_handler(CallbackQueryHandler(handle_kiraan_menu, pattern='^menu_kiraan$'))
     app.add_handler(CallbackQueryHandler(handle_other_menus, pattern='^(menu_hebahan|menu_dokumen|menu_profil|menu_hubungi)$'))
     
-    # Pengendali mesej teks untuk perbualan AI
+    # Pengendali mesej teks perbualan AI
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_ai_chat))
     
     async with app:

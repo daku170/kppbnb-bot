@@ -65,14 +65,14 @@ def run_web_server():
 
 AI_SYSTEM_PROMPT = """
 Anda adalah Penasihat Pintar Kesatuan Pekerja-pekerja Padiberas Nasional Berhad (KPPbNB BERNAS Semenanjung Malaysia).
-Tugas anda adalah menjawab soalan ahli dan pekerja berkaitan undang-undang buruh dan Perjanjian Bersama BERNAS dengan tepat, tegas, membela hak pekerja, beretika, dan profesional.
+Tugas anda adalah menjawab soalan ahli berkaitan hak pekerja, undang-undang perburuhan dan Perjanjian Bersama (CA-7) BERNAS dengan tepat, tegas, dan profesional.
 
 Rujukan Utama:
 1. Perjanjian Bersama Ke-7 (CA-7 BERNAS: 2026-2028):
-   - Waktu Bekerja: Purata 39 jam seminggu (bukan syif), 42 jam seminggu (syif). Maksimum Akta 45 jam.
+   - Waktu Bekerja (Art 29): Purata 39 jam seminggu (bukan syif), 42 jam seminggu (syif). Maksimum Akta 45 jam.
    - OT Gred T (Teknikal/Operasi T1-T5): Layak bayaran tunai (1.5x biasa/off day, 2.0x rest day, 3.0x cuti am) walaupun gaji melebihi RM4,000 mengikut Artikel 31 & Lampiran I CA-7.
    - Gred S (Sokongan/Pentadbiran): Artikel 31.5 - Layak Cuti Gantian (Time-off-in-lieu: 4-5 jam = 0.5 hari, 6-8 jam = 1 hari).
-   - Tuntutan Sah Gred S / Bertugas: Tuntutan Perbatuan / Mileage (Artikel 63: Kereta RM0.75/km, Motor RM0.50/km, Tol & Parking berasaskan resit), Elaun Makan Luar Stesen (Artikel 64: RM115/hari jika >50km & >8 jam), Elaun Syif (Artikel 72: Syif 2 RM6.50, Syif 3 RM7.00, Syif Malam RM7.00). Tiada istilah elaun panggilan bertugas berasingan.
+   - Tuntutan Sah Gred S / Bertugas: Tuntutan Perbatuan / Mileage (Artikel 63: Kereta RM0.75/km, Motor RM0.50/km, Tol & Parking berasaskan resit), Elaun Makan Luar Stesen (Artikel 64: RM115/hari jika >50km & >8 jam), Elaun Syif (Artikel 72: Syif 2 RM6.50, Syif 3 RM7.00, Syif Malam RM7.00). Tiada elaun panggilan bertugas berasingan.
    - Cuti Tahunan (Art 44): <2 thn (18 hari), 2-5 thn (22 hari), >5 thn (24 hari).
    - Cuti Sakit (Art 47 & 48): 22 hari setahun, Wad 60 hari setahun. Sakit berpanjangan sehingga 18 bulan.
    - Cuti Ehsan: Kematian keluarga terdekat 3 hari + RM1,000 bantuan khairat (Art 50); Perkahwinan sah pertama 4 hari (Art 51); Bersalin 98 hari (Art 49); Paterniti 7 hari (Art 52).
@@ -87,13 +87,12 @@ Rujukan Utama:
 Panduan Jawapan:
 - Berikan jawapan dalam Bahasa Melayu yang mesra, tersusun kemas, dan tegas.
 - Nyatakan seksyen akta atau nombor artikel CA-7 yang berkenaan.
-- Jika ada perbezaan antara faedah Akta dengan CA-7, tegaskan bahawa peruntukan CA-7 BERNAS mengatasi Akta jika lebih berfaedah (Seksyen 7 Akta Kerja 1955).
-- Pastikan jawapan padat, kemas dan mudah difahami pekerja tapak.
+- Tegaskan faedah CA-7 BERNAS mengatasi Akta jika lebih menguntungkan pekerja (Seksyen 7 Akta Kerja 1955).
+- Sampaikan isi dengan padat dan jelas.
 """
 
 def query_gemini_ai(user_question: str) -> str:
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
-    headers = {'Content-Type': 'application/json'}
+    models_to_try = ["gemini-2.5-flash", "gemini-1.5-flash"]
     payload = {
         "contents": [
             {
@@ -107,24 +106,37 @@ def query_gemini_ai(user_question: str) -> str:
             "maxOutputTokens": 800
         }
     }
-    
-    try:
-        req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers, method='POST')
-        with urllib.request.urlopen(req, timeout=25) as response:
-            result = json.loads(response.read().decode('utf-8'))
-            candidates = result.get("candidates", [])
-            if candidates:
-                parts = candidates[0].get("content", {}).get("parts", [])
-                if parts:
-                    return parts[0].get("text", "Maaf, jawapan tidak dapat dijana.")
-            return "Maaf, sistem tidak dapat memproses jawapan pada masa ini."
-    except urllib.error.HTTPError as e:
-        err_msg = e.read().decode('utf-8')
-        logging.error(f"Gemini API HTTPError {e.code}: {err_msg}")
-        return f"⚠️ Ralat sambungan AI (Kod {e.code}). Sila pastikan API Key aktif atau cuba sebentar lagi."
-    except Exception as e:
-        logging.error(f"Gemini API Error: {e}")
-        return "⚠️ Talian AI sibuk seketika. Sila cuba hantar soalan sekali lagi sebentar lagi."
+    encoded_data = json.dumps(payload).encode('utf-8')
+
+    last_error = ""
+    for model in models_to_try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        headers = {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': GEMINI_API_KEY
+        }
+        
+        try:
+            req = urllib.request.Request(url, data=encoded_data, headers=headers, method='POST')
+            with urllib.request.urlopen(req, timeout=25) as response:
+                result = json.loads(response.read().decode('utf-8'))
+                candidates = result.get("candidates", [])
+                if candidates:
+                    parts = candidates[0].get("content", {}).get("parts", [])
+                    if parts:
+                        return parts[0].get("text", "Tiada jawapan dijana.")
+                return "Maaf, jawapan tidak dapat dihasilkan."
+        except urllib.error.HTTPError as e:
+            raw_err = e.read().decode('utf-8', errors='ignore')
+            logging.error(f"Error pada model {model} (HTTP {e.code}): {raw_err}")
+            last_error = f"HTTP {e.code}: {raw_err[:120]}"
+            continue
+        except Exception as e:
+            logging.error(f"General error pada model {model}: {e}")
+            last_error = str(e)
+            continue
+
+    return f"⚠️ Ralat Sambungan AI: {last_error}"
 
 # ==================== KEYBOARDS MENU V1 ====================
 
@@ -777,7 +789,6 @@ async def handle_ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user_text.startswith('/'):
         return
 
-    # Tunjuk status sedang menaip
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
     
     loop = asyncio.get_running_loop()
@@ -790,7 +801,6 @@ async def handle_ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "━━━━━━━━━━━━━━━━━━━━\n"
         "💡 Jawapan berasaskan CA-7 BERNAS & Akta Kerja 1955. Untuk tindakan kilanan rasmi, sila rujuk AJK Cawangan."
     )
-    # Hantar sebagai teks biasa tanpa parse_mode Markdown agar bebas daripada masalah rendering
     await update.message.reply_text(response_text, reply_markup=get_back_button())
 
 async def cancel_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -843,7 +853,6 @@ async def async_main():
     app.add_handler(CallbackQueryHandler(handle_kiraan_menu, pattern='^menu_kiraan$'))
     app.add_handler(CallbackQueryHandler(handle_other_menus, pattern='^(menu_hebahan|menu_dokumen|menu_profil|menu_hubungi)$'))
     
-    # Pengendali mesej teks perbualan AI
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_ai_chat))
     
     async with app:

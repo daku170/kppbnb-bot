@@ -71,37 +71,51 @@ Pimpinan Utama Kesatuan KPPbNB:
 - Bendahari Kesatuan: En. KHAIRUL FAIZ BIN RAMIZAN (Emel: khairulfaiz@bernas.com.my)
 - Alamat Pejabat Kesatuan: No 2190 KM20 Jalan Kodiang, 06000 Jitra, Kedah Darul Aman.
 
-Takrifan Jadual Hari Mengikut Zon di BERNAS (Artikel 29 & 64.3):
-1. Zon A (Kedah, Kelantan, Terengganu, Johor):
-   - Hari Bekerja Biasa: Ahad hingga Khamis (8.00 pagi - 5.00 ptg; Khamis hingga 4.00 ptg).
-   - Off Day: Jumaat.
-   - Rest Day: Sabtu.
-2. Zon B (Pulau Pinang, Perak, Selangor, KL, Pahang, Melaka, N. Sembilan):
-   - Hari Bekerja Biasa: Isnin hingga Jumaat (8.30 pagi - 5.30 ptg).
-   - Off Day: Sabtu.
-   - Rest Day: Ahad.
-3. Pekerja Syif:
-   - Hari Biasa, Off Day dan Rest Day ditentukan mengikut jadual giliran roaster rasmi kompleks.
+Rujukan Terperinci CA-7 BERNAS (2026-2028):
+1. Waktu Bekerja (Artikel 29):
+   - Bukan Syif: Purata 39 jam seminggu.
+     * Hari Bekerja Isnin - Jumaat (Ibu Pejabat & Luar Ibu Pejabat): 8.30 pagi - 5.30 petang (Waktu makan: 1.00 - 2.00 petang; Jumaat: 12.30 tengah hari - 2.30 petang).
+     * Hari Bekerja Ahad - Khamis (Zon A): Ahad - Rabu 8.00 pagi - 5.00 petang; Khamis 8.00 pagi - 4.00 petang (Waktu makan: 1.00 - 2.00 petang).
+   - Kerja Syif: Purata 42 jam seminggu.
+     * 2 Syif (12 jam/syif): Syif Pertama (8.00 pagi - 8.00 malam), Syif Kedua (8.00 malam - 8.00 pagi).
+     * 3 Syif (8 jam/syif): Syif Pertama (8.00 pagi - 4.00 petang), Syif Kedua (4.00 petang - 12.00 tengah malam), Syif Ketiga (12.00 tengah malam - 8.00 pagi).
+     * Waktu Rehat Syif: Tambahan 30 minit rehat diberi bagi setiap 5 jam kerja berterusan jika OT dijadualkan.
+     * Notis Pertukaran Jadual: Dimaklumkan sekurang-kurangnya 3 hari sebelum tarikh berkuat kuasa.
 
-Ketetapan Artikel 64.3 (Elaun Makan Lebih Masa Gaji ≥ RM4,000):
-- Terpakai bagi staf bergaji RM4,000 ke atas yang tidak layak bayaran tunai OT Akta.
-- Pada Hari Bekerja Biasa (Zon A: Ahad-Khamis | Zon B: Isnin-Jumaat):
-  * Melebihi 2 jam hingga 5 jam: RM25.00
-  * Melebihi 5 jam: RM50.00
-- Pada Hari Rehat, Off Day & Hari Kelepasan Am (Zon A: Jumaat & Sabtu | Zon B: Sabtu & Ahad | PH):
-  * Staf boleh memilih sama ada Cuti Gantian ATAU Elaun Makan:
-  * Melebihi 4 jam hingga 8 jam: RM25.00 ATAU separuh (1/2) hari cuti gantian.
-  * Melebihi 8 jam: RM50.00 ATAU satu (1) hari penuh cuti gantian.
+2. Kerja Lebih Masa & Bayaran (Artikel 30 & 31):
+   - Artikel 30: Dilakukan atas permintaan majikan dengan persetujuan pekerja (tidak boleh tolak tanpa alasan munasabah).
+   - Had Masa: Maksimum 104 jam sebulan (tidak termasuk kerja hari rehat & cuti umum).
+   - Kiraan Lebih Masa (Gred T & Gred S [Gaji Bawah RM4,000]):
+     * Formula: (Gaji / 26) × Kadar × (Jam OT / Jam Kerja Normal)
+     * Kadar: Hari Biasa & Off Day (1.5x), Rest Day (2.0x), Cuti Kelepasan Am (3.0x).
+   - Cuti Gantian (Artikel 31.5): Terpakai untuk Gred T dan Gred S sebagai ganti bayaran tunai.
+     * 6 - 8 jam = 1 hari cuti gantian.
+     * 4 - 5 jam = 1/2 hari cuti gantian.
+     * Boleh dikumpul dalam tempoh 6 bulan pada tahun berkenaan.
 
-Rujukan Lain CA-7 (2026-2028):
-- Struktur Gred T (T1-T5): RM1,700 hingga RM6,300. Layak tunai OT Art 31 (1.5x, 2.0x, 3.0x).
-- Struktur Gred S (S1-S5): RM1,700 hingga RM5,400. Cuti gantian Art 31.5 & Elaun Art 64.3.
-- Cuti Tahunan (Art 44): <2 thn (18 hari), 2-5 thn (22 hari), >5 thn (24 hari).
-- Cuti Haji/Umrah (Art 55): 54 hari bergaji penuh sekali sepanjang perkhidmatan.
-- Cuti Sakit (Art 47): 22 hari klinik, 60 hari hospital.
-- Sumbangan Beras (Art 67): 2 kampit (10kg) sebulan.
-- Insurans Kematian/Hilang Upaya (Art 40): 36 bulan gaji terakhir.
-- Elaun Perjalanan (Art 63): Kereta RM0.75/km, Motor RM0.50/km. Elaun Makan Luar Stesen: RM115/hari (Art 64.1).
+3. Elaun Makan Lebih Masa Gaji ≥ RM4,000 (Artikel 64.3):
+   - Terpakai bagi pekerja bergaji RM4,000 ke atas yang tidak layak bayaran lebih masa.
+   - Hari Bekerja Biasa (Zon A: Ahad-Khamis | Zon B: Isnin-Jumaat):
+     * 2 hingga 5 jam: RM25.00
+     * Melebihi 5 jam: RM50.00
+   - Hari Rehat, Off Day & Cuti Am (Zon A: Jumaat & Sabtu | Zon B: Sabtu & Ahad | PH):
+     * Pilihan: Cuti Gantian ATAU Elaun Makan.
+     * 4 hingga 8 jam: RM25.00 atau 1/2 hari cuti gantian.
+     * Melebihi 8 jam: RM50.00 atau 1 hari cuti gantian.
+
+4. Struktur Gred & Tangga Gaji (Lampiran I):
+   - Gred T (Teknikal): T1 (RM1,700 - RM2,800) hingga T5 (RM3,000 - RM6,300).
+   - Gred S (Sokongan): S1 (RM1,700 - RM2,800) hingga S5 (RM2,800 - RM5,400).
+
+5. Cuti & Faedah Lain:
+   - Cuti Tahunan (Art 44): <2 thn (18 hari), 2-5 thn (22 hari), >5 thn (24 hari).
+   - Cuti Haji/Umrah (Art 55): 54 hari bergaji penuh sekali sepanjang perkhidmatan.
+   - Cuti Bersalin (Art 49): 98 hari bergaji penuh. Pilihan tambahan 90 hari cuti tanpa gaji menjaga anak.
+   - Cuti Paterniti (Art 52): 7 hari (khidmat >1 thn) / 3 hari (<1 thn).
+   - Cuti Sakit (Art 47): 22 hari klinik, 60 hari hospital.
+   - Sumbangan Beras (Art 67): 2 kampit (10kg) sebulan.
+   - Insurans Kematian/Hilang Upaya (Art 40): 36 bulan gaji terakhir (GTL & GPA).
+   - Elaun Perjalanan (Art 63): Kereta RM0.75/km, Motor RM0.50/km. Elaun Makan Luar Stesen: RM115/hari (Art 64.1).
 
 Panduan Jawapan:
 - Berikan jawapan dalam Bahasa Melayu yang tersusun rapi dan jelas mengikut zon jika berkaitan.
@@ -177,10 +191,11 @@ def get_akta_keyboard():
 def get_ca_keyboard():
     keyboard = [
         [InlineKeyboardButton("💰 Gaji, Bonus & Pelarasan", callback_data='ca_gaji'),
-         InlineKeyboardButton("⏰ Waktu Kerja & OT", callback_data='ca_ot')],
+         InlineKeyboardButton("⏰ Waktu Bekerja (Art 29)", callback_data='ca_waktu_kerja')],
+        [InlineKeyboardButton("🧮 Kerja Lebih Masa (Art 30 & 31)", callback_data='ca_ot')],
+        [InlineKeyboardButton("🍱 Elaun Makan Gaji ≥RM4k (Art 64.3)", callback_data='ca_elaun_4k_menu')],
         [InlineKeyboardButton("🏖️ Cuti Tahunan, Haji & Ehsan", callback_data='ca_cuti'),
          InlineKeyboardButton("🚗 Perbatuan (Mileage) & Elaun", callback_data='ca_elaun')],
-        [InlineKeyboardButton("🍱 Elaun Makan Gaji ≥RM4k (Art 64.3)", callback_data='ca_elaun_4k_menu')],
         [InlineKeyboardButton("🏥 Faedah Rawatan & Hospital", callback_data='ca_perubatan'),
          InlineKeyboardButton("👨‍👩‍👧 Kebajikan & Beras", callback_data='ca_kebajikan')],
         [InlineKeyboardButton("📊 Struktur Tangga Gaji (T & S)", callback_data='ca_gred')],
@@ -190,10 +205,10 @@ def get_ca_keyboard():
 
 def get_kiraan_keyboard():
     keyboard = [
-        [InlineKeyboardButton("🧮 Kira Kerja Lebih Masa (OT Gred T)", callback_data='calc_start_ot')],
+        [InlineKeyboardButton("🧮 Kira Kerja Lebih Masa (Art 31)", callback_data='calc_start_ot')],
         [InlineKeyboardButton("🍱 Semak Elaun Makan Gaji ≥RM4k (Art 64.3)", callback_data='ca_elaun_4k_menu')],
         [InlineKeyboardButton("🚗 Kira Tuntutan Mileage (Art 63)", callback_data='calc_start_mileage')],
-        [InlineKeyboardButton("💼 Semak Cuti Gantian (Gred S)", callback_data='grade_s')],
+        [InlineKeyboardButton("💼 Semak Cuti Gantian (Art 31.5)", callback_data='grade_s')],
         [InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')]
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -215,7 +230,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "━━━━━━━━━━━━━━━━━━━━\n"
         "🏛️ *Pusat Maklumat & Perkhidmatan Ahli KPPbNB*\n"
         "_Kesatuan Pekerja-pekerja Padiberas Nasional Berhad (Semenanjung Malaysia)_\n\n"
-        "💬 *Ada soalan Akta, pimpinan, zon kerja, elaun makan atau CA-7?*\n"
+        "💬 *Ada soalan Akta, pimpinan, waktu kerja atau CA-7?*\n"
         "Anda boleh terus *taip soalan anda di ruangan ini* dan AI Kesatuan akan menjawabnya secara terperinci!\n\n"
         "Atau sila pilih perkhidmatan daripada butang di bawah:"
     )
@@ -263,8 +278,8 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "• Hari Kelepasan Am: *3.0x* kadar sejam.\n"
             "• Had maksimum OT: *104 jam sebulan* (tidak termasuk kerja hari rehat & cuti am).\n\n"
             "📌 *Pekerja Gaji Melebihi RM4,000 (CA-7 Art 31 & 64.3):*\n"
-            "• Gred T: Dilindungi bayaran tunai Artikel 31.\n"
-            "• Pekerja bukan penerima OT tunai: Layak menuntut *Elaun Makan Lebih Masa* di bawah Artikel 64.3."
+            "• Gred T: Dilindungi bayaran Artikel 31.\n"
+            "• Pekerja bukan penerima OT: Layak menuntut *Elaun Makan Lebih Masa* di bawah Artikel 64.3."
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
 
@@ -360,7 +375,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = (
             "📋 *2. PERJANJIAN BERSAMA KE-7 (CA-7: 2026 – 2028)*\n"
             "_No Pendaftaran Mahkamah Perusahaan: 923_\n\n"
-            "Sila pilih kategori klausa yang ingin disemak:"
+            "Sila pilih klausa yang ingin disemak:"
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
 
@@ -379,16 +394,47 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
 
+    elif data == 'ca_waktu_kerja':
+        text = (
+            "⏰ *CA-7: WAKTU BEKERJA (ARTIKEL 29)*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "🏢 *1. BUKAN SYIF (Purata 39 Jam Seminggu):*\n\n"
+            "📍 *Isnin hingga Jumaat (Ibu Pejabat & Luar Ibu Pejabat):*\n"
+            "• Waktu Kerja: 8.30 pagi – 5.30 petang\n"
+            "• Rehat: 1.00 – 2.00 petang (Jumaat: 12.30 t/hari – 2.30 petang)\n\n"
+            "📍 *Ahad hingga Khamis (Zon A):*\n"
+            "• Ahad – Rabu: 8.00 pagi – 5.00 petang (Rehat: 1.00 – 2.00 petang)\n"
+            "• Khamis: 8.00 pagi – 4.00 petang (Rehat: 1.00 – 2.00 petang)\n\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "🔄 *2. PEKERJA SYIF (Purata 42 Jam Seminggu):*\n\n"
+            "📍 *Sistem 2 Syif (12 jam/syif):*\n"
+            "• Syif 1: 8.00 pagi – 8.00 malam\n"
+            "• Syif 2: 8.00 malam – 8.00 pagi\n\n"
+            "📍 *Sistem 3 Syif (8 jam/syif):*\n"
+            "• Syif 1: 8.00 pagi – 4.00 petang\n"
+            "• Syif 2: 4.00 petang – 12.00 tengah malam\n"
+            "• Syif 3: 12.00 tengah malam – 8.00 pagi\n\n"
+            "📌 *Peraturan Rehat & Notis:* Tambahan rehat 30 minit diberi bagi setiap 5 jam kerja berterusan jika OT dijadualkan. Notis pertukaran jadual sekurang-kurangnya 3 hari sebelum kuat kuasa."
+        )
+        await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+
     elif data == 'ca_ot':
         text = (
-            "⏰ *CA-7: WAKTU KERJA & LEBIH MASA (ARTIKEL 29 & 31)*\n"
+            "🧮 *CA-7: KERJA LEBIH MASA & CUTI GANTIAN (ARTIKEL 30 & 31)*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Gred T (Kiraan Tunai):*\n"
-            "• Formula: `(Gaji / 26) × Kadar × (Jam OT / Jam Kerja)`\n"
-            "• Hari Biasa / Off Day: 1.5x | Rest Day: 2.0x | Public Holiday: 3.0x\n\n"
-            "📌 *Gred S (Cuti Gantian Art 31.5):*\n"
-            "• 6 - 8 jam = 1 hari cuti gantian\n"
-            "• 4 - 5 jam = 1/2 hari cuti gantian (sah 6 bulan)\n\n"
+            "📌 *Artikel 30 (Keperluan Tugas):*\n"
+            "• Dilakukan atas permintaan BERNAS dengan persetujuan pekerja (tidak boleh tolak tanpa alasan munasabah).\n\n"
+            "📌 *Had Maksimum OT (Art 31.4):*\n"
+            "• Had 104 jam sebulan (tidak termasuk kerja hari rehat & cuti umum).\n\n"
+            "📌 *Kiraan Lebih Masa (Gred T & Gred S [Gaji Bawah RM4,000]):*\n"
+            "• Formula: `(Gaji / 26) × Kadar × (Jam OT / Jam Kerja Normal)`\n"
+            "• Hari Biasa / Off Day: 1.5x\n"
+            "• Rest Day: 2.0x\n"
+            "• Hari Kelepasan Am: 3.0x\n\n"
+            "📌 *Cuti Gantian (Gred T & Gred S - Art 31.5):*\n"
+            "• 6 - 8 jam bekerja = 1 hari cuti gantian\n"
+            "• 4 - 5 jam bekerja = 1/2 hari cuti gantian\n"
+            "*(Sah dikumpulkan dalam tempoh 6 bulan. Pekerja yang memilih cuti gantian tidak layak membuat tuntutan bayaran lebih masa)*\n\n"
             "💡 *Pekerja Gaji RM4,000 Ke Atas:* Layak menuntut *Elaun Makan Lebih Masa* di bawah Artikel 64.3."
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
@@ -397,7 +443,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = (
             "🍱 *CA-7: ELAUN MAKAN LEBIH MASA GAJI ≥ RM4,000 (ARTIKEL 64.3)*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "Bagi staf bergaji RM4,000 ke atas yang tidak layak OT tunai, pelaksanaan terbahagi mengikut zon kerja:\n\n"
+            "Bagi staf bergaji RM4,000 ke atas yang tidak layak bayaran lebih masa, pelaksanaan terbahagi mengikut zon kerja:\n\n"
             "Sila pilih zon anda untuk melihat ketetapan hari bekerja dan hari rehat yang tepat:"
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_elaun_4k_keyboard())
@@ -552,8 +598,8 @@ async def start_calc_ot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     keyboard = [
-        [InlineKeyboardButton("🔧 Gred T (Teknikal) - Bayaran Tunai", callback_data='grade_t')],
-        [InlineKeyboardButton("💼 Gred S (Sokongan) - Cuti Gantian & Elaun", callback_data='grade_s')],
+        [InlineKeyboardButton("🔧 Gred T (Teknikal)", callback_data='grade_t')],
+        [InlineKeyboardButton("💼 Gred S (Gaji Bawah RM4,000)", callback_data='grade_s_under4k')],
         [InlineKeyboardButton("🔙 Batal", callback_data='menu_kiraan')]
     ]
     text = "Sila pilih *Kategori Gred Jawatan* anda:"
@@ -567,7 +613,8 @@ async def calc_grade_selected(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     if choice == 'grade_s':
         text = (
-            "💼 *GRED S: KIRAAN CUTI GANTIAN (ART 31.5 & 64.3)*\n\n"
+            "💼 *KIRAAN CUTI GANTIAN (ARTIKEL 31.5)*\n"
+            "_(Terpakai untuk Gred T & Gred S)_\n\n"
             "👉 Sila taip *Jumlah Jam Kerja Lebih Masa* yang dilakukan:\n"
             "_Contoh: 4 atau 8_"
         )
@@ -601,15 +648,14 @@ async def calc_gred_s_hours_received(update: Update, context: ContextTypes.DEFAU
         cuti = f"*{hours} Jam* (Kumpul hingga 4 atau 6 jam)"
 
     res = (
-        "💼 *HASIL KELAYAKAN CUTI GANTIAN / ELAUN (GRED S)*\n"
+        "💼 *HASIL KELAYAKAN CUTI GANTIAN (GRED T & S)*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
         f"⏱️ Jam Bertugas: {hours} Jam\n"
-        f"🏖️ Cuti Gantian (Art 31.5): {cuti}\n\n"
-        "🍱 *Bagi Gaji RM4,000 ke atas (Artikel 64.3):*\n"
-        "• Hari biasa (Zon A: Ahd-Khamis | Zon B: Isn-Jum): RM25 (2-5 jam) | RM50 (>5 jam)\n"
-        "• Hari rehat/cuti am (Zon A: Jumaat-Sabtu | Zon B: Sabtu-Ahad): Pilihan Cuti Gantian atau Tunai RM25 (4-8 jam) / RM50 (>8 jam)\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        "💡 *Peringatan Elaun:* Anda juga berhak menuntut Mileage (Art 63) dan Elaun Makan Luar Stesen (Art 64.1) jika bertugas luar kawasan."
+        f"🏖️ Cuti Gantian (Art 31.5): {cuti}\n"
+        "📌 *Syarat CA-7:* Sah dikumpulkan dalam tempoh enam (6) bulan.\n\n"
+        "🍱 *Bagi Staf Gaji RM4,000 ke atas (Artikel 64.3):*\n"
+        "• Hari biasa: RM25 (2-5 jam) | RM50 (>5 jam)\n"
+        "• Hari rehat/cuti am: Pilihan Cuti Gantian atau Tunai RM25 (4-8 jam) / RM50 (>8 jam)"
     )
     await update.message.reply_text(res, parse_mode='Markdown', reply_markup=get_back_button())
     return ConversationHandler.END
@@ -688,15 +734,15 @@ async def calc_hours_received(update: Update, context: ContextTypes.DEFAULT_TYPE
     total = rate * hrp * hours
 
     res = (
-        "📊 *HASIL KIRAAN KERJA LEBIH MASA (GRED T)*\n"
+        "📊 *HASIL KIRAAN LEBIH MASA (ARTIKEL 31)*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
         f"Jam kerja normal: {norm} jam\n"
         f"Jam OT: {hours} jam\n"
         f"Kadar Gaji Sejam (HRP): RM {hrp:.2f}\n"
         f"Kadar Pengganda: {rate}x\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        f"💰 *Anggaran Bayaran OT: RM {total:,.2f}*\n"
-        "📌 *Rujukan:* Artikel 31 CA-7 & Akta Kerja 1955\n\n"
+        f"💰 *Anggaran Bayaran Lebih Masa: RM {total:,.2f}*\n"
+        "📌 *Rujukan:* Artikel 31 CA-7 BERNAS & Akta Kerja 1955\n\n"
         "_Nota: Tuntutan rasmi tertakluk kepada pengesahan perakam waktu._"
     )
     await update.message.reply_text(res, parse_mode='Markdown', reply_markup=get_back_button())

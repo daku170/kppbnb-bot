@@ -93,7 +93,12 @@ Panduan Jawapan:
 
 def query_gemini_ai(user_question: str) -> str:
     clean_key = GEMINI_API_KEY.strip()
-    models_to_try = ["gemini-1.5-flash", "gemini-2.5-flash"]
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={clean_key}"
+    
+    headers = {
+        'Content-Type': 'application/json'
+    }
+    
     payload = {
         "contents": [
             {
@@ -107,37 +112,27 @@ def query_gemini_ai(user_question: str) -> str:
             "maxOutputTokens": 800
         }
     }
-    encoded_data = json.dumps(payload).encode('utf-8')
-
-    last_error = ""
-    for model in models_to_try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={clean_key}"
-        headers = {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': clean_key
-        }
+    
+    try:
+        encoded_data = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(url, data=encoded_data, headers=headers, method='POST')
         
-        try:
-            req = urllib.request.Request(url, data=encoded_data, headers=headers, method='POST')
-            with urllib.request.urlopen(req, timeout=25) as response:
-                result = json.loads(response.read().decode('utf-8'))
-                candidates = result.get("candidates", [])
-                if candidates:
-                    parts = candidates[0].get("content", {}).get("parts", [])
-                    if parts:
-                        return parts[0].get("text", "Tiada jawapan dijana.")
-                return "Maaf, jawapan tidak dapat dihasilkan."
-        except urllib.error.HTTPError as e:
-            raw_err = e.read().decode('utf-8', errors='ignore')
-            logging.error(f"Error model {model} (HTTP {e.code}): {raw_err}")
-            last_error = f"HTTP {e.code}: {raw_err[:150]}"
-            continue
-        except Exception as e:
-            logging.error(f"General error model {model}: {e}")
-            last_error = str(e)
-            continue
-
-    return f"⚠️ Ralat Sambungan AI: {last_error}"
+        with urllib.request.urlopen(req, timeout=25) as response:
+            result = json.loads(response.read().decode('utf-8'))
+            candidates = result.get("candidates", [])
+            if candidates:
+                parts = candidates[0].get("content", {}).get("parts", [])
+                if parts:
+                    return parts[0].get("text", "Tiada jawapan dijana.")
+            return "Maaf, jawapan tidak dapat dihasilkan."
+            
+    except urllib.error.HTTPError as e:
+        raw_err = e.read().decode('utf-8', errors='ignore')
+        logging.error(f"Gemini API HTTPError {e.code}: {raw_err}")
+        return f"⚠️ Ralat Sambungan AI (HTTP {e.code}): {raw_err[:150]}"
+    except Exception as e:
+        logging.error(f"Gemini General Error: {e}")
+        return f"⚠️ Ralat Sistem: {str(e)}"
 
 # ==================== KEYBOARDS MENU V1 ====================
 

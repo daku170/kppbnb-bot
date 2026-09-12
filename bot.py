@@ -76,7 +76,7 @@ Rujukan Utama:
    - Tuntutan Sah Gred S / Bertugas: Tuntutan Perbatuan / Mileage (Artikel 63: Kereta RM0.75/km, Motor RM0.50/km, Tol & Parking berasaskan resit), Elaun Makan Luar Stesen (Artikel 64: RM115/hari jika >50km & >8 jam), Elaun Syif (Artikel 72: Syif 2 RM6.50, Syif 3 RM7.00, Syif Malam RM7.00). Tiada elaun panggilan bertugas berasingan.
    - Cuti Tahunan (Art 44): <2 thn (18 hari), 2-5 thn (22 hari), >5 thn (24 hari).
    - Cuti Sakit (Art 47 & 48): 22 hari setahun, Wad 60 hari setahun. Sakit berpanjangan sehingga 18 bulan.
-   - Cuti Ehsan & Khusus: Kematian keluarga terdekat 3 hari + RM1,000 bantuan khairat (Art 50); Perkahwinan sah pertama 4 hari (Art 51); Bersalin 98 hari (Art 49); Paterniti 7 hari (Art 52); Cuti Menunaikan Haji / Umrah tertakluk peruntukan syarikat / cuti tanpa gaji atau cuti khas yang diluluskan.
+   - Cuti Ehsan & Khusus: Kematian keluarga terdekat 3 hari + RM1,000 bantuan khairat (Art 50); Perkahwinan sah pertama 4 hari (Art 51); Bersalin 98 hari (Art 49); Paterniti 7 hari (Art 52); Cuti Haji / Umrah tertakluk peruntukan syarikat / cuti tanpa gaji atau cuti tahunan terkumpul.
    - Sumbangan Beras (Art 67): 2 kampit (10kg) sebulan.
    - Elaun Chargeman (Art 71): RM300/bulan.
    - Kenaikan Gaji Tahunan (Art 25): Memenuhi jangkaan 3.5% + merit; Tidak memuaskan 2.0%. Bonus kontraktual 1 bulan (Art 26). Pelarasan 4.5% (Art 74).
@@ -97,34 +97,46 @@ def query_groq_ai(user_question: str) -> str:
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {GROQ_API_KEY.strip()}",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
     }
-    payload = {
-        "model": "llama-3.3-70b-versatile",
-        "messages": [
-            {"role": "system", "content": AI_SYSTEM_PROMPT},
-            {"role": "user", "content": user_question}
-        ],
-        "temperature": 0.3,
-        "max_tokens": 900
-    }
+    
+    # Model pantas dan terbuka untuk semua tier percuma Groq
+    models_to_try = [
+        "llama-3.1-8b-instant",
+        "llama3-8b-8192",
+        "mixtral-8x7b-32768"
+    ]
+    
+    last_err = ""
+    for model_name in models_to_try:
+        payload = {
+            "model": model_name,
+            "messages": [
+                {"role": "system", "content": AI_SYSTEM_PROMPT},
+                {"role": "user", "content": user_question}
+            ],
+            "temperature": 0.3,
+            "max_tokens": 900
+        }
 
-    try:
-        data = json.dumps(payload).encode('utf-8')
-        req = urllib.request.Request(url, data=data, headers=headers, method='POST')
-        with urllib.request.urlopen(req, timeout=25) as response:
-            result = json.loads(response.read().decode('utf-8'))
-            choices = result.get("choices", [])
-            if choices:
-                return choices[0].get("message", {}).get("content", "Tiada jawapan dihasilkan.")
-            return "Maaf, sistem tidak dapat memproses jawapan pada masa ini."
-    except urllib.error.HTTPError as e:
-        err_msg = e.read().decode('utf-8', errors='ignore')
-        logging.error(f"Groq HTTPError {e.code}: {err_msg}")
-        return f"⚠️ Ralat Sambungan AI (Kod {e.code}): {err_msg[:120]}"
-    except Exception as e:
-        logging.error(f"Groq General Error: {e}")
-        return f"⚠️ Ralat Sistem: {str(e)}"
+        try:
+            data = json.dumps(payload).encode('utf-8')
+            req = urllib.request.Request(url, data=data, headers=headers, method='POST')
+            with urllib.request.urlopen(req, timeout=25) as response:
+                result = json.loads(response.read().decode('utf-8'))
+                choices = result.get("choices", [])
+                if choices:
+                    return choices[0].get("message", {}).get("content", "Tiada jawapan dihasilkan.")
+        except urllib.error.HTTPError as e:
+            raw_err = e.read().decode('utf-8', errors='ignore')
+            logging.info(f"Model {model_name} error {e.code}: {raw_err}")
+            last_err = f"Kod {e.code}: {raw_err[:120]}"
+            continue
+        except Exception as e:
+            last_err = str(e)
+            continue
+
+    return f"⚠️ Ralat Sambungan AI: {last_err}"
 
 # ==================== KEYBOARDS MENU V1 ====================
 

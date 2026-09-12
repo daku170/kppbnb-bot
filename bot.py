@@ -62,10 +62,16 @@ def run_web_server():
 
 AI_SYSTEM_PROMPT = """
 Anda adalah Penasihat Pintar Kesatuan Pekerja-pekerja Padiberas Nasional Berhad (KPPbNB BERNAS Semenanjung Malaysia).
-Moto: Bersatu, Berdisiplin, Berjaya.
-Tugas anda adalah menjawab soalan ahli berkaitan hak pekerja, undang-undang perburuhan dan Perjanjian Bersama (CA-7) BERNAS dengan tepat, tegas, membela hak pekerja, dan profesional.
+Moto Kesatuan: Bersatu, Berdisiplin, Berjaya.
+Tugas anda adalah menjawab soalan ahli berkaitan hak pekerja, kepimpinan kesatuan, undang-undang perburuhan dan Perjanjian Bersama (CA-7) BERNAS dengan tepat, tegas, mesra, dan profesional.
 
-Rujukan Utama:
+Pimpinan Utama Kesatuan KPPbNB:
+- Presiden: En. SYAHIBUDIL ASSAUFI BIN ABDUL KUDUS (Emel: syahibudil@bernas.com.my)
+- Setiausaha Agung: Pn. FARAH AQILAH BINTI BARDZAN (Emel: aqilah@bernas.com.my)
+- Bendahari Kesatuan: En. KHAIRUL FAIZ BIN RAMIZAN (Emel: khairulfaiz@bernas.com.my)
+- Alamat Pejabat Kesatuan: No 2190 KM20 Jalan Kodiang, 06000 Jitra, Kedah.
+
+Rujukan Utama Perundangan & CA-7 (2026-2028):
 1. Perjanjian Bersama Ke-7 (CA-7 BERNAS: 2026-2028):
    - Waktu Bekerja (Art 29): Purata 39 jam seminggu (bukan syif), 42 jam seminggu (syif). Had maksimum Akta 45 jam.
    - OT Gred T (Teknikal/Operasi T1-T5): Layak bayaran tunai (1.5x biasa/off day, 2.0x rest day, 3.0x cuti am) walaupun gaji melebihi RM4,000 mengikut Artikel 31 & Lampiran I CA-7.
@@ -73,7 +79,7 @@ Rujukan Utama:
    - Tuntutan Sah Gred S / Bertugas: Tuntutan Perbatuan / Mileage (Artikel 63: Kereta RM0.75/km, Motor RM0.50/km, Tol & Parking berasaskan resit), Elaun Makan Luar Stesen (Artikel 64: RM115/hari jika >50km & >8 jam), Elaun Syif (Artikel 72: Syif 2 RM6.50, Syif 3 RM7.00, Syif Malam RM7.00). Tiada elaun panggilan bertugas berasingan.
    - Cuti Tahunan (Art 44): <2 thn (18 hari), 2-5 thn (22 hari), >5 thn (24 hari).
    - Cuti Sakit (Art 47 & 48): 22 hari setahun, Wad 60 hari setahun. Sakit berpanjangan sehingga 18 bulan.
-   - Cuti Ehsan & Khusus: Kematian keluarga terdekat 3 hari + RM1,000 bantuan khairat (Art 50); Perkahwinan sah pertama 4 hari (Art 51); Bersalin 98 hari (Art 49); Paterniti 7 hari (Art 52); Cuti Umrah/Haji tertakluk kelulusan syarikat atau guna Cuti Tahunan/Cuti Tanpa Gaji mengikut pekeliling perkhidmatan.
+   - Cuti Ehsan & Khusus: Kematian keluarga terdekat 3 hari + RM1,000 bantuan khairat (Art 50); Perkahwinan sah pertama 4 hari (Art 51); Bersalin 98 hari (Art 49); Paterniti 7 hari (Art 52); Cuti Umrah/Haji tertakluk peruntukan syarikat / cuti tahunan terkumpul / cuti tanpa gaji mengikut pekeliling perkhidmatan.
    - Sumbangan Beras (Art 67): 2 kampit (10kg) sebulan.
    - Elaun Chargeman (Art 71): RM300/bulan.
    - Kenaikan Gaji Tahunan (Art 25): Memenuhi jangkaan 3.5% + merit; Tidak memuaskan 2.0%. Bonus kontraktual 1 bulan (Art 26). Pelarasan 4.5% (Art 74).
@@ -83,10 +89,8 @@ Rujukan Utama:
 4. Akta Keselamatan Sosial Pekerja 1969 (PERKESO): Skim bencana pekerjaan dan kemalangan perjalanan laluan lazim (80% purata gaji harian semasa MC).
 
 Panduan Jawapan:
-- Berikan jawapan dalam Bahasa Melayu yang mesra, tersusun kemas, dan tegas.
-- Nyatakan seksyen akta atau nombor artikel CA-7 yang berkenaan.
-- Tegaskan faedah CA-7 BERNAS mengatasi Akta jika lebih menguntungkan pekerja (Seksyen 7 Akta Kerja 1955).
-- Sampaikan jawapan yang padat dan jelas.
+- Berikan jawapan dalam Bahasa Melayu yang tersusun rapi.
+- Nyatakan seksyen akta atau nombor artikel CA-7 yang berkaitan.
 """
 
 def query_groq_ai(user_question: str) -> str:
@@ -96,7 +100,6 @@ def query_groq_ai(user_question: str) -> str:
     except Exception as err_init:
         return f"⚠️ Ralat Inisialisasi Groq: {str(err_init)}"
 
-    # Model rasmi yang aktif di Groq
     candidate_models = [
         "openai/gpt-oss-20b",
         "openai/gpt-oss-120b"
@@ -187,8 +190,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "━━━━━━━━━━━━━━━━━━━━\n"
         "🏛️ *Pusat Maklumat & Perkhidmatan Ahli KPPbNB*\n"
         "_Kesatuan Pekerja-pekerja Padiberas Nasional Berhad (Semenanjung Malaysia)_\n\n"
-        "💬 *Ada soalan Akta atau CA-7?*\n"
-        "Anda boleh terus **taip soalan anda di ruangan ini** dan AI Kesatuan akan menjawabnya secara terperinci!\n\n"
+        "💬 *Ada soalan Akta, pimpinan atau CA-7?*\n"
+        "Anda boleh terus *taip soalan anda di ruangan ini* dan AI Kesatuan akan menjawabnya secara terperinci!\n\n"
         "Atau sila pilih perkhidmatan daripada butang di bawah:"
     )
     if update.message:
@@ -216,9 +219,9 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "⏰ *AKTA KERJA 1955: WAKTU BEKERJA*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
             "📌 *Seksyen 60A(1):*\n"
-            "• Had maksimum waktu kerja: **45 jam seminggu** (Pindaan 2022).\n"
-            "• Had sehari: Tidak melebihi **8 jam sehari** (atau 9 jam bagi kerja 5 hari seminggu).\n"
-            "• Tidak boleh bekerja berterusan melebihi **5 jam** tanpa rehat sekurang-kurangnya 30 minit.\n\n"
+            "• Had maksimum waktu kerja: *45 jam seminggu* (Pindaan 2022).\n"
+            "• Had sehari: Tidak melebihi *8 jam sehari* (atau 9 jam bagi kerja 5 hari seminggu).\n"
+            "• Tidak boleh bekerja berterusan melebihi *5 jam* tanpa rehat sekurang-kurangnya 30 minit.\n\n"
             "📌 *Rujukan CA-7 BERNAS (Artikel 29):*\n"
             "• Bukan Syif: Purata 39 jam seminggu.\n"
             "• Syif: Purata 42 jam seminggu (Faedah lebih baik daripada Akta)."
@@ -230,10 +233,10 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "🧮 *AKTA KERJA 1955: KERJA LEBIH MASA (OT)*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
             "📌 *Seksyen 60A(3) & Peraturan Had OT:*\n"
-            "• Kadar Hari Biasa: **1.5x** kadar sejam (HRP).\n"
-            "• Hari Rehat: **2.0x** kadar sejam.\n"
-            "• Hari Kelepasan Am: **3.0x** kadar sejam.\n"
-            "• Had maksimum OT: **104 jam sebulan** (tidak termasuk kerja hari rehat & cuti am).\n\n"
+            "• Kadar Hari Biasa: *1.5x* kadar sejam (HRP).\n"
+            "• Hari Rehat: *2.0x* kadar sejam.\n"
+            "• Hari Kelepasan Am: *3.0x* kadar sejam.\n"
+            "• Had maksimum OT: *104 jam sebulan* (tidak termasuk kerja hari rehat & cuti am).\n\n"
             "📌 *Gaji Melebihi RM4,000 & Perlindungan CA-7:*\n"
             "Walaupun Akta menghadkan hak OT bagi bukan manual >RM4k, pekerja Gred Kesatuan (Gred T) tetap dilindungi bayaran OT tunai mengikut Artikel 31 CA-7."
         )
@@ -245,10 +248,10 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "━━━━━━━━━━━━━━━━━━━━\n"
             "📌 *Cuti Tahunan (Seksyen 60E):*\n"
             "• Minimum Akta: 8 hari (<2 thn), 12 hari (2-5 thn), 16 hari (>5 thn).\n"
-            "• **Di Bawah CA-7 BERNAS (Jauh Lebih Baik):**\n"
-            "  👉 <2 tahun: **18 hari**\n"
-            "  👉 2 - 5 tahun: **22 hari**\n"
-            "  👉 >5 tahun: **24 hari**\n\n"
+            "• *Di Bawah CA-7 BERNAS (Jauh Lebih Baik):*\n"
+            "  👉 <2 tahun: *18 hari*\n"
+            "  👉 2 - 5 tahun: *22 hari*\n"
+            "  👉 >5 tahun: *24 hari*\n\n"
             "📌 *Hari Kelepasan Am (Seksyen 60D):*\n"
             "• Minimum 11 hari diwartakan termasuk 5 hari wajib."
         )
@@ -260,9 +263,9 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "━━━━━━━━━━━━━━━━━━━━\n"
             "📌 *Pengasingan Kelayakan (Pindaan 2022):*\n"
             "• Cuti Sakit biasa tidak lagi menolak hak 60 hari cuti masuk wad.\n"
-            "• Cuti Masuk Wad: Layak sehingga **60 hari setahun** dengan pengesahan doktor berdaftar.\n\n"
+            "• Cuti Masuk Wad: Layak sehingga *60 hari setahun* dengan pengesahan doktor berdaftar.\n\n"
             "📌 *Syarat Pematuhan:*\n"
-            "• Pekerja **wajib memaklumkan majikan dalam masa 48 jam** dari tarikh MC bermula. Kegagalan boleh menyebabkan ketidakhadiran dianggap tidak sah."
+            "• Pekerja *wajib memaklumkan majikan dalam masa 48 jam* dari tarikh MC bermula. Kegagalan boleh menyebabkan ketidakhadiran dianggap tidak sah."
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
 
@@ -271,7 +274,7 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "💰 *AKTA KERJA 1955: PEMBAYARAN & POTONGAN GAJI*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
             "📌 *Seksyen 19 (Tempoh Bayaran):*\n"
-            "• Gaji wajib dibayar tidak lewat daripada **hari ke-7** selepas tamat tempoh upah.\n\n"
+            "• Gaji wajib dibayar tidak lewat daripada *hari ke-7* selepas tamat tempoh upah.\n\n"
             "📌 *Seksyen 24 (Had Potongan Gaji):*\n"
             "• Majikan dilarang membuat potongan sesuka hati kecuali caruman statutori (KWSP, PERKESO, Cukai) atau yuran kesatuan dengan kebenaran."
         )
@@ -282,10 +285,10 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "⚠️ *AKTA KERJA 1955: KETIDAKHADIRAN (AWOL) & DISIPLIN*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
             "📌 *Seksyen 15(2) (Pecah Kontrak):*\n"
-            "• Pekerja disifatkan memungkiri kontrak jika tidak hadir bertugas **melebihi 2 hari berturut-turut** tanpa cuti awal dan tanpa alasan munasabah.\n\n"
+            "• Pekerja disifatkan memungkiri kontrak jika tidak hadir bertugas *melebihi 2 hari berturut-turut* tanpa cuti awal dan tanpa alasan munasabah.\n\n"
             "📌 *Seksyen 14 (Siasatan Wajar / Due Inquiry):*\n"
             "• Majikan wajib adakan siasatan adil sebelum buang kerja.\n"
-            "• Gantung kerja maksimum **14 hari** dengan separuh gaji."
+            "• Gantung kerja maksimum *14 hari* dengan separuh gaji."
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
 
@@ -315,8 +318,8 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "🛡️ *AKTA KESELAMATAN SOSIAL PEKERJA 1969 (PERKESO)*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
             "📌 *Skim Bencana Pekerjaan:*\n"
-            "• Meliputi kemalangan kerja dan **Kemalangan Perjalanan** pergi/balik ikut laluan biasa.\n"
-            "• PERKESO membayar elaun ganti rugi harian sebanyak **80% purata gaji harian** sepanjang tempoh cuti sakit kemalangan."
+            "• Meliputi kemalangan kerja dan *Kemalangan Perjalanan* pergi/balik ikut laluan biasa.\n"
+            "• PERKESO membayar elaun ganti rugi harian sebanyak *80% purata gaji harian* sepanjang tempoh cuti sakit kemalangan."
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
 
@@ -379,13 +382,13 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "🚗 *CA-7: PERBATUAN (MILEAGE) & ELAUN TUGAS*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
             "📌 *Artikel 63 (Tuntutan Perbatuan):*\n"
-            "• Kereta: **RM0.75 / km**\n"
-            "• Motosikal: **RM0.50 / km**\n"
+            "• Kereta: *RM0.75 / km*\n"
+            "• Motosikal: *RM0.50 / km*\n"
             "• Bayaran tol & tempat letak kenderaan berasaskan resit.\n\n"
             "📌 *Artikel 64 (Elaun Makan Luar Stesen):*\n"
             "• RM115.00 sehari (>50km & >8 jam bertugas).\n\n"
             "📌 *Artikel 71 & 72 (Elaun Khas):*\n"
-            "• Elaun Chargeman: **RM300.00 / bulan**\n"
+            "• Elaun Chargeman: *RM300.00 / bulan*\n"
             "• Elaun Syif: RM6.50 (Syif 2) / RM7.00 (Syif 3 & Syif Malam)"
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
@@ -396,7 +399,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "━━━━━━━━━━━━━━━━━━━━\n"
             "📌 *Pesakit Luar (Art 59):* Had RM3,500 setahun sekeluarga (termasuk RM1,000 gigi/cermin mata).\n"
             "📌 *Pesakit Dalam / Wad (Art 60):*\n"
-            "• Mulai 1 Jan 2027: Had **RM45,000 setahun bagi setiap individu** (Pekerja & setiap tanggungan).\n"
+            "• Mulai 1 Jan 2027: Had *RM45,000 setahun bagi setiap individu* (Pekerja & setiap tanggungan).\n"
             "• Kelayakan bilik wad: RM150 sehari."
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
@@ -406,7 +409,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "👨‍👩‍👧 *CA-7: KEBAJIKAN & SUMBANGAN BERAS*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
             "📌 *Sumbangan Beras (Art 67):* 2 kampit (10kg) Beras Super Tempatan setiap bulan.\n"
-            "📌 *Insurans Hayat GTL & GPA (Art 40):* Pampasan kematian/keilatan kekal sebanyak **36 bulan gaji pokok**."
+            "📌 *Insurans Hayat GTL & GPA (Art 40):* Pampasan kematian/keilatan kekal sebanyak *36 bulan gaji pokok*."
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
 
@@ -450,7 +453,7 @@ async def start_calc_ot(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("💼 Gred S (Sokongan) - Cuti Gantian & Elaun", callback_data='grade_s')],
         [InlineKeyboardButton("🔙 Batal", callback_data='menu_kiraan')]
     ]
-    text = "Sila pilih **Kategori Gred Jawatan** anda:"
+    text = "Sila pilih *Kategori Gred Jawatan* anda:"
     await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
     return STATE_GRADE
 
@@ -462,7 +465,7 @@ async def calc_grade_selected(update: Update, context: ContextTypes.DEFAULT_TYPE
     if choice == 'grade_s':
         text = (
             "💼 *GRED S: KIRAAN CUTI GANTIAN (ART 31.5)*\n\n"
-            "👉 Sila taip **Jumlah Jam Kerja Lebih Masa** yang dilakukan:\n"
+            "👉 Sila taip *Jumlah Jam Kerja Lebih Masa* yang dilakukan:\n"
             "_Contoh: 4 atau 8_"
         )
         await query.edit_message_text(text, parse_mode='Markdown')
@@ -546,7 +549,7 @@ async def calc_day_type_selected(update: Update, context: ContextTypes.DEFAULT_T
     query = update.callback_query
     await query.answer()
     context.user_data['day_type'] = query.data
-    text = "👉 Sila taip **Gaji Pokok Bulanan** anda (contoh: 2400):"
+    text = "👉 Sila taip *Gaji Pokok Bulanan* anda (contoh: 2400):"
     await query.edit_message_text(text, parse_mode='Markdown')
     return STATE_SALARY
 
@@ -558,7 +561,7 @@ async def calc_salary_received(update: Update, context: ContextTypes.DEFAULT_TYP
         await update.message.reply_text("⚠️ Sila masukkan angka gaji yang sah (contoh: 2400):")
         return STATE_SALARY
 
-    await update.message.reply_text("👉 Sila taip **Jumlah Jam OT** (contoh: 3.5 atau 4):", parse_mode='Markdown')
+    await update.message.reply_text("👉 Sila taip *Jumlah Jam OT* (contoh: 3.5 atau 4):", parse_mode='Markdown')
     return STATE_HOURS
 
 async def calc_hours_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -617,7 +620,7 @@ async def calc_mileage_vehicle_selected(update: Update, context: ContextTypes.DE
     context.user_data['veh_rate'] = 0.75 if choice == 'mil_car' else 0.50
     context.user_data['veh_name'] = "Kereta" if choice == 'mil_car' else "Motosikal"
 
-    await query.edit_message_text(f"👉 Sila taip **Jumlah Perbatuan (KM)** bagi tugasan tersebut:\n_Contoh: 85 atau 120_")
+    await query.edit_message_text(f"👉 Sila taip *Jumlah Perbatuan (KM)* bagi tugasan tersebut:\n_Contoh: 85 atau 120_")
     return STATE_MILEAGE_KM
 
 async def calc_mileage_km_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -665,7 +668,7 @@ async def start_aduan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
         "📝 *4. SISTEM LAPORAN & ADUAN (KILANAN)*\n"
         "_(Selaras Artikel 15 CA-7 BERNAS)_\n\n"
-        "Langkah 1: Sila pilih **Kategori Aduan** anda:"
+        "Langkah 1: Sila pilih *Kategori Aduan* anda:"
     )
     await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
     return STATE_ADUAN_CAT
@@ -677,7 +680,7 @@ async def aduan_cat_selected(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     text = (
         f"✅ Kategori Dipilih: *{context.user_data['aduan_cat']}*\n\n"
-        "Langkah 2: Sila **taip penerangan masalah / aduan** anda dengan jelas di bawah:\n"
+        "Langkah 2: Sila *taip penerangan masalah / aduan* anda dengan jelas di bawah:\n"
         "_(Nyatakan lokasi kompleks, tarikh kejadian dan ringkasan masalah)_"
     )
     await query.edit_message_text(text, parse_mode='Markdown')
@@ -755,16 +758,24 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
             "☎️ *8. HUBUNGI KESATUAN (KPPbNB)*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
             "🏛️ *Ibu Pejabat Kesatuan:*\n"
-            "Tingkat 2, Kompleks BERNAS, Jalan Tuanku Abdul Rahman, KL.\n\n"
+            "No 2190 KM20 Jalan Kodiang, 06000 Jitra, Kedah.\n\n"
             "📌 *Barisan Kepimpinan Rasmi:*\n"
-            "• *Presiden:* En. Zulkifli (019-XXXXXXX)\n"
-            "• *Setiausaha Agung:* En. Ahmad (012-XXXXXXX)\n"
-            "• *Bendahari Kesatuan:* En. Khairul Faiz (013-XXXXXXX)\n\n"
-            "📩 *Emel Rasmi:* kppbnb.malaysia@gmail.com"
+            "• *Presiden:* En. SYAHIBUDIL ASSAUFI BIN ABDUL KUDUS\n"
+            "  📩 syahibudil@bernas.com.my\n\n"
+            "• *Setiausaha Agung:* Pn. FARAH AQILAH BINTI BARDZAN\n"
+            "  📩 aqilah@bernas.com.my\n\n"
+            "• *Bendahari Kesatuan:* En. KHAIRUL FAIZ BIN RAMIZAN\n"
+            "  📩 khairulfaiz@bernas.com.my"
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_back_button())
 
 # ==================== PENGENDALI MESEJ TEKS AI ====================
+
+def clean_markdown(text: str) -> str:
+    # Memastikan format Markdown standard Telegram diproses dengan kemas
+    # Menukar **teks** kepada *teks* jika perlu bagi mengelakkan simbol bintang berganda mentah
+    cleaned = text.replace("**", "*")
+    return cleaned
 
 async def handle_ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
@@ -777,16 +788,24 @@ async def handle_ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
     
     loop = asyncio.get_running_loop()
-    ai_response = await loop.run_in_executor(None, query_groq_ai, user_text)
+    ai_raw = await loop.run_in_executor(None, query_groq_ai, user_text)
+    ai_response = clean_markdown(ai_raw)
 
     response_text = (
-        "🤖 JAWAPAN PENASIHAT KESATUAN (AI)\n"
+        "🤖 *JAWAPAN PENASIHAT KESATUAN (AI)*\n"
         "━━━━━━━━━━━━━━━━━━━━\n\n"
         f"{ai_response}\n\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        "💡 Jawapan berasaskan CA-7 BERNAS & Akta Kerja 1955. Untuk tindakan kilanan rasmi, sila rujuk AJK Cawangan."
+        "💡 _Jawapan berasaskan CA-7 BERNAS & Akta Kerja 1955. Untuk tindakan kilanan rasmi, sila rujuk AJK Cawangan._"
     )
-    await update.message.reply_text(response_text, reply_markup=get_back_button())
+    
+    try:
+        await update.message.reply_text(response_text, parse_mode='Markdown', reply_markup=get_back_button())
+    except Exception as parse_error:
+        logging.warning(f"Markdown formatting fallback: {parse_error}")
+        # Hantar teks bersih biasa jika terdapat aksara khas yang mengganggu enjin Telegram
+        plain_text = response_text.replace("*", "").replace("_", "")
+        await update.message.reply_text(plain_text, reply_markup=get_back_button())
 
 async def cancel_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await start(update, context)

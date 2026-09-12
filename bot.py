@@ -16,13 +16,9 @@ from telegram.ext import (
     ContextTypes,
     filters
 )
-from groq import Groq
 
 BOT_TOKEN = "8938997589:AAHac3AbBUvhxTBTq6nj8UQkV-2K2MUB-qc"
 GROQ_API_KEY = "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"
-
-# Inisialisasi client rasmi Groq
-groq_client = Groq(api_key=GROQ_API_KEY.strip())
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -94,26 +90,34 @@ Panduan Jawapan:
 """
 
 def query_groq_ai(user_question: str) -> str:
-    # Model stabil dan pantas dalam Groq
-    models = ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"]
-    
-    for model_name in models:
+    try:
+        from groq import Groq
+        client = Groq(api_key=GROQ_API_KEY.strip())
+    except Exception as err_init:
+        return f"⚠️ Ralat Inisialisasi Groq: {str(err_init)}"
+
+    candidate_models = ["llama-3.1-8b-instant", "llama3-8b-8192"]
+    last_err = ""
+
+    for m in candidate_models:
         try:
-            chat_completion = groq_client.chat.completions.create(
+            chat_completion = client.chat.completions.create(
                 messages=[
                     {"role": "system", "content": AI_SYSTEM_PROMPT},
                     {"role": "user", "content": user_question}
                 ],
-                model=model_name,
+                model=m,
                 temperature=0.3,
                 max_tokens=800
             )
-            return chat_completion.choices[0].message.content
+            if chat_completion.choices:
+                return chat_completion.choices[0].message.content
         except Exception as e:
-            logging.error(f"Error model {model_name}: {e}")
+            last_err = str(e)
+            logging.error(f"Groq API Error ({m}): {e}")
             continue
 
-    return "⚠️ Maaf, perkhidmatan AI sedang sibuk. Sila cuba sebentar lagi."
+    return f"⚠️ Ralat Groq: {last_err[:180]}"
 
 # ==================== KEYBOARDS MENU V1 ====================
 

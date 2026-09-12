@@ -93,46 +93,69 @@ Panduan Jawapan:
 
 def query_gemini_ai(user_question: str) -> str:
     clean_key = GEMINI_API_KEY.strip()
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={clean_key}"
     
-    headers = {
-        'Content-Type': 'application/json'
+    # 1. CUBA GUNA LALUAN OPENAI COMPATIBILITY GATEWAY (Sesuai untuk Kunci AQ. sebagai Bearer Token)
+    openai_url = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+    headers_openai = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {clean_key}'
     }
-    
-    payload = {
+    payload_openai = {
+        "model": "gemini-2.5-flash",
+        "messages": [
+            {"role": "system", "content": AI_SYSTEM_PROMPT},
+            {"role": "user", "content": user_question}
+        ],
+        "temperature": 0.3,
+        "max_tokens": 800
+    }
+
+    try:
+        req = urllib.request.Request(openai_url, data=json.dumps(payload_openai).encode('utf-8'), headers=headers_openai, method='POST')
+        with urllib.request.urlopen(req, timeout=25) as response:
+            result = json.loads(response.read().decode('utf-8'))
+            choices = result.get("choices", [])
+            if choices:
+                return choices[0].get("message", {}).get("content", "Tiada jawapan dijana.")
+    except urllib.error.HTTPError as e:
+        err_openai = e.read().decode('utf-8', errors='ignore')
+        logging.info(f"OpenAI gateway note: {err_openai[:100]}")
+    except Exception as e:
+        logging.info(f"OpenAI fallback note: {e}")
+
+    # 2. CUBA GUNA LALUAN NATIVE GEMINI HEADER
+    native_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+    headers_native = {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': clean_key
+    }
+    payload_native = {
         "contents": [
             {
                 "parts": [
-                    {"text": f"{AI_SYSTEM_PROMPT}\n\nSoalan daripada ahli kesatuan: {user_question}"}
+                    {"text": f"{AI_SYSTEM_PROMPT}\n\nSoalan: {user_question}"}
                 ]
             }
         ],
-        "generationConfig": {
-            "temperature": 0.3,
-            "maxOutputTokens": 800
-        }
+        "generationConfig": {"temperature": 0.3, "maxOutputTokens": 800}
     }
-    
+
     try:
-        encoded_data = json.dumps(payload).encode('utf-8')
-        req = urllib.request.Request(url, data=encoded_data, headers=headers, method='POST')
-        
-        with urllib.request.urlopen(req, timeout=25) as response:
+        req2 = urllib.request.Request(native_url, data=json.dumps(payload_native).encode('utf-8'), headers=headers_native, method='POST')
+        with urllib.request.urlopen(req2, timeout=25) as response:
             result = json.loads(response.read().decode('utf-8'))
             candidates = result.get("candidates", [])
             if candidates:
                 parts = candidates[0].get("content", {}).get("parts", [])
                 if parts:
                     return parts[0].get("text", "Tiada jawapan dijana.")
-            return "Maaf, jawapan tidak dapat dihasilkan."
-            
     except urllib.error.HTTPError as e:
-        raw_err = e.read().decode('utf-8', errors='ignore')
-        logging.error(f"Gemini API HTTPError {e.code}: {raw_err}")
-        return f"⚠️ Ralat Sambungan AI (HTTP {e.code}): {raw_err[:150]}"
+        err_native = e.read().decode('utf-8', errors='ignore')
+        return f"⚠️ Ralat Sambungan Google AI: {err_native[:150]}"
     except Exception as e:
-        logging.error(f"Gemini General Error: {e}")
         return f"⚠️ Ralat Sistem: {str(e)}"
+
+    return "Maaf, jawapan tidak dapat dihasilkan buat masa ini."
 
 # ==================== KEYBOARDS MENU V1 ====================
 

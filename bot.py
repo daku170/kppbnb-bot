@@ -93,8 +93,11 @@ Panduan Jawapan:
 
 def query_gemini_ai(user_question: str) -> str:
     clean_key = GEMINI_API_KEY.strip()
+    
+    # URL rasmi REST API Google Gemini
     url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
     
+    # Standard header rasmi untuk kunci AQ.
     headers = {
         'Content-Type': 'application/json',
         'x-goog-api-key': clean_key

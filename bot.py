@@ -21,7 +21,7 @@ from telegram.ext import (
 )
 
 BOT_TOKEN = "8938997589:AAHac3AbBUvhxTBTq6nj8UQkV-2K2MUB-qc"
-GEMINI_API_KEY = "AQ.Ab8RN6LcXMHhRBmspZIiO1cPdau9XgGs24PpR5yIMG4jRnXdlg"
+GEMINI_API_KEY = "AQ.Ab8RN6IVwdhSNq1K1eZksq-W_UTtWCSsp-pJLaMYMC9-z4mGkg"
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -69,7 +69,7 @@ Tugas anda adalah menjawab soalan ahli berkaitan hak pekerja, undang-undang perb
 
 Rujukan Utama:
 1. Perjanjian Bersama Ke-7 (CA-7 BERNAS: 2026-2028):
-   - Waktu Bekerja (Art 29): Purata 39 jam seminggu (bukan syif), 42 jam seminggu (syif). Maksimum Akta 45 jam.
+   - Waktu Bekerja (Art 29): Purata 39 jam seminggu (bukan syif), 42 jam seminggu (syif). Had maksimum Akta 45 jam.
    - OT Gred T (Teknikal/Operasi T1-T5): Layak bayaran tunai (1.5x biasa/off day, 2.0x rest day, 3.0x cuti am) walaupun gaji melebihi RM4,000 mengikut Artikel 31 & Lampiran I CA-7.
    - Gred S (Sokongan/Pentadbiran): Artikel 31.5 - Layak Cuti Gantian (Time-off-in-lieu: 4-5 jam = 0.5 hari, 6-8 jam = 1 hari).
    - Tuntutan Sah Gred S / Bertugas: Tuntutan Perbatuan / Mileage (Artikel 63: Kereta RM0.75/km, Motor RM0.50/km, Tol & Parking berasaskan resit), Elaun Makan Luar Stesen (Artikel 64: RM115/hari jika >50km & >8 jam), Elaun Syif (Artikel 72: Syif 2 RM6.50, Syif 3 RM7.00, Syif Malam RM7.00). Tiada elaun panggilan bertugas berasingan.
@@ -92,7 +92,8 @@ Panduan Jawapan:
 """
 
 def query_gemini_ai(user_question: str) -> str:
-    models_to_try = ["gemini-2.5-flash", "gemini-1.5-flash"]
+    clean_key = GEMINI_API_KEY.strip()
+    models_to_try = ["gemini-1.5-flash", "gemini-2.5-flash"]
     payload = {
         "contents": [
             {
@@ -110,10 +111,10 @@ def query_gemini_ai(user_question: str) -> str:
 
     last_error = ""
     for model in models_to_try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={clean_key}"
         headers = {
             'Content-Type': 'application/json',
-            'x-goog-api-key': GEMINI_API_KEY
+            'x-goog-api-key': clean_key
         }
         
         try:
@@ -128,11 +129,11 @@ def query_gemini_ai(user_question: str) -> str:
                 return "Maaf, jawapan tidak dapat dihasilkan."
         except urllib.error.HTTPError as e:
             raw_err = e.read().decode('utf-8', errors='ignore')
-            logging.error(f"Error pada model {model} (HTTP {e.code}): {raw_err}")
-            last_error = f"HTTP {e.code}: {raw_err[:120]}"
+            logging.error(f"Error model {model} (HTTP {e.code}): {raw_err}")
+            last_error = f"HTTP {e.code}: {raw_err[:150]}"
             continue
         except Exception as e:
-            logging.error(f"General error pada model {model}: {e}")
+            logging.error(f"General error model {model}: {e}")
             last_error = str(e)
             continue
 

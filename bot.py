@@ -1,4 +1,7 @@
 import os
+import json
+import urllib.request
+import urllib.error
 import asyncio
 import threading
 import http.server
@@ -18,7 +21,7 @@ from telegram.ext import (
 )
 
 BOT_TOKEN = "8938997589:AAHac3AbBUvhxTBTq6nj8UQkV-2K2MUB-qc"
-GEMINI_API_KEY = "AQ.Ab8RN6IVwdhSNq1K1eZksq-W_UTtWCSsp-pJLaMYMC9-z4mGkg"
+GEMINI_API_KEY = "AQ.Ab8RN6Lb9-pprFdQWR8jhKkRc8IZItoNYxdj3TwoGicWHT_9A"
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -90,19 +93,47 @@ Panduan Jawapan:
 
 def query_gemini_ai(user_question: str) -> str:
     clean_key = GEMINI_API_KEY.strip()
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+    
+    headers = {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': clean_key
+    }
+    
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": f"{AI_SYSTEM_PROMPT}\n\nSoalan daripada ahli kesatuan: {user_question}"}
+                ]
+            }
+        ],
+        "generationConfig": {
+            "temperature": 0.3,
+            "maxOutputTokens": 800
+        }
+    }
+    
     try:
-        from google import genai
-        client = genai.Client(api_key=clean_key)
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=f"{AI_SYSTEM_PROMPT}\n\nSoalan daripada ahli kesatuan: {user_question}"
-        )
-        if response and response.text:
-            return response.text
-        return "Maaf, jawapan tidak dapat dihasilkan."
+        encoded_data = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(url, data=encoded_data, headers=headers, method='POST')
+        
+        with urllib.request.urlopen(req, timeout=25) as response:
+            result = json.loads(response.read().decode('utf-8'))
+            candidates = result.get("candidates", [])
+            if candidates:
+                parts = candidates[0].get("content", {}).get("parts", [])
+                if parts:
+                    return parts[0].get("text", "Tiada jawapan dijana.")
+            return "Maaf, jawapan tidak dapat dihasilkan."
+            
+    except urllib.error.HTTPError as e:
+        raw_err = e.read().decode('utf-8', errors='ignore')
+        logging.error(f"Gemini API HTTPError {e.code}: {raw_err}")
+        return f"⚠️ Ralat Sambungan AI (HTTP {e.code}): {raw_err[:150]}"
     except Exception as e:
-        logging.error(f"GenAI SDK Error: {e}")
-        return f"⚠️ Ralat AI: {str(e)[:160]}"
+        logging.error(f"Gemini General Error: {e}")
+        return f"⚠️ Ralat Sistem: {str(e)}"
 
 # ==================== KEYBOARDS MENU V1 ====================
 

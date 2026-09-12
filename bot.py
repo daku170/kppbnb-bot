@@ -20,9 +20,8 @@ from telegram.ext import (
 BOT_TOKEN = "8938997589:AAHac3AbBUvhxTBTq6nj8UQkV-2K2MUB-qc"
 GROQ_API_KEY = "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"
 
-# Telegram Chat ID Admin (En. Khairul Faiz)
-# Bila dah dapat ID Group (cth: "-1002345678901"), gantikan nombor di bawah ini
-ADMIN_CHAT_ID = "33746692"
+# ID Rasmi GROUP ADUAN KPPbNB
+ADMIN_CHAT_ID = "-1003958495436"
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -74,51 +73,51 @@ Pimpinan Utama Kesatuan KPPbNB:
 - Bendahari Kesatuan: En. KHAIRUL FAIZ BIN RAMIZAN (Emel: khairulfaiz@bernas.com.my)
 - Alamat Pejabat Kesatuan: No 2190 KM20 Jalan Kodiang, 06000 Jitra, Kedah Darul Aman.
 
-Rujukan Terperinci CA-7 BERNAS (2026-2028):
-1. Waktu Bekerja (Artikel 29):
-   - Bukan Syif: Purata 39 jam seminggu.
-     * Hari Bekerja Isnin - Jumaat (Ibu Pejabat & Luar Ibu Pejabat): 8.30 pagi - 5.30 petang (Waktu makan: 1.00 - 2.00 petang; Jumaat: 12.30 tengah hari - 2.30 petang).
-     * Hari Bekerja Ahad - Khamis (Zon A): Ahad - Rabu 8.00 pagi - 5.00 petang; Khamis 8.00 pagi - 4.00 petang (Waktu makan: 1.00 - 2.00 petang).
-   - Kerja Syif: Purata 42 jam seminggu.
-     * 2 Syif (12 jam/syif): Syif Pertama (8.00 pagi - 8.00 malam), Syif Kedua (8.00 malam - 8.00 pagi).
-     * 3 Syif (8 jam/syif): Syif Pertama (8.00 pagi - 4.00 petang), Syif Kedua (4.00 petang - 12.00 tengah malam), Syif Ketiga (12.00 tengah malam - 8.00 pagi).
-     * Waktu Rehat Syif: Tambahan 30 minit rehat diberi bagi setiap 5 jam kerja berterusan jika OT dijadualkan.
-     * Notis Pertukaran Jadual: Dimaklumkan sekurang-kurangnya 3 hari sebelum tarikh berkuat kuasa.
+Takrifan Jadual Hari Mengikut Zon di BERNAS (Artikel 29 & 64.3):
+1. Zon A (Kedah, Kelantan, Terengganu, Johor):
+   - Hari Bekerja Biasa: Ahad hingga Khamis (8.00 pagi - 5.00 ptg; Khamis hingga 4.00 ptg).
+   - Off Day: Jumaat.
+   - Rest Day: Sabtu.
+2. Zon B (Pulau Pinang, Perak, Selangor, KL, Pahang, Melaka, N. Sembilan):
+   - Hari Bekerja Biasa: Isnin hingga Jumaat (8.30 pagi - 5.30 ptg).
+   - Off Day: Sabtu.
+   - Rest Day: Ahad.
+3. Pekerja Syif:
+   - Hari Biasa, Off Day dan Rest Day ditentukan mengikut jadual giliran roaster rasmi kompleks.
 
-2. Kerja Lebih Masa & Bayaran (Artikel 30 & 31):
-   - Artikel 30: Dilakukan atas permintaan majikan dengan persetujuan pekerja (tidak boleh tolak tanpa alasan munasabah).
-   - Had Masa: Maksimum 104 jam sebulan (tidak termasuk kerja hari rehat & cuti umum).
-   - Kiraan Lebih Masa (Gred T & Gred S [Gaji Bawah RM4,000]):
-     * Formula: (Gaji / 26) × Kadar × (Jam OT / Jam Kerja Normal)
-     * Kadar: Hari Biasa & Off Day (1.5x), Rest Day (2.0x), Cuti Kelepasan Am (3.0x).
-   - Cuti Gantian (Artikel 31.5): Terpakai untuk Gred T dan Gred S sebagai ganti bayaran tunai.
-     * 6 - 8 jam = 1 hari cuti gantian.
-     * 4 - 5 jam = 1/2 hari cuti gantian.
-     * Boleh dikumpul dalam tempoh 6 bulan pada tahun berkenaan.
+Ketetapan Kerja Lebih Masa & Cuti Gantian (Artikel 29 & 31 CA-7):
+- Waktu Bekerja (Art 29): 39 jam seminggu (bukan syif), 42 jam seminggu (syif).
+- Kiraan Lebih Masa (Gred T & Gred S [Gaji Bawah RM4,000]):
+  * Formula: (Gaji / 26) × Kadar × (Jam OT / Jam Kerja Normal)
+  * Kadar: Hari Biasa & Off Day (1.5x), Rest Day (2.0x), Cuti Kelepasan Am (3.0x).
+- Cuti Gantian (Artikel 31.5): Terpakai untuk Gred T dan Gred S sebagai ganti bayaran tunai.
+  * 6 - 8 jam = 1 hari cuti gantian.
+  * 4 - 5 jam = 1/2 hari cuti gantian.
+  * Boleh dikumpul dalam tempoh 6 bulan pada tahun berkenaan.
 
-3. Elaun Makan Lebih Masa Gaji ≥ RM4,000 (Artikel 64.3):
-   - Terpakai bagi pekerja bergaji RM4,000 ke atas yang tidak layak bayaran lebih masa.
-   - Hari Bekerja Biasa (Zon A: Ahad-Khamis | Zon B: Isnin-Jumaat):
-     * 2 hingga 5 jam: RM25.00
-     * Melebihi 5 jam: RM50.00
-   - Hari Rehat, Off Day & Cuti Am (Zon A: Jumaat & Sabtu | Zon B: Sabtu & Ahad | PH):
-     * Pilihan: Cuti Gantian ATAU Elaun Makan.
-     * 4 hingga 8 jam: RM25.00 atau 1/2 hari cuti gantian.
-     * Melebihi 8 jam: RM50.00 atau 1 hari cuti gantian.
+Ketetapan Artikel 64.3 (Elaun Makan Lebih Masa Gaji ≥ RM4,000):
+- Terpakai bagi pekerja bergaji RM4,000 ke atas yang tidak layak bayaran lebih masa.
+- Hari Bekerja Biasa (Zon A: Ahad-Khamis | Zon B: Isnin-Jumaat):
+  * 2 hingga 5 jam: RM25.00
+  * Melebihi 5 jam: RM50.00
+- Hari Rehat, Off Day & Cuti Am (Zon A: Jumaat & Sabtu | Zon B: Sabtu & Ahad | PH):
+  * Pilihan: Cuti Gantian ATAU Elaun Makan.
+  * 4 hingga 8 jam: RM25.00 atau 1/2 hari cuti gantian.
+  * Melebihi 8 jam: RM50.00 atau 1 hari cuti gantian.
 
-4. Struktur Gred & Tangga Gaji (Lampiran I):
-   - Gred T (Teknikal): T1 (RM1,700 - RM2,800) hingga T5 (RM3,000 - RM6,300).
-   - Gred S (Sokongan): S1 (RM1,700 - RM2,800) hingga S5 (RM2,800 - RM5,400).
+Struktur Gred & Tangga Gaji (Lampiran I):
+- Gred T (Teknikal): T1 (RM1,700 - RM2,800) hingga T5 (RM3,000 - RM6,300).
+- Gred S (Sokongan): S1 (RM1,700 - RM2,800) hingga S5 (RM2,800 - RM5,400).
 
-5. Cuti & Faedah Lain:
-   - Cuti Tahunan (Art 44): <2 thn (18 hari), 2-5 thn (22 hari), >5 thn (24 hari).
-   - Cuti Haji/Umrah (Art 55): 54 hari bergaji penuh sekali sepanjang perkhidmatan.
-   - Cuti Bersalin (Art 49): 98 hari bergaji penuh. Pilihan tambahan 90 hari cuti tanpa gaji menjaga anak.
-   - Cuti Paterniti (Art 52): 7 hari (khidmat >1 thn) / 3 hari (<1 thn).
-   - Cuti Sakit (Art 47): 22 hari klinik, 60 hari hospital.
-   - Sumbangan Beras (Art 67): 2 kampit (10kg) sebulan.
-   - Insurans Kematian/Hilang Upaya (Art 40): 36 bulan gaji terakhir (GTL & GPA).
-   - Elaun Perjalanan (Art 63): Kereta RM0.75/km, Motor RM0.50/km. Elaun Makan Luar Stesen: RM115/hari (Art 64.1).
+Cuti & Faedah Lain:
+- Cuti Tahunan (Art 44): <2 thn (18 hari), 2-5 thn (22 hari), >5 thn (24 hari).
+- Cuti Haji/Umrah (Art 55): 54 hari bergaji penuh sekali sepanjang perkhidmatan.
+- Cuti Bersalin (Art 49): 98 hari bergaji penuh. Pilihan tambahan 90 hari cuti tanpa gaji menjaga anak.
+- Cuti Paterniti (Art 52): 7 hari (khidmat >1 thn) / 3 hari (<1 thn).
+- Cuti Sakit (Art 47): 22 hari klinik, 60 hari hospital.
+- Sumbangan Beras (Art 67): 2 kampit (10kg) sebulan.
+- Insurans Kematian/Hilang Upaya (Art 40): 36 bulan gaji terakhir (GTL & GPA).
+- Elaun Perjalanan (Art 63): Kereta RM0.75/km, Motor RM0.50/km. Elaun Makan Luar Stesen: RM115/hari (Art 64.1).
 
 Panduan Jawapan:
 - Berikan jawapan dalam Bahasa Melayu yang tersusun rapi dan jelas mengikut zon jika berkaitan.
@@ -805,7 +804,7 @@ async def calc_mileage_km_received(update: Update, context: ContextTypes.DEFAULT
     await update.message.reply_text(res, parse_mode='Markdown', reply_markup=get_back_button())
     return ConversationHandler.END
 
-# ==================== 4. MODUL LAPORAN / ADUAN ====================
+# ==================== 4. MODUL LAPORAN / ADUAN (NOTIFIKASI GROUP AKTIF) ====================
 
 async def start_aduan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -858,14 +857,14 @@ async def aduan_desc_received(update: Update, context: ContextTypes.DEFAULT_TYPE
         f"📋 *No. Laporan:* `{tiket_no}`\n"
         f"📁 *Kategori:* {cat}\n"
         f"📅 *Tarikh:* {masa_lapor}\n"
-        "Status: 🟡 *Menunggu Semakan AJK Kesatuan*\n"
+        "Status: 🟡 *Menunggu Tindakan AJK Kesatuan*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        "Notifikasi rasmi telah dihantar kepada Bendahari Kesatuan. Sila simpan No. Laporan untuk rujukan tatacara kilanan Artikel 15 CA-7."
+        "Notifikasi rasmi telah dihantar ke Bilik Gerakan Aduan AJK Kesatuan. Sila simpan No. Laporan untuk rujukan tatacara kilanan Artikel 15 CA-7."
     )
     await update.message.reply_text(res, parse_mode='Markdown', reply_markup=get_back_button())
 
-    # 2. Hantar notifikasi terus ke Telegram En. Khairul Faiz (33746692)
-    notis_admin = (
+    # 2. Hantar notifikasi rasmi terus ke GROUP ADUAN KPPbNB (-1003958495436)
+    notis_group = (
         "🚨 *NOTIFIKASI ADUAN BARU MASUK (KPPbNB)*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
         f"📋 *No. Tiket:* `{tiket_no}`\n"
@@ -875,38 +874,19 @@ async def aduan_desc_received(update: Update, context: ContextTypes.DEFAULT_TYPE
         f"📅 *Masa:* {masa_lapor}\n\n"
         f"📝 *Butiran Aduan:*\n_{desc}_\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        "📌 *Tindakan:* Sila rujuk Prosedur Kilanan Artikel 15 CA-7 untuk siasatan lanjut."
+        "📌 *Tindakan Pimpinan:* Sila rujuk Prosedur Kilanan Artikel 15 CA-7 untuk siasatan dan penyelesaian."
     )
     
     try:
         await context.bot.send_message(
             chat_id=ADMIN_CHAT_ID,
-            text=notis_admin,
+            text=notis_group,
             parse_mode='Markdown'
         )
     except Exception as err:
-        logging.error(f"Gagal hantar notis ke admin ({ADMIN_CHAT_ID}): {err}")
+        logging.error(f"Gagal hantar notis ke group ({ADMIN_CHAT_ID}): {err}")
 
     return ConversationHandler.END
-
-# ==================== PENGESAN ID GROUP AUTOMATIK ====================
-
-async def group_id_tracker(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Jika mesej datang dari mana-mana Group atau Supergroup
-    if update.effective_chat and update.effective_chat.type in ['group', 'supergroup']:
-        group_id = update.effective_chat.id
-        group_title = update.effective_chat.title
-        logging.info(f"==> GROUP DETECTED! Nama Group: '{group_title}', ID Group: {group_id}")
-        
-        # Hantar terus mesej ke telefon Faiz supaya tak payah cari-cari lagi
-        try:
-            await context.bot.send_message(
-                chat_id="33746692",
-                text=f"📢 *ID GROUP DIKESAN!*\n\nNama Group: *{group_title}*\nID Group: `{group_id}`\n\n_Salin nombor ID di atas untuk dimasukkan ke ADMIN_CHAT_ID!_",
-                parse_mode='Markdown'
-            )
-        except Exception:
-            pass
 
 # ==================== 5-8. MODUL-MODUL LAIN ====================
 
@@ -1055,10 +1035,6 @@ async def async_main():
     app.add_handler(CallbackQueryHandler(handle_kiraan_menu, pattern='^menu_kiraan$'))
     app.add_handler(CallbackQueryHandler(handle_other_menus, pattern='^(menu_hebahan|menu_dokumen|menu_profil|menu_hubungi)$'))
     
-    # Pengesan ID Group Automatik
-    app.add_handler(MessageHandler(filters.ChatType.GROUPS, group_id_tracker))
-    
-    # Pengendali chat peribadi AI
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_ai_chat))
     
     async with app:

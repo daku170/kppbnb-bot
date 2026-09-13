@@ -23,6 +23,9 @@ GROQ_API_KEY = "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"
 # ID Rasmi GROUP ADUAN KPPbNB
 ADMIN_CHAT_ID = -1003958495436
 
+# Pautan Folder Google Drive Rasmi KPPbNB
+DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/1R7PB93gHWmL9Y6DtZ4BJXAcsiXYhPbah?usp=drive_link"
+
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -225,7 +228,7 @@ def get_elaun_4k_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard)
 
-# Keyboard Menu Dokumen
+# Keyboard Menu Dokumen (Pautan Terus ke Google Drive)
 def get_dokumen_main_keyboard():
     keyboard = [
         [InlineKeyboardButton("📑 Arkib Perjanjian Bersama (CA 1 - CA 7)", callback_data='doc_menu_ca')],
@@ -237,29 +240,21 @@ def get_dokumen_main_keyboard():
 
 def get_dokumen_ca_keyboard():
     keyboard = [
-        [InlineKeyboardButton("📘 Buku CA-7 (2026-2028)", callback_data='dl_ca7'),
-         InlineKeyboardButton("📗 Buku CA-6", callback_data='dl_ca6')],
-        [InlineKeyboardButton("📙 Buku CA-5", callback_data='dl_ca5'),
-         InlineKeyboardButton("📕 Buku CA-4", callback_data='dl_ca4')],
-        [InlineKeyboardButton("📒 Buku CA-3", callback_data='dl_ca3'),
-         InlineKeyboardButton("📓 Buku CA-2", callback_data='dl_ca2')],
-        [InlineKeyboardButton("📔 Buku CA-1", callback_data='dl_ca1')],
+        [InlineKeyboardButton("📂 Buka Folder Arkib CA (1 - 7)", url=DRIVE_FOLDER_URL)],
         [InlineKeyboardButton("🔙 Kembali", callback_data='menu_dokumen')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
 def get_dokumen_borang_keyboard():
     keyboard = [
-        [InlineKeyboardButton("📄 Borang Kilanan Rasmi (Lampiran II)", callback_data='dl_borang_kilanan')],
-        [InlineKeyboardButton("🏥 Borang Kebajikan Wad (3H 2M)", callback_data='dl_borang_wad')],
-        [InlineKeyboardButton("🤝 Borang Khairat Kematian (Art 50)", callback_data='dl_borang_khairat')],
+        [InlineKeyboardButton("📂 Buka Folder Borang Rasmi", url=DRIVE_FOLDER_URL)],
         [InlineKeyboardButton("🔙 Kembali", callback_data='menu_dokumen')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
 def get_dokumen_akta_keyboard():
     keyboard = [
-        [InlineKeyboardButton("📜 Akta Kerja 1955 (Pindaan 2022)", callback_data='dl_akta_kerja')],
+        [InlineKeyboardButton("📂 Buka Folder Akta & Rujukan", url=DRIVE_FOLDER_URL)],
         [InlineKeyboardButton("📘 Portal / Buku Tatatertib PNC", url="https://portal.bernas.com.my")],
         [InlineKeyboardButton("🔙 Kembali", callback_data='menu_dokumen')]
     ]
@@ -891,7 +886,7 @@ async def aduan_desc_received(update: Update, context: ContextTypes.DEFAULT_TYPE
     tiket_no = f"KPPbNB-{tahun}-00{no_siri}"
     masa_lapor = datetime.now().strftime('%d/%m/%Y %H:%M')
 
-    # 1. Hantar pengesahan kepada ahli (mesej dikemas kini)
+    # 1. Hantar pengesahan kepada ahli
     res = (
         "✅ *LAPORAN BERJAYA DIHANTAR!*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
@@ -930,47 +925,6 @@ async def aduan_desc_received(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     return ConversationHandler.END
 
-# ==================== 6. MODUL PUSAT DOKUMEN & MUAT TURUN ====================
-
-DOC_MAP = {
-    'dl_ca7': ("Buku_CA7_BERNAS.pdf", "📘 *Perjanjian Bersama Ke-7 (CA-7: 2026-2028)*\nMahkamah Perusahaan No: 923"),
-    'dl_ca6': ("Buku_CA6_BERNAS.pdf", "📗 *Perjanjian Bersama Ke-6 (CA-6)*"),
-    'dl_ca5': ("Buku_CA5_BERNAS.pdf", "📙 *Perjanjian Bersama Ke-5 (CA-5)*"),
-    'dl_ca4': ("Buku_CA4_BERNAS.pdf", "📕 *Perjanjian Bersama Ke-4 (CA-4)*"),
-    'dl_ca3': ("Buku_CA3_BERNAS.pdf", "📒 *Perjanjian Bersama Ke-3 (CA-3)*"),
-    'dl_ca2': ("Buku_CA2_BERNAS.pdf", "📓 *Perjanjian Bersama Ke-2 (CA-2)*"),
-    'dl_ca1': ("Buku_CA1_BERNAS.pdf", "📔 *Perjanjian Bersama Ke-1 (CA-1)*"),
-    'dl_borang_kilanan': ("Borang_Kilanan_Lampiran_II.pdf", "📄 *Borang Kilanan Pekerja (Lampiran II CA-7)*"),
-    'dl_borang_wad': ("Borang_Sumbangan_Wad_3H2M.pdf", "🏥 *Borang Permohonan Sumbangan Kebajikan Masuk Wad (3 Hari 2 Malam)*"),
-    'dl_borang_khairat': ("Borang_Khairat_Kematian.pdf", "🤝 *Borang Tuntutan Bantuan Khairat Kematian (Artikel 50 CA-7)*"),
-    'dl_akta_kerja': ("Akta_Kerja_1955_Pindaan_2022.pdf", "📜 *Akta Kerja 1955 (Pindaan 2022)*"),
-}
-
-async def handle_download(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    data = query.data
-
-    if data in DOC_MAP:
-        filename, title = DOC_MAP[data]
-        file_path = os.path.join("dokumen", filename)
-
-        if os.path.exists(file_path):
-            await query.message.reply_document(
-                document=open(file_path, 'rb'),
-                filename=filename,
-                caption=f"✅ Berjaya memuat turun:\n{title}"
-            )
-        else:
-            msg = (
-                f"📥 *SALINAN DOKUMEN DIPERLUKAN*\n"
-                f"━━━━━━━━━━━━━━━━━━━━\n"
-                f"{title}\n\n"
-                f"📂 _Status Fail:_ `dokumen/{filename}` sedang disediakan oleh pentadbir sistem.\n"
-                f"Sila hubungi Setiausaha Agung (Pn. Farah Aqilah) atau Bendahari (En. Khairul Faiz) untuk salinan bercetak / e-dokumen segera."
-            )
-            await query.message.reply_text(msg, parse_mode='Markdown', reply_markup=get_back_button())
-
 # ==================== 5, 7, 8. MODUL-MODUL LAIN ====================
 
 async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -982,7 +936,7 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
         text = (
             "📚 *6. PUSAT DOKUMEN & MUAT TURUN KESATUAN*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "Sila pilih kategori dokumen atau borang rasmi di bawah untuk dimuat turun terus ke peranti anda:"
+            "Sila pilih kategori dokumen atau borang rasmi di bawah untuk diakses melalui Google Drive rasmi KPPbNB:"
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_dokumen_main_keyboard())
 
@@ -990,7 +944,7 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
         text = (
             "📑 *ARKIB BUKU PERJANJIAN BERSAMA (CA 1 - CA 7)*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "Pilih naskhah Perjanjian Bersama BERNAS & Kesatuan untuk dimuat turun:"
+            "Klik butang di bawah untuk membuka folder simpanan naskhah Perjanjian Bersama:"
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_dokumen_ca_keyboard())
 
@@ -998,7 +952,7 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
         text = (
             "📝 *BORANG-BORANG RASMI KESATUAN*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "Pilih borang permohonan atau tuntutan di bawah:"
+            "Klik butang di bawah untuk memuat turun borang permohonan atau tuntutan:"
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_dokumen_borang_keyboard())
 
@@ -1006,7 +960,7 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
         text = (
             "⚖️ *AKTA PERBURUHAN & PERATURAN SYARIKAT*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "Rujukan undang-undang statutori dan polisi disiplin:"
+            "Rujukan undang-undang statutori dan polisi disiplin syarikat:"
         )
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_dokumen_akta_keyboard())
 
@@ -1134,8 +1088,7 @@ async def async_main():
     app.add_handler(CallbackQueryHandler(handle_akta, pattern='^(menu_akta|akta_)'))
     app.add_handler(CallbackQueryHandler(handle_ca, pattern='^(menu_ca|ca_|art64_)'))
     app.add_handler(CallbackQueryHandler(handle_kiraan_menu, pattern='^menu_kiraan$'))
-    app.add_handler(CallbackQueryHandler(handle_other_menus, pattern='^(menu_hebahan|menu_dokumen|doc_menu_|menu_profil|menu_hubungi)$'))
-    app.add_handler(CallbackQueryHandler(handle_download, pattern='^dl_'))
+    app.add_handler(CallbackQueryHandler(handle_other_notes := handle_other_menus, pattern='^(menu_hebahan|menu_dokumen|doc_menu_|menu_profil|menu_hubungi)$'))
     
     # Pengendali chat peribadi AI
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_ai_chat))

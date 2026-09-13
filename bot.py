@@ -20,7 +20,7 @@ from telegram.ext import (
 BOT_TOKEN = "8938997589:AAHac3AbBUvhxTBTq6nj8UQkV-2K2MUB-qc"
 GROQ_API_KEY = "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"
 
-# ID Rasmi GROUP ADUAN KPPbNB (Pastikan tepat)
+# ID Rasmi GROUP ADUAN KPPbNB
 ADMIN_CHAT_ID = -1003958495436
 
 logging.basicConfig(
@@ -122,6 +122,7 @@ Cuti & Faedah Lain:
 Panduan Jawapan:
 - Berikan jawapan dalam Bahasa Melayu yang tersusun rapi dan jelas mengikut zon jika berkaitan.
 - Nyatakan nombor artikel CA-7 atau seksyen akta yang berkaitan.
+- PENTING: Jika soalan yang dikemukakan di luar bidang maklumat di atas, terlampau khusus, atau anda tidak pasti jawapannya mengikut CA-7, jangan reka jawapan. Sila jawab dengan jelas: "Maaf, maklumat terperinci mengenai perkara ini tiada dalam rekod saya. Sila rujuk dengan Exco atau barisan pimpinan kesatuan untuk kepastian lanjut."
 """
 
 def query_groq_ai(user_question: str) -> str:
@@ -844,7 +845,7 @@ async def calc_mileage_km_received(update: Update, context: ContextTypes.DEFAULT
     await update.message.reply_text(res, parse_mode='Markdown', reply_markup=get_back_button())
     return ConversationHandler.END
 
-# ==================== 4. MODUL LAPORAN / ADUAN (DIPAKSA HANTAR KE GRUP) ====================
+# ==================== 4. MODUL LAPORAN / ADUAN ====================
 
 async def start_aduan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -890,7 +891,7 @@ async def aduan_desc_received(update: Update, context: ContextTypes.DEFAULT_TYPE
     tiket_no = f"KPPbNB-{tahun}-00{no_siri}"
     masa_lapor = datetime.now().strftime('%d/%m/%Y %H:%M')
 
-    # 1. Hantar pengesahan kepada ahli di chat peribadi
+    # 1. Hantar pengesahan kepada ahli (mesej dikemas kini)
     res = (
         "✅ *LAPORAN BERJAYA DIHANTAR!*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
@@ -899,7 +900,7 @@ async def aduan_desc_received(update: Update, context: ContextTypes.DEFAULT_TYPE
         f"📅 *Tarikh:* {masa_lapor}\n"
         "Status: 🟡 *Menunggu Tindakan AJK Kesatuan*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        "Notifikasi rasmi telah dihantar ke Bilik Gerakan Aduan AJK Kesatuan. Sila simpan No. Laporan untuk rujukan tatacara kilanan Artikel 15 CA-7."
+        "Notifikasi rasmi telah diterima, Exco Kesatuan akan hubungi anda semula terima kasih."
     )
     await update.message.reply_text(res, parse_mode='Markdown', reply_markup=get_back_button())
 
@@ -1132,7 +1133,7 @@ async def async_main():
     app.add_handler(CallbackQueryHandler(start, pattern='^menu_utama$'))
     app.add_handler(CallbackQueryHandler(handle_akta, pattern='^(menu_akta|akta_)'))
     app.add_handler(CallbackQueryHandler(handle_ca, pattern='^(menu_ca|ca_|art64_)'))
-    app.add_handler(CallbackLogHandler := CallbackQueryHandler(handle_kiraan_menu, pattern='^menu_kiraan$'))
+    app.add_handler(CallbackQueryHandler(handle_kiraan_menu, pattern='^menu_kiraan$'))
     app.add_handler(CallbackQueryHandler(handle_other_menus, pattern='^(menu_hebahan|menu_dokumen|doc_menu_|menu_profil|menu_hubungi)$'))
     app.add_handler(CallbackQueryHandler(handle_download, pattern='^dl_'))
     

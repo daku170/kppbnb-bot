@@ -20,8 +20,8 @@ from telegram.ext import (
 BOT_TOKEN = "8938997589:AAHac3AbBUvhxTBTq6nj8UQkV-2K2MUB-qc"
 GROQ_API_KEY = "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"
 
-# ID Rasmi GROUP ADUAN KPPbNB
-ADMIN_CHAT_ID = "-1003958495436"
+# ID Rasmi GROUP ADUAN KPPbNB (Pastikan tepat)
+ADMIN_CHAT_ID = -1003958495436
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -844,7 +844,7 @@ async def calc_mileage_km_received(update: Update, context: ContextTypes.DEFAULT
     await update.message.reply_text(res, parse_mode='Markdown', reply_markup=get_back_button())
     return ConversationHandler.END
 
-# ==================== 4. MODUL LAPORAN / ADUAN ====================
+# ==================== 4. MODUL LAPORAN / ADUAN (DIPAKSA HANTAR KE GRUP) ====================
 
 async def start_aduan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -890,7 +890,7 @@ async def aduan_desc_received(update: Update, context: ContextTypes.DEFAULT_TYPE
     tiket_no = f"KPPbNB-{tahun}-00{no_siri}"
     masa_lapor = datetime.now().strftime('%d/%m/%Y %H:%M')
 
-    # 1. Hantar pengesahan kepada ahli
+    # 1. Hantar pengesahan kepada ahli di chat peribadi
     res = (
         "✅ *LAPORAN BERJAYA DIHANTAR!*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
@@ -903,7 +903,7 @@ async def aduan_desc_received(update: Update, context: ContextTypes.DEFAULT_TYPE
     )
     await update.message.reply_text(res, parse_mode='Markdown', reply_markup=get_back_button())
 
-    # 2. Hantar notifikasi rasmi terus ke GROUP ADUAN KPPbNB (-1003958495436)
+    # 2. Hantar notifikasi rasmi secara mutlak ke GROUP ADUAN KPPbNB (-1003958495436)
     notis_group = (
         "🚨 *NOTIFIKASI ADUAN BARU MASUK (KPPbNB)*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
@@ -923,8 +923,9 @@ async def aduan_desc_received(update: Update, context: ContextTypes.DEFAULT_TYPE
             text=notis_group,
             parse_mode='Markdown'
         )
+        logging.info(f"Berjaya hantar aduan {tiket_no} ke group ADMIN_CHAT_ID")
     except Exception as err:
-        logging.error(f"Gagal hantar notis ke group ({ADMIN_CHAT_ID}): {err}")
+        logging.error(f"GAGAL hantar notis ke group ({ADMIN_CHAT_ID}): {err}")
 
     return ConversationHandler.END
 
@@ -1131,7 +1132,7 @@ async def async_main():
     app.add_handler(CallbackQueryHandler(start, pattern='^menu_utama$'))
     app.add_handler(CallbackQueryHandler(handle_akta, pattern='^(menu_akta|akta_)'))
     app.add_handler(CallbackQueryHandler(handle_ca, pattern='^(menu_ca|ca_|art64_)'))
-    app.add_handler(CallbackQueryHandler(handle_kiraan_menu, pattern='^menu_kiraan$'))
+    app.add_handler(CallbackLogHandler := CallbackQueryHandler(handle_kiraan_menu, pattern='^menu_kiraan$'))
     app.add_handler(CallbackQueryHandler(handle_other_menus, pattern='^(menu_hebahan|menu_dokumen|doc_menu_|menu_profil|menu_hubungi)$'))
     app.add_handler(CallbackQueryHandler(handle_download, pattern='^dl_'))
     

@@ -118,15 +118,16 @@ def get_akta_keyboard():
 
 def get_ca_keyboard():
     keyboard = [
-        [InlineKeyboardButton("💰 Gaji, Bonus & Pelarasan", callback_data='ca_gaji'),
-         InlineKeyboardButton("⏰ Waktu Bekerja (Art 29)", callback_data='ca_waktu_kerja')],
-        [InlineKeyboardButton("🧮 Kerja Lebih Masa (Art 30 & 31)", callback_data='ca_ot')],
-        [InlineKeyboardButton("🍱 Elaun Makan Gaji ≥RM4k (Art 64.3)", callback_data='ca_elaun_4k_menu')],
-        [InlineKeyboardButton("🏖️ Cuti Tahunan, Haji & Ehsan", callback_data='ca_cuti'),
-         InlineKeyboardButton("🚗 Perbatuan (Mileage) & Elaun", callback_data='ca_elaun')],
-        [InlineKeyboardButton("🏥 Faedah Rawatan & Hospital", callback_data='ca_perubatan'),
-         InlineKeyboardButton("👨‍👩‍👧 Kebajikan & Beras", callback_data='ca_kebajikan')],
-        [InlineKeyboardButton("📊 Struktur Tangga Gaji (T & S)", callback_data='ca_gred')],
+        [InlineKeyboardButton("💰 Gaji & Kenaikan Gaji", callback_data='ca_gaji'),
+         InlineKeyboardButton("⏰ Waktu Kerja & OT", callback_data='ca_waktu_ot')],
+        [InlineKeyboardButton("🏖️ Cuti", callback_data='ca_cuti'),
+         InlineKeyboardButton("🏥 Perubatan", callback_data='ca_perubatan')],
+        [InlineKeyboardButton("📈 Kenaikan Pangkat & Gred", callback_data='ca_pangkat'),
+         InlineKeyboardButton("🚫 Ketidakhadiran / AWOL", callback_data='ca_awol')],
+        [InlineKeyboardButton("⚖️ Disiplin", callback_data='ca_disiplin'),
+         InlineKeyboardButton("🚗 Elaun", callback_data='ca_elaun')],
+        [InlineKeyboardButton("🦺 Keselamatan & Kemalangan", callback_data='ca_keselamatan'),
+         InlineKeyboardButton("👥 Kesatuan", callback_data='ca_kesatuan')],
         [InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')]
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -426,41 +427,168 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data
 
     if data == 'menu_ca':
-        text = "📋 *2. PERJANJIAN BERSAMA KE-7 (CA-7)*\nPilih klausa perjanjian:"
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
-    elif data == 'ca_gaji':
-        text = "💰 *CA-7: GAJI & BONUS (ART 25 & 26)*\n• Kenaikan tahunan berdasarkan prestasi + Bonus 1 bulan gaji asas."
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
-    elif data == 'ca_waktu_kerja':
-        text = "⏰ *CA-7: WAKTU BEKERJA (ART 29)*\n• Bukan syif 39 jam | Syif 42 jam seminggu."
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
-    elif data == 'ca_ot':
-        text = "🧮 *CA-7: OT & CUTI GANTIAN (ART 30 & 31)*\n• Kelayakan Gred T & S bawah RM4,000."
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
-    elif data == 'ca_elaun_4k_menu':
-        text = "🍱 *CA-7: ELAUN MAKAN GAJI ≥ RM4,000*\nPilih zon anda:"
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_elaun_4k_keyboard())
-    elif data in ['art64_zona', 'art64_zonb', 'art64_syif']:
-        text = "🍱 *ARTIKEL 64.3: ELAUN MAKAN*\n• 2-5 jam: RM25 | >5 jam: RM50."
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
-    elif data == 'ca_cuti':
-        text = "🏖️ *CA-7: CUTI KHAS*\n• Haji: 54 hari | Bersalin: 98 hari | Paterniti: 7 hari."
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
-    elif data == 'ca_elaun':
-        text = "🚗 *CA-7: ELAUN*\n• Kereta: RM0.75/km | Motor: RM0.50/km | Luar Stesen: RM115/hari."
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
-    elif data == 'ca_perubatan':
-        text = "🏥 *CA-7: PERUBATAN*\n• Pesakit Luar: RM3,500 | Wad (2027): RM45,000/individu."
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
-    elif data == 'ca_kebajikan':
-        text = "👨‍👩‍👧 *CA-7: KEBAJIKAN*\n• Beras: 2 kampit (10kg)/bulan | Insurans: 36 bulan gaji."
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
-    elif data == 'ca_gred':
         text = (
-            "📊 *CA-7: STRUKTUR TANGGA GAJI (LAMPIRAN I)*\n"
+            "📋 *PERJANJIAN BERSAMA KE-7 (CA-7)*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "🔧 *Gred T (Teknikal):* T1 (RM1.7k-2.8k) hingga T5 (RM3.0k-6.3k)\n"
-            "💼 *Gred S (Sokongan):* S1 (RM1.7k-2.8k) hingga S5 (RM2.8k-5.4k)"
+            "📅 Berkuat kuasa: *1 Januari 2026 – 31 Disember 2028*\n\n"
+            "Rujukan ringkas perkara penting CA-7. Pilih topik di bawah:"
+        )
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+
+    elif data == 'ca_gaji':
+        text = (
+            "💰 *CA-7: GAJI & KENAIKAN GAJI*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "📌 *Artikel 25 – Kenaikan Gaji Tahunan*\n"
+            "• Pekerja yang telah disahkan layak dipertimbangkan untuk kenaikan pada 1 Januari.\n"
+            "• Kenaikan mengambil kira prestasi, prestasi kumpulan/syarikat, keupayaan kewangan dan faktor berkaitan.\n"
+            "• Prestasi *Memenuhi Jangkaan dan ke atas*: *3.5% + merit*.\n"
+            "• *Di Bawah Jangkaan / Tidak Memuaskan*: *2%*.\n"
+            "• Pekerja di gaji maksimum boleh dipertimbangkan EIP tertakluk prestasi; tidak kumulatif.\n\n"
+            "📌 *Artikel 26 – Bonus*\n"
+            "• Bonus kontraktual: *1 bulan gaji*.\n"
+            "• Tertakluk kepada syarat pengesahan, tempoh perkhidmatan dan status disiplin.\n\n"
+            "📌 *Artikel 74 – Semakan Gaji*\n"
+            "• Dokumen CA-7 menyatakan gaji bulanan ahli Kesatuan diselaraskan *lima peratus (4.5%)*. Wording ini dikekalkan seperti naskhah CA-7 untuk rujukan."
+        )
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+
+    elif data == 'ca_waktu_ot':
+        text = (
+            "⏰ *CA-7: WAKTU KERJA & KERJA LEBIH MASA*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "📌 *Artikel 29 – Waktu Bekerja*\n"
+            "• Pekerja bukan syif: purata *39 jam seminggu*.\n"
+            "• Pekerja syif: purata *42 jam seminggu*.\n"
+            "• Perubahan jadual waktu bekerja hendaklah, setakat yang praktik, dimaklumkan sekurang-kurangnya 3 hari sebelum berkuat kuasa.\n\n"
+            "📌 *Artikel 30 – Kerja Lebih Masa*\n"
+            "• OT dilakukan atas permintaan BERNAS dengan persetujuan pekerja.\n"
+            "• Pekerja tidak boleh menolak tanpa alasan munasabah.\n\n"
+            "📌 *Artikel 31 – Bayaran OT*\n"
+            "• Hari kerja biasa: *1.5 × kadar jam biasa*.\n"
+            "• Had OT: sehingga *104 jam sebulan* bagi bulan berkenaan, tidak termasuk OT hari rehat/cuti umum seperti diperuntukkan.\n"
+            "• OT boleh diganti cuti: *6–8 jam = 1 hari*; *4–5 jam = ½ hari*, tertakluk syarat CA-7."
+        )
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+
+    elif data == 'ca_cuti':
+        text = (
+            "🏖️ *CA-7: CUTI*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "📌 *Artikel 44 – Cuti Tahunan*\n"
+            "• <2 tahun: *18 hari*.\n"
+            "• 2–5 tahun: *22 hari*.\n"
+            "• >5 tahun: *24 hari*.\n\n"
+            "📌 *Artikel 47 – Cuti Sakit*\n"
+            "• Tanpa hospital: *22 hari setahun*.\n"
+            "• Hospital: *60 hari setahun*, tertakluk syarat CA-7.\n\n"
+            "📌 *Artikel 49 – Bersalin*: *98 hari berturut-turut* bergaji penuh, maksimum 5 kelahiran hidup.\n"
+            "📌 *Artikel 50 – Ehsan*: *3 hari bekerja* bagi kematian ahli keluarga yang ditetapkan; terdapat juga kelayakan menjaga/mengiringi tanggungan ke hospital.\n"
+            "📌 *Artikel 52 – Paterniti*: *7 hari berturut-turut* bergaji penuh bagi pekerja lelaki yang memenuhi syarat; 3 hari jika tempoh perkhidmatan kurang 1 tahun.\n"
+            "📌 *Artikel 55 – Haji/Umrah*: *54 hari berturut-turut* bergaji penuh, sekali sepanjang perkhidmatan, tertakluk syarat kelayakan."
+        )
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+
+    elif data == 'ca_perubatan':
+        text = (
+            "🏥 *CA-7: PERUBATAN*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "📌 *Artikel 58 – Tanggungan*\n"
+            "• Meliputi tanggungan yang ditetapkan seperti pasangan sah, anak dan kategori ibu/bapa/anak OKU tertakluk syarat CA-7.\n\n"
+            "📌 *Artikel 59 – Rawatan Pesakit Luar*\n"
+            "• Had tahunan: *RM3,500*.\n"
+            "• Termasuk peruntukan tertentu untuk pergigian/cermin mata bagi pekerja.\n"
+            "• Rawatan pakar lazimnya memerlukan rujukan panel.\n\n"
+            "📌 *Artikel 60 – Rawatan Hospital*\n"
+            "• Sehingga 31 Disember 2026: *RM35,000 setahun/individu*.\n"
+            "• Mulai 1 Januari 2027: *RM45,000 setahun/individu*.\n"
+            "• Bilik & makan: *RM150 sehari*.\n"
+            "• Lebihan daripada had ditanggung pekerja, tertakluk syarat CA-7."
+        )
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+
+    elif data == 'ca_pangkat':
+        text = (
+            "📈 *CA-7: KENAIKAN PANGKAT & GRED*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "📌 *Artikel 33 – Kenaikan Pangkat*\n"
+            "• Kekosongan boleh diisi melalui sumber yang sesuai.\n"
+            "• Keutamaan dasar ialah memberi peluang kepada pekerja BERNAS yang sesuai, berpengalaman dan berkebolehan.\n"
+            "• Kekosongan dalaman hendaklah dihebahkan kepada pekerja.\n"
+            "• Kenaikan pangkat boleh dipertimbangkan berdasarkan kecekapan, prestasi, tanggungjawab dan kekosongan yang diluluskan.\n"
+            "• Jika tiada calon dalaman yang sesuai, pengambilan luar boleh dibuat.\n\n"
+            "📌 *Nota:* Kelayakan sebenar tetap tertakluk kepada syarat jawatan, prosedur kenaikan pangkat dan kekosongan yang diluluskan."
+        )
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+
+    elif data == 'ca_awol':
+        text = (
+            "🚫 *CA-7: KETIDAKHADIRAN / AWOL*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "📌 *Artikel 28 – Ketidakhadiran*\n"
+            "• Ketidakhadiran lebih daripada *2 hari bekerja berturut-turut* tanpa kebenaran terlebih dahulu boleh dianggap sebagai pelanggaran.\n"
+            "• Pengecualian boleh dipertimbangkan jika pekerja mempunyai alasan munasabah dan telah memaklumkan atau cuba memaklumkan BERNAS seawal mungkin.\n"
+            "• Artikel ini merujuk kepada peruntukan *Seksyen 15(2) Akta Kerja 1955*.\n\n"
+            "⚠️ Jika berlaku masalah ketidakhadiran, simpan bukti komunikasi dan dokumen sokongan untuk rujukan Kesatuan/HR."
+        )
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+
+    elif data == 'ca_disiplin':
+        text = (
+            "⚖️ *CA-7: DISIPLIN*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "📌 *Artikel 73*\n"
+            "• Peraturan dan prosedur tatatertib BERNAS yang sedang digunakan terus terpakai kepada pekerja yang dikenakan tindakan disiplin.\n\n"
+            "📌 *Artikel 26 – Bonus*\n"
+            "• Status tindakan disiplin boleh memberi kesan kepada bayaran bonus mengikut syarat CA-7.\n\n"
+            "💡 *Jika menerima surat tunjuk sebab/tindakan disiplin:* simpan surat, bukti dan jawapan yang dihantar serta dapatkan pandangan Kesatuan sebelum membuat keputusan lanjut."
+        )
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+
+    elif data == 'ca_elaun':
+        text = (
+            "🚗 *CA-7: ELAUN*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "📌 *Artikel 62 – Pertukaran/Perpindahan*\n"
+            "• Elaun berkaitan perpindahan boleh dipertimbangkan berdasarkan tempoh, lokasi, tujuan dan kesan kepada keluarga, tertakluk syarat.\n\n"
+            "📌 *Artikel 63 – Perjalanan*\n"
+            "• BERNAS membayar elaun perjalanan bagi tugas rasmi menggunakan kenderaan sendiri, tertakluk kadar/syarat CA-7.\n\n"
+            "📌 *Artikel 64 – Makan*\n"
+            "• Kelayakan dan kadar bergantung kepada tempoh perjalanan, zon dan kategori pekerja seperti dinyatakan dalam CA-7.\n\n"
+            "📌 *Artikel 65 – Hotel*\n"
+            "• Tuntutan penginapan bagi tugas rasmi tertakluk kepada syarat dan had CA-7.\n\n"
+            "📌 *Artikel 71 – Chargeman*: *RM300 sebulan* bagi pekerja yang mempunyai sijil kelayakan Chargeman dan menjalankan tugas sebagai Chargeman.\n"
+            "📌 *Artikel 72 – Syif*: kadar elaun syif bergantung kepada waktu/jadual syif yang ditetapkan."
+        )
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+
+    elif data == 'ca_keselamatan':
+        text = (
+            "🦺 *CA-7: KESELAMATAN & KEMALANGAN*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "📌 *Artikel 42 – Kemalangan Pekerjaan*\n"
+            "• Pampasan kemalangan perusahaan adalah mengikut peruntukan dan kelulusan Akta Keselamatan Sosial Pekerja 1969.\n\n"
+            "📌 *Artikel 46 – Kemalangan Industri*\n"
+            "• Cuti sakit bergaji penuh boleh dipertimbangkan sehingga pulih bagi kemalangan industri yang bukan disebabkan kecuaian sendiri, tertakluk laporan doktor pakar dan syarat CA-7.\n\n"
+            "📌 *Artikel 69 – Jawatankuasa Keselamatan, Kesihatan Pekerjaan & Persekitaran*\n"
+            "• BERNAS hendaklah mewujudkan jawatankuasa sejajar dengan Akta Keselamatan dan Kesihatan Pekerjaan 1994.\n"
+            "• Jawatankuasa diwakili pihak BERNAS dan Kesatuan."
+        )
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+
+    elif data == 'ca_kesatuan':
+        text = (
+            "👥 *CA-7: KESATUAN*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "📌 *Artikel 11 – Pengiktirafan Kesatuan*\n"
+            "• Pekerja bukan eksekutif yang tidak dikecualikan di bawah CA-7 diiktiraf layak menjadi ahli Kesatuan.\n"
+            "• BERNAS mengiktiraf hak Kesatuan mewakili ahlinya dalam perkara berkaitan terma dan syarat perkhidmatan.\n\n"
+            "📌 *Artikel 23 – Yuran Kesatuan*\n"
+            "• Potongan yuran melalui gaji dilaksanakan tertakluk kepada syarat dan notis yang ditetapkan.\n"
+            "• Pengeluaran persetujuan potongan memerlukan *2 bulan notis bertulis*.\n\n"
+            "📌 *Artikel 21 – Cuti Tugas Kesatuan*\n"
+            "• Kemudahan berkaitan tugas Kesatuan adalah tertakluk kepada peruntukan CA-7 dan kelulusan yang ditetapkan.\n\n"
+            "📌 *Rujukan:* Jika berlaku pertikaian berkaitan tafsiran/pelaksanaan CA-7, rujuk Kesatuan untuk tindakan dan saluran yang bersesuaian."
         )
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
 

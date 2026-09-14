@@ -970,11 +970,18 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
         text = (
             "☎️ *HUBUNGI KESATUAN (KPPbNB)*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
+            "🤝 *Bro & Sis Kesatuan*\n\n"
             "🏛️ No 2190 KM20 Jalan Kodiang, 06000 Jitra, Kedah.\n\n"
-            "📌 *Pimpinan Utama:*\n"
-            "• Presiden: En. Syahibudil Assaufi\n"
-            "• Setiausaha Agung: Pn. Farah Aqilah\n"
-            "• Bendahari: En. Khairul Faiz"
+            "👤 *Bro Syahibudil Assaufi bin Abdul Kudus*\n"
+            "Presiden\n"
+            "📧 syahibudil@bernas.com.my\n\n"
+            "👩 *Sis Farah Aqilah binti Bardzan*\n"
+            "Setiausaha Agung\n"
+            "📧 aqilah@bernas.com.my\n\n"
+            "👤 *Bro Khairul Faiz bin Ramizan*\n"
+            "Bendahari\n"
+            "📧 khairulfaiz@bernas.com.my\n\n"
+            "📧 *Email Kesatuan:* kppbnb@gmail.com"
         )
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_back_button())
     elif data == 'menu_utama':

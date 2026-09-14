@@ -1124,7 +1124,7 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
         import urllib.request
         import urllib.error
 
-        model = os.environ.get("SAHABAT_MODEL", "gemini-2.5-flash")
+        model = os.environ.get("SAHABAT_MODEL", "gemini-3.6-flash")
         payload = json.dumps({
             "systemInstruction": {
                 "parts": [{"text": SAHABAT_SYSTEM_PROMPT}]

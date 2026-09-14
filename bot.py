@@ -124,6 +124,7 @@ def get_ca_keyboard():
          InlineKeyboardButton("🏥 Perubatan", callback_data='ca_perubatan')],
         [InlineKeyboardButton("📈 Kenaikan Pangkat & Gred", callback_data='ca_pangkat'),
          InlineKeyboardButton("🚫 Ketidakhadiran / AWOL", callback_data='ca_awol')],
+        [InlineKeyboardButton("📊 Struktur Tangga Gaji S & T", callback_data='ca_gred')],
         [InlineKeyboardButton("⚖️ Disiplin", callback_data='ca_disiplin'),
          InlineKeyboardButton("🚗 Elaun", callback_data='ca_elaun')],
         [InlineKeyboardButton("🦺 Keselamatan & Kemalangan", callback_data='ca_keselamatan'),
@@ -521,6 +522,26 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
 
+    elif data == 'ca_gred':
+        text = (
+            "📊 *CA-7: STRUKTUR TANGGA GAJI S & T*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "*🔷 KUMPULAN T — TEKNIKAL*\n"
+            "• *T1* – Juruteknik Rendah: RM1,700 – RM2,800\n"
+            "• *T2* – Juruteknik I / Pembantu Makmal I: RM1,900 – RM3,200\n"
+            "• *T3* – Juruteknik II / Penjaga Jentera I / Juru Dandang I / Pembantu Makmal II: RM2,100 – RM4,000\n"
+            "• *T4* – Juruteknik III / Penjaga Jentera II / Juru Dandang II / Penyelia Kejuruteraan I / Penyelia Operasi I / Penyelia Makmal I: RM2,600 – RM5,200\n"
+            "• *T5* – Penyelia Kejuruteraan II / Penyelia Operasi II / Penyelia Makmal II: RM3,000 – RM6,300\n\n"
+            "*🔶 KUMPULAN S — SOKONGAN*\n"
+            "• *S1* – Operator Pengeluaran / Pembantu Tadbir Rendah: RM1,700 – RM2,800\n"
+            "• *S2* – Pembantu Tadbir I / Pemandu I / Operator Ladang: RM1,900 – RM3,000\n"
+            "• *S3* – Pembantu Tadbir II / Pemandu II: RM2,100 – RM3,600\n"
+            "• *S4* – Penyelia I / Pembantu Tadbir III: RM2,400 – RM4,500\n"
+            "• *S5* – Penyelia II: RM2,800 – RM5,400\n\n"
+            "📌 *Nota:* Struktur di atas adalah berdasarkan jadual gred jawatan dalam CA-7. Kelayakan seseorang pekerja kepada gred/jawatan tertentu tetap tertakluk kepada syarat jawatan dan peruntukan CA-7."
+        )
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+
     elif data == 'ca_awol':
         text = (
             "🚫 *CA-7: KETIDAKHADIRAN / AWOL*\n"
@@ -547,18 +568,28 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif data == 'ca_elaun':
         text = (
-            "🚗 *CA-7: ELAUN*\n"
+            "🚗 *CA-7: ELAUN & TUNTUTAN*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Artikel 62 – Pertukaran/Perpindahan*\n"
-            "• Elaun berkaitan perpindahan boleh dipertimbangkan berdasarkan tempoh, lokasi, tujuan dan kesan kepada keluarga, tertakluk syarat.\n\n"
-            "📌 *Artikel 63 – Perjalanan*\n"
-            "• BERNAS membayar elaun perjalanan bagi tugas rasmi menggunakan kenderaan sendiri, tertakluk kadar/syarat CA-7.\n\n"
-            "📌 *Artikel 64 – Makan*\n"
-            "• Kelayakan dan kadar bergantung kepada tempoh perjalanan, zon dan kategori pekerja seperti dinyatakan dalam CA-7.\n\n"
-            "📌 *Artikel 65 – Hotel*\n"
-            "• Tuntutan penginapan bagi tugas rasmi tertakluk kepada syarat dan had CA-7.\n\n"
-            "📌 *Artikel 71 – Chargeman*: *RM300 sebulan* bagi pekerja yang mempunyai sijil kelayakan Chargeman dan menjalankan tugas sebagai Chargeman.\n"
-            "📌 *Artikel 72 – Syif*: kadar elaun syif bergantung kepada waktu/jadual syif yang ditetapkan."
+            "📌 *Artikel 62 – Penempatan Semula / Secondment*\n"
+            "• Elaun boleh dipertimbangkan berdasarkan tempoh, lokasi, tujuan dan kesan kepada pekerja/keluarga.\n"
+            "• Elaun makan: berdasarkan bilangan sebenar ahli keluarga yang tinggal bersama pekerja, termasuk seorang orang gaji, bagi *3 hari sebelum + 5 hari selepas* pertukaran.\n"
+            "• Penginapan: berdasarkan ahli keluarga, maksimum *3 bilik*, dengan resit.\n"
+            "• Jika tidak tuntut hotel: Elaun Lojing *RM100/malam* untuk pekerja sahaja bagi tempoh 3 hari sebelum + 5 hari selepas pertukaran.\n\n"
+            "📌 *Artikel 63 – Elaun Perjalanan*\n"
+            "• Kereta sendiri: *RM0.75/km*.\n"
+            "• Motorsikal: *RM0.50/km*.\n"
+            "• Tol, parkir & feri: *boleh dituntut balik* dengan resit (atau pengesahan Ketua Bahagian jika resit hilang/tiada).\n"
+            "• Pengangkutan awam/teksi: *tambang semasa*.\n\n"
+            "📌 *Artikel 64 – Elaun Makan*\n"
+            "• Tugas rasmi >50 km dan *8 jam atau lebih*: *RM115 sehari*.\n"
+            "• Jika makan disediakan: Sarapan *20% (RM23)*, Tengahari *40% (RM46)*, Malam *40% (RM46)*.\n"
+            "• Gaji *RM4,000 ke atas* dan tidak layak OT: kerja hari biasa >2–5 jam = *RM25*; >5 jam = *RM50*.\n"
+            "• Hari rehat/cuti am: >4–8 jam = *RM25* atau ½ hari cuti gantian; >8 jam = *RM50* atau 1 hari cuti gantian.\n\n"
+            "📌 *Artikel 65 – Penginapan Hotel*\n"
+            "• Tuntutan hotel: penginapan standard setaraf *4 bintang, twin sharing*, dengan resit.\n"
+            "• Jika tidak tuntut hotel: *Elaun Lojing RM100 semalam* tanpa resit.\n\n"
+            "📌 *Artikel 71 – Chargeman*: *RM300 sebulan* jika mempunyai sijil kelayakan dan menjalankan tugas sebagai Chargeman.\n"
+            "📌 *Artikel 72 – Syif*: *RM6.50* (4pm–12am) dan *RM7.00* (12am–8am); bagi syif 8pm–8am = *RM7.00*, mengikut jadual/lokasi CA-7."
         )
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
 

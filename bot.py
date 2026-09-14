@@ -1089,18 +1089,102 @@ Tugas anda:
 
 
 def _sahabat_baca_ca7():
-    # Fail CA7 txt sedia ada digunakan sebagai sumber rujukan tambahan.
-    candidates = ["ca7_kppbnb.txt", "/mnt/data/ca7_kppbnb.txt"]
+    """Baca keseluruhan teks CA-7 tanpa memotong pada 60,000 aksara."""
+    candidates = [
+        "ca7_kppbnb.txt",
+        "/app/ca7_kppbnb.txt",
+        "/mnt/data/ca7_kppbnb.txt",
+    ]
     for path in candidates:
         try:
             if os.path.exists(path):
                 with open(path, "r", encoding="utf-8") as f:
-                    text = f.read()
-                # Hadkan saiz supaya permintaan API tidak terlalu besar.
-                return text[:60000]
+                    return f.read()
         except Exception as e:
             logging.error(f"Gagal baca sumber CA7 untuk Sahabat: {e}")
     return ""
+
+
+def _sahabat_pilih_rujukan(soalan: str, ca7: str) -> str:
+    """Pilih artikel CA-7 yang paling berkaitan dengan soalan ahli.
+
+    Fungsi ini hanya memilih teks daripada fail CA-7 sedia ada; ia tidak
+    mencipta kadar atau hak baharu. Jika soalan tidak dapat dipadankan,
+    beberapa bahagian awal yang relevan akan digunakan sebagai fallback.
+    """
+    if not ca7:
+        return ""
+
+    import re
+
+    # Pecahkan CA-7 mengikut tajuk ARTIKEL supaya kita tidak perlu menghantar
+    # keseluruhan dokumen kepada Gemini pada setiap soalan.
+    matches = list(re.finditer(r"(?im)^ARTIKEL\s+(\d+)\s*[–-]\s*([^\n]+)", ca7))
+    sections = []
+    for i, m in enumerate(matches):
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(ca7)
+        text = ca7[m.start():end].strip()
+        sections.append((int(m.group(1)), m.group(2).strip(), text))
+
+    if not sections:
+        return ca7[:30000]
+
+    q = soalan.lower()
+    # Kata kunci biasa ahli yang perlu dipadankan kepada artikel tertentu.
+    topic_map = {
+        15: ["kilanan", "aduan", "grievance", "pertikaian", "proses aduan"],
+        29: ["waktu kerja", "waktu bekerja", "jam kerja", "39 jam", "zon a", "zon b"],
+        30: ["kerja lebih masa", "kerja lebihmasa", "ot", "overtime"],
+        31: ["bayaran ot", "kadar ot", "kiraan ot", "kadar kerja lebih masa", "1.5", "2 kali", "3 kali"],
+        32: ["kerja hari rehat", "hari rehat", "cuti am", "keperluan tugas", "diarahkan bekerja"],
+        33: ["kenaikan pangkat", "gred", "promosi", "naik pangkat"],
+        43: ["cuti am", "public holiday", "cuti umum"],
+        44: ["cuti tahunan", "annual leave"],
+        47: ["cuti sakit", "mc", "sick leave"],
+        55: ["haji", "umrah"],
+        58: ["perubatan", "medical", "panel", "tanggungan"],
+        62: ["secondment", "penempatan semula", "pinjaman sementara", "lojing"],
+        63: ["mileage", "kilometer", "kilometre", "km", "kereta sendiri", "kereta", "motosikal", "motor", "tol", "parkir", "parking", "feri", "teksi", "perjalanan"],
+        64: ["elaun makan", "makan", "sarapan", "tengahari", "tengah hari", "makan malam", "rm115"],
+        65: ["hotel", "penginapan", "lojing", "4 bintang", "twin sharing"],
+        71: ["chargeman", "elaun chargeman"],
+        72: ["syif", "shift", "elaun syif"],
+        73: ["disiplin", "tatatertib", "surat tunjuk sebab", "amaran", "hukuman"],
+        74: ["semakan gaji", "gaji", "pelarasan gaji"],
+    }
+
+    scores = []
+    for no, title, text in sections:
+        score = 0
+        for kw in topic_map.get(no, []):
+            if kw in q:
+                score += 8 if " " in kw else 5
+        # Padanan umum dengan tajuk artikel.
+        for word in re.findall(r"[a-zA-ZÀ-ÿ0-9]+", title.lower()):
+            if len(word) >= 4 and word in q:
+                score += 2
+        # Padanan umum dengan isi artikel.
+        q_words = set(w for w in re.findall(r"[a-zA-ZÀ-ÿ0-9]+", q) if len(w) >= 4)
+        text_lower = text.lower()
+        score += min(6, sum(1 for w in q_words if w in text_lower))
+        scores.append((score, no, text))
+
+    scores.sort(reverse=True, key=lambda x: (x[0], -x[1]))
+    selected = [item for item in scores[:3] if item[0] > 0]
+
+    if not selected:
+        # Jika soalan terlalu umum, beri tajuk artikel dan beberapa bahagian
+        # awal sahaja supaya Gemini tidak mereka jawapan tanpa sumber.
+        return "\n\n".join(text for _, _, text in sections[:5])[:30000]
+
+    # Hadkan setiap artikel supaya satu soalan tidak menggunakan token secara
+    # berlebihan, tetapi jangan potong bahagian awal artikel yang biasanya
+    # mengandungi kadar/syarat utama.
+    chunks = []
+    for _, _, text in selected:
+        chunks.append(text[:14000])
+    return "\n\n====================\n\n".join(chunks)
+
 
 async def _sahabat_tanya_ai(soalan: str) -> str:
     api_key = os.environ.get("GEMINI_API_KEY", "").strip()
@@ -1112,9 +1196,16 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
         )
 
     ca7 = _sahabat_baca_ca7()
+    rujukan = _sahabat_pilih_rujukan(soalan, ca7)
     prompt = (
-        "SUMBER CA-7 KPPbNB:\n"
-        + (ca7 if ca7 else "Sumber CA-7 tidak dapat dibaca sekarang.")
+        "ARAHAN RUJUKAN:\n"
+        "Jawab berdasarkan teks CA-7 yang diberikan di bawah. Jangan reka kadar, "
+        "nombor artikel, syarat atau hak yang tidak terdapat dalam rujukan. "
+        "Jika rujukan tidak cukup untuk menjawab, nyatakan dengan jelas bahawa "
+        "maklumat tidak ditemui dalam petikan yang dipilih dan cadangkan menu CA-7 "
+        "atau pegawai Kesatuan yang sesuai.\n\n"
+        "PETIKAN CA-7 YANG RELEVAN:\n"
+        + (rujukan if rujukan else "Sumber CA-7 tidak dapat dibaca sekarang.")
         + "\n\nSOALAN AHLI:\n"
         + soalan
     )
@@ -1124,7 +1215,9 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
         import urllib.request
         import urllib.error
 
-        model = os.environ.get("SAHABAT_MODEL", "gemini-3.6-flash")
+        # Gemini 3.6 Flash ialah model stabil semasa. Jika Render mempunyai
+        # SAHABAT_MODEL, nilai itu masih boleh digunakan tanpa mengubah modul lain.
+        model = "gemini-3.6-flash"
         payload = json.dumps({
             "systemInstruction": {
                 "parts": [{"text": SAHABAT_SYSTEM_PROMPT}]

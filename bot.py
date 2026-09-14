@@ -43,6 +43,13 @@ STATE_OT_SALARY = 4
 STATE_OT_HOURS = 5
 STATE_ADUAN_JENIS = 6
 STATE_ADUAN_KETERANGAN = 7
+STATE_MINAT_NAMA = 8
+STATE_MINAT_PEKERJA = 9
+STATE_MINAT_LOKASI = 10
+STATE_MINAT_JAWATAN = 11
+STATE_MINAT_TELEFON = 12
+STATE_MINAT_EMAIL = 13
+STATE_MINAT_PERTANYAAN = 14
 
 # Fungsi Web Server untuk Render
 def run_web_server():
@@ -91,6 +98,12 @@ def is_session_active(context: ContextTypes.DEFAULT_TYPE) -> bool:
     return False
 
 # ==================== KEYBOARDS ====================
+def get_start_keyboard():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔐 Saya Ahli KPPbNB", callback_data='start_ahli')],
+        [InlineKeyboardButton("🤝 Berminat Menjadi Ahli", callback_data='minat_ahli')]
+    ])
+
 def get_main_keyboard():
     keyboard = [
         [InlineKeyboardButton("📖 Akta & Peraturan", callback_data='menu_akta'),
@@ -160,16 +173,94 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return ConversationHandler.END
 
     text = (
-        "🔐 *PENGESAHAN KEAHLIAN KPPbNB*\n"
+        "👋 *SELAMAT DATANG KE BOT KPPbNB*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        "Sesi anda telah tamat tempoh (selepas 15 minit) atau belum disahkan.\n\n"
-        "👉 Sila masukkan *Nombor Pekerja* sah anda untuk meneruskan:"
+        "Sila pilih pilihan di bawah untuk meneruskan:"
     )
     if update.message:
-        await update.message.reply_text(text, parse_mode='Markdown')
+        await update.message.reply_text(text, parse_mode='Markdown', reply_markup=get_start_keyboard())
     elif update.callback_query:
-        await update.callback_query.message.reply_text(text, parse_mode='Markdown')
-    return STATE_VERIFY_ID
+        await update.callback_query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_start_keyboard())
+    return ConversationHandler.END
+
+async def handle_start_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    if query.data == 'start_ahli':
+        await query.message.reply_text(
+            "🔐 *PENGESAHAN KEAHLIAN KPPbNB*\n\n👉 Sila masukkan *Nombor Pekerja* sah anda:",
+            parse_mode='Markdown'
+        )
+        return STATE_VERIFY_ID
+    context.user_data.clear()
+    await query.message.reply_text(
+        "🤝 *BERMINAT MENJADI AHLI KPPbNB*\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        "Terima kasih kerana berminat untuk menyertai Kesatuan.\n\n"
+        "Maklumat ini akan digunakan oleh pihak Kesatuan untuk menghubungi anda dan menerangkan proses keahlian.\n\n"
+        "👤 Sila masukkan *nama penuh*:", parse_mode='Markdown'
+    )
+    return STATE_MINAT_NAMA
+
+async def minat_nama(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data['minat_nama'] = update.message.text.strip()
+    await update.message.reply_text("🆔 Sila masukkan *No. Pekerja*:", parse_mode='Markdown')
+    return STATE_MINAT_PEKERJA
+
+async def minat_pekerja(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data['minat_pekerja'] = update.message.text.strip()
+    await update.message.reply_text("🏢 Sila masukkan *lokasi / tempat bertugas*:", parse_mode='Markdown')
+    return STATE_MINAT_LOKASI
+
+async def minat_lokasi(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data['minat_lokasi'] = update.message.text.strip()
+    await update.message.reply_text("💼 Sila masukkan *jawatan / gred*:", parse_mode='Markdown')
+    return STATE_MINAT_JAWATAN
+
+async def minat_jawatan(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data['minat_jawatan'] = update.message.text.strip()
+    await update.message.reply_text("📱 Sila masukkan *No. Telefon*:", parse_mode='Markdown')
+    return STATE_MINAT_TELEFON
+
+async def minat_telefon(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data['minat_telefon'] = update.message.text.strip()
+    await update.message.reply_text("📧 Sila masukkan *Email*:", parse_mode='Markdown')
+    return STATE_MINAT_EMAIL
+
+async def minat_email(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data['minat_email'] = update.message.text.strip()
+    await update.message.reply_text("💬 Jika ada, nyatakan *pertanyaan / sebab berminat*. Jika tiada, taip `Tiada`.", parse_mode='Markdown')
+    return STATE_MINAT_PERTANYAAN
+
+async def minat_pertanyaan(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data['minat_pertanyaan'] = update.message.text.strip()
+    user = update.effective_user
+    masa = time.strftime('%d/%m/%Y %H:%M:%S')
+    text = (
+        "🤝 *MINAT MENJADI AHLI KPPbNB*\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        f"👤 *Nama:* {context.user_data.get('minat_nama')}\n"
+        f"🆔 *No. Pekerja:* {context.user_data.get('minat_pekerja')}\n"
+        f"🏢 *Lokasi:* {context.user_data.get('minat_lokasi')}\n"
+        f"💼 *Jawatan/Gred:* {context.user_data.get('minat_jawatan')}\n"
+        f"📱 *Telefon:* {context.user_data.get('minat_telefon')}\n"
+        f"📧 *Email:* {context.user_data.get('minat_email')}\n"
+        f"💬 *Pertanyaan/Sebab:* {context.user_data.get('minat_pertanyaan')}\n\n"
+        f"🕐 *Tarikh/Masa:* {masa}\n"
+        f"🆔 *Telegram ID:* `{user.id}`\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        "📌 *Tindakan:* Sila hubungi pemohon untuk penerangan lanjut."
+    )
+    try:
+        await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=text, parse_mode='Markdown')
+        await update.message.reply_text(
+            "✅ *TERIMA KASIH!*\n\nMaklumat minat anda telah dihantar kepada pihak Kesatuan. Pihak KPPbNB akan menghubungi anda untuk penerangan lanjut.",
+            parse_mode='Markdown', reply_markup=get_start_keyboard()
+        )
+    except Exception as e:
+        logging.error(f"Gagal hantar minat ke group: {e}")
+        await update.message.reply_text("❌ Maklumat tidak dapat dihantar buat masa ini. Sila hubungi pihak Kesatuan.", reply_markup=get_start_keyboard())
+    return ConversationHandler.END
 
 async def verify_employee_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     emp_id = update.message.text.strip()
@@ -993,6 +1084,22 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def async_main():
     threading.Thread(target=run_web_server, daemon=True).start()
     app = ApplicationBuilder().token(BOT_TOKEN).build()
+
+    start_choice_conv = ConversationHandler(
+        entry_points=[CommandHandler("start", start), CallbackQueryHandler(handle_start_choice, pattern='^(start_ahli|minat_ahli)$')],
+        states={
+            STATE_VERIFY_ID: [MessageHandler(filters.TEXT & ~filters.COMMAND, verify_employee_id)],
+            STATE_MINAT_NAMA: [MessageHandler(filters.TEXT & ~filters.COMMAND, minat_nama)],
+            STATE_MINAT_PEKERJA: [MessageHandler(filters.TEXT & ~filters.COMMAND, minat_pekerja)],
+            STATE_MINAT_LOKASI: [MessageHandler(filters.TEXT & ~filters.COMMAND, minat_lokasi)],
+            STATE_MINAT_JAWATAN: [MessageHandler(filters.TEXT & ~filters.COMMAND, minat_jawatan)],
+            STATE_MINAT_TELEFON: [MessageHandler(filters.TEXT & ~filters.COMMAND, minat_telefon)],
+            STATE_MINAT_EMAIL: [MessageHandler(filters.TEXT & ~filters.COMMAND, minat_email)],
+            STATE_MINAT_PERTANYAAN: [MessageHandler(filters.TEXT & ~filters.COMMAND, minat_pertanyaan)]
+        },
+        fallbacks=[CommandHandler("start", start)]
+    )
+    app.add_handler(start_choice_conv)
 
     verify_conv = ConversationHandler(
         entry_points=[CommandHandler("start", start)],

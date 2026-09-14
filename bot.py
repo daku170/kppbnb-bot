@@ -345,7 +345,7 @@ async def handle_kiraan_menu(update: Update, context: ContextTypes.DEFAULT_TYPE)
         [InlineKeyboardButton("💼 Cuti Gantian", callback_data='grade_s')],
         [InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')]
     ]
-    await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
+    await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_kiraan_keyboard())
 
 async def start_calc_ot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -472,7 +472,7 @@ async def aduan_desc_received(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     return ConversationHandler.END
 
-# ==================== 5. MODUL DOKUMEN & LAIN-LAIN ====================
+# ==================== 5. MODUL DOKUMEN & LAIN-LAIN (HANTAR DI BAWAH) ====================
 
 async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -490,17 +490,18 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
             [InlineKeyboardButton("⚖️ Buku Tatatertib BERNAS Edisi 5", url=URL_TATATERTIB)],
             [InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')]
         ]
-        await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
+        # Menggunakan reply_text supaya ia keluar sebagai mesej baru di bawah
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
     elif data == 'menu_hebahan':
         text = "📢 *HEBAHAN KESATUAN*\n• CA-7 berkuatkuasa 2026-2028.\n• Pastikan semakan yuran kesatuan teratur."
-        await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_back_button())
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_back_button())
     elif data == 'menu_profil':
         user = update.effective_user
         text = f"👤 *PROFIL AHLI*\nNama: {user.full_name}\nStatus: Aktif"
-        await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_back_button())
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_back_button())
     elif data == 'menu_hubungi':
         text = "☎️ *HUBUNGI KESATUAN*\nNo 2190 KM20 Jalan Kodiang, 06000 Jitra, Kedah."
-        await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_back_button())
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_back_button())
 
 async def handle_ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text or update.message.text.startswith('/'):
@@ -528,7 +529,7 @@ async def async_main():
             STATE_DAY_TYPE: [CallbackQueryHandler(calc_day_type_selected, pattern='^day_')],
             STATE_SALARY: [MessageHandler(filters.TEXT & ~filters.COMMAND, calc_salary_received)],
             STATE_HOURS: [MessageHandler(filters.TEXT & ~filters.COMMAND, calc_hours_received)],
-            STATE_MILEAGE_VEHICLE: [CallbackQueryHandler(calc_mileage_vehicle_selected, pattern='^mil_')],
+            STATE_MILEAGE_VEHICLE: [CallbackQueryHandler(mil_rate_sel := calc_mileage_vehicle_selected, pattern='^mil_')],
             STATE_MILEAGE_KM: [MessageHandler(filters.TEXT & ~filters.COMMAND, calc_mileage_km_received)]
         },
         fallbacks=[CallbackQueryHandler(cancel_handler, pattern='^menu_utama$'), CommandHandler("start", start)]
@@ -551,9 +552,7 @@ async def async_main():
     app.add_handler(CallbackQueryHandler(handle_ca, pattern='^(menu_ca|ca_|art64_)'))
     app.add_handler(CallbackQueryHandler(handle_kiraan_menu, pattern='^menu_kiraan$'))
     
-    # Pengendali menu utama, dokumen, hebahan, profil, dan hubungi
     app.add_handler(CallbackQueryHandler(handle_other_menus, pattern='^menu_(dokumen|hebahan|profil|hubungi)$'))
-    
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_ai_chat))
 
     async with app:

@@ -1061,7 +1061,7 @@ async def terima_aduan(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ==================== MODUL SAHABAT KPPbNB ====================
 # Modul ini berdiri sendiri dan tidak mengubah fungsi CA7, OT, Aduan, Ahli dll.
-# Memerlukan environment variable OPENAI_API_KEY untuk jawapan AI.
+# Memerlukan environment variable GEMINI_API_KEY untuk jawapan AI.
 
 SAHABAT_SYSTEM_PROMPT = """
 Anda ialah Sahabat KPPbNB, pembantu digital rasmi untuk ahli Kesatuan Pekerja-Pekerja
@@ -1103,11 +1103,11 @@ def _sahabat_baca_ca7():
     return ""
 
 async def _sahabat_tanya_ai(soalan: str) -> str:
-    api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
     if not api_key:
         return (
             "⚠️ *Sahabat KPPbNB belum diaktifkan sepenuhnya.*\n\n"
-            "Sila tetapkan `OPENAI_API_KEY` pada Environment Variables server bot.\n\n"
+            "Sila tetapkan `GEMINI_API_KEY` pada Environment Variables server bot.\n\n"
             "Buat masa ini, gunakan menu *📖 Akta & Peraturan* dan *📋 CA7* untuk rujukan."
         )
 
@@ -1124,19 +1124,28 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
         import urllib.request
         import urllib.error
 
+        model = os.environ.get("SAHABAT_MODEL", "gemini-2.5-flash")
         payload = json.dumps({
-            "model": os.environ.get("SAHABAT_MODEL", "gpt-5.6-luna"),
-            "instructions": SAHABAT_SYSTEM_PROMPT,
-            "input": prompt,
-            "max_output_tokens": 700
+            "systemInstruction": {
+                "parts": [{"text": SAHABAT_SYSTEM_PROMPT}]
+            },
+            "contents": [{
+                "role": "user",
+                "parts": [{"text": prompt}]
+            }],
+            "generationConfig": {
+                "maxOutputTokens": 700,
+                "temperature": 0.3
+            }
         }).encode("utf-8")
 
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
         req = urllib.request.Request(
-            "https://api.openai.com/v1/responses",
+            url,
             data=payload,
             headers={
                 "Content-Type": "application/json",
-                "Authorization": f"Bearer {api_key}"
+                "x-goog-api-key": api_key
             },
             method="POST"
         )
@@ -1147,28 +1156,26 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
                 return json.loads(response.read().decode("utf-8"))
 
         data = await loop.run_in_executor(None, call_api)
-        answer = data.get("output_text", "").strip()
 
-        if not answer:
-            # Fallback jika struktur output tidak menyediakan output_text.
-            parts = []
-            for item in data.get("output", []):
-                for content in item.get("content", []):
-                    if content.get("type") == "output_text":
-                        parts.append(content.get("text", ""))
-            answer = "\n".join(parts).strip()
+        answer = ""
+        candidates = data.get("candidates", [])
+        if candidates:
+            content = candidates[0].get("content", {})
+            parts = content.get("parts", [])
+            answer = "\n".join(
+                part.get("text", "") for part in parts if part.get("text")
+            ).strip()
 
         return answer or "Maaf, Sahabat tidak dapat memberikan jawapan sekarang. Sila cuba semula."
 
     except urllib.error.HTTPError as e:
-        # Simpan butiran HTTP error untuk diagnosis tanpa mendedahkan API key.
         try:
             raw_body = e.read().decode("utf-8", errors="replace")
         except Exception:
             raw_body = ""
         retry_after = e.headers.get("Retry-After") if getattr(e, "headers", None) else None
         logging.error(
-            "Ralat Sahabat KPPbNB: HTTP %s | Retry-After=%s | Body=%s",
+            "Ralat Sahabat KPPbNB Gemini: HTTP %s | Retry-After=%s | Body=%s",
             e.code, retry_after or "-", raw_body[:2000]
         )
         return (
@@ -1176,7 +1183,7 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
             "Sila cuba semula sebentar lagi. Jika masalah berterusan, hubungi pihak Kesatuan."
         )
     except Exception as e:
-        logging.error(f"Ralat Sahabat KPPbNB: {e}")
+        logging.error(f"Ralat Sahabat KPPbNB Gemini: {e}")
         return (
             "❌ *Sahabat tidak dapat memproses soalan buat masa ini.*\n\n"
             "Sila cuba semula sebentar lagi atau hubungi pihak Kesatuan."

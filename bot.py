@@ -5,6 +5,7 @@ import http.server
 import socketserver
 import logging
 import csv
+import time
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
@@ -63,17 +64,47 @@ def baca_data_ahli(no_pekerja_dicari):
         logging.error(f"Ralat baca CSV: {e}")
     return None
 
-# Menu Utama Sementara
+# Fungsi Semak Adakah Sesi Masih Aktif (< 15 Minit / 900 Saat)
+def is_session_active(context: ContextTypes.DEFAULT_TYPE) -> bool:
+    verified = context.user_data.get('verified', False)
+    last_active = context.user_data.get('last_active', 0)
+    if verified and (time.time() - last_active < 900):
+        context.user_data['last_active'] = time.time()  # Perbarui masa aktif setiap kali berinteraksi
+        return True
+    return False
+
+# ==================== KEYBOARD MENU UTAMA ====================
 def get_main_keyboard():
-    keyboard = [[InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')]]
+    keyboard = [
+        [InlineKeyboardButton("📖 Akta & Peraturan", callback_data='menu_akta'),
+         InlineKeyboardButton("📋 CA7", callback_data='menu_ca')],
+        [InlineKeyboardButton("🧮 Kiraan OT & Elaun", callback_data='menu_kiraan'),
+         InlineKeyboardButton("📝 Laporan / Aduan", callback_data='menu_aduan')],
+        [InlineKeyboardButton("📢 Hebahan Kesatuan", callback_data='menu_hebahan'),
+         InlineKeyboardButton("📚 Dokumen Kesatuan", callback_data='menu_dokumen')],
+        [InlineKeyboardButton("👤 Profil Saya", callback_data='menu_profil'),
+         InlineKeyboardButton("☎️ Hubungi Kesatuan", callback_data='menu_hubungi')]
+    ]
     return InlineKeyboardMarkup(keyboard)
 
-# Langkah 1: Mula bot minta No Pekerja
+def get_back_button():
+    return InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')]])
+
+# Langkah 1: Mula bot minta No Pekerja (Semak Sesi 15 Minit)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if is_session_active(context):
+        nama = context.user_data.get('nama', 'Ahli')
+        text = f"Hi kembali, *{nama}*! 👋\n\nSesi anda masih aktif. Sila pilih perkhidmatan di bawah:"
+        if update.message:
+            await update.message.reply_text(text, parse_mode='Markdown', reply_markup=get_main_keyboard())
+        elif update.callback_query:
+            await update.callback_query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_main_keyboard())
+        return ConversationHandler.END
+
     text = (
         "🔐 *PENGESAHAN KEAHLIAN KPPbNB*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        "Selamat datang ke Bot Rasmi KPPbNB BERNAS.\n\n"
+        "Sesi anda telah tamat tempoh (selepas 15 minit) atau belum disahkan.\n\n"
         "👉 Sila masukkan *Nombor Pekerja* sah anda untuk meneruskan:"
     )
     if update.message:
@@ -82,7 +113,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.callback_query.message.reply_text(text, parse_mode='Markdown')
     return STATE_VERIFY_ID
 
-# Langkah 2: Semak No Pekerja & Hantar Notis ke Group jika Gagal
+# Langkah 2: Semak No Pekerja & Set Masa Sesi Aktif
 async def verify_employee_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     emp_id = update.message.text.strip()
     user = update.effective_user
@@ -94,6 +125,7 @@ async def verify_employee_id(update: Update, context: ContextTypes.DEFAULT_TYPE)
         context.user_data['nama'] = data_ahli['nama']
         context.user_data['lokasi'] = data_ahli['lokasi']
         context.user_data['verified'] = True
+        context.user_data['last_active'] = time.time()  # Rekod masa mula log masuk
         
         welcome_text = (
             f"Hi *{data_ahli['nama']}*! 👋\n\n"
@@ -103,7 +135,6 @@ async def verify_employee_id(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await update.message.reply_text(welcome_text, parse_mode='Markdown', reply_markup=get_main_keyboard())
         return ConversationHandler.END
     else:
-        # Notifikasi amaran ke Group Aduan KPPbNB
         notis_admin = (
             "🚨 *PERCUBAAN AKSES BOT TIDAK SAH*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
@@ -127,6 +158,19 @@ async def verify_employee_id(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await update.message.reply_text(error_text, parse_mode='Markdown')
         return STATE_VERIFY_ID
 
+# Handler Callback untuk Butang Menu Utama (Kemas kini masa aktif sesi)
+async def handle_menu_utama(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    
+    if not is_session_active(context):
+        await query.message.reply_text("🔐 Sesi anda telah tamat tempoh selepas 15 minit tidak aktif. Sila taip /start semula.")
+        return
+
+    nama = context.user_data.get('nama', 'Ahli')
+    text = f"🏠 *MENU UTAMA KPPbNB*\n\nSelamat kembali, *{nama}*.\nSila pilih perkhidmatan di bawah:"
+    await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_main_keyboard())
+
 # Main Runner
 async def async_main():
     threading.Thread(target=run_web_server, daemon=True).start()
@@ -141,11 +185,12 @@ async def async_main():
     )
 
     app.add_handler(verify_conv)
+    app.add_handler(CallbackQueryHandler(handle_menu_utama, pattern='^menu_utama$'))
 
     async with app:
         await app.start()
         await app.updater.start_polling()
-        print("Bot Asas KPPbNB LIVE!")
+        print("Bot KPPbNB LIVE dengan Timeout Sesi 15 Minit!")
         while True:
             await asyncio.sleep(3600)
 
@@ -154,25 +199,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-def get_main_keyboard():
-    keyboard = [
-        [InlineKeyboardButton("📖 Akta & Peraturan", callback_data='menu_akta'),
-         InlineKeyboardButton("📋 CA7", callback_data='menu_ca')],
-        [InlineKeyboardButton("🧮 Kiraan OT & Elaun", callback_data='menu_kiraan'),
-         InlineKeyboardButton("📝 Laporan / Aduan", callback_data='menu_aduan')],
-        [InlineKeyboardButton("📢 Hebahan Kesatuan", callback_data='menu_hebahan'),
-         InlineKeyboardButton("📚 Dokumen Kesatuan", callback_data='menu_dokumen')],
-        [InlineKeyboardButton("👤 Profil Saya", callback_data='menu_profil'),
-         InlineKeyboardButton("☎️ Hubungi Kesatuan", callback_data='menu_hubungi')]
-    ]
-    return InlineKeyboardMarkup(keyboard)
-
-async def handle_menu_utama(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    nama = context.user_data.get('nama', 'Ahli')
-    text = f"🏠 *MENU UTAMA KPPbNB*\n\nSelamat kembali, *{nama}*.\nSila pilih perkhidmatan di bawah:"
-    await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_main_keyboard())
-
-# Daftar handler ini dalam async_main():
-app.add_handler(CallbackQueryHandler(handle_menu_utama, pattern='^menu_utama$'))

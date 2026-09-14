@@ -5,6 +5,7 @@ import http.server
 import socketserver
 import logging
 import random
+import csv
 from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -34,15 +35,6 @@ URL_CA6 = "https://drive.google.com/file/d/19kQw-6Klinuq1ErF-raLs8-9xoosYroi/vie
 URL_AKTA = "https://drive.google.com/file/d/1zR2l8JhjjP5udVwnpaq9v_iVuZrreJ-g/view?usp=sharing"
 URL_TATATERTIB = "https://padiberasnasional.sharepoint.com/sites/RiCentre/Prosedur%20Operasi%20Standard%20HR/Forms/AllItems.aspx?id=%2Fsites%2FRiCentre%2FProsedur%20Operasi%20Standard%20HR%2FHRD%2DIR%2D50%2DSOP%2D01%2DE%20PERATURAN%20DAN%20PROSEDUR%20TATATERTIB%20BAGI%20BERNAS%20EDISI%20KELIMA%2Epdf&parent=%2Fsites%2FRiCentre%2FProsedur%20Operasi%20Standard%20HR"
 
-# Pangkalan Data Ahli Rasmi (No Pekerja : {Nama Penuh, Lokasi})
-SENARAI_AHLI_SAH = {
-    "1001": {"nama": "KHAIRUL FAIZ BIN RAMIZAN", "lokasi": "Kompleks Jitra, Kedah"},
-    "1002": {"nama": "SYAHIBUDIL ASSAUFI BIN ABDUL KUDUS", "lokasi": "Ibu Pejabat Kuala Lumpur"},
-    "1003": {"nama": "FARAH AQILAH BINTI BARDZAN", "lokasi": "Ibu Pejabat Kuala Lumpur"},
-    "10455": {"nama": "MOHD FAIZAL BIN AHMAD", "lokasi": "Kompleks Alor Setar, Kedah"},
-    "2850": {"nama": "AZMAN BIN OTHMAN", "lokasi": "Kompleks Shah Alam, Selangor"},
-}
-
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -50,6 +42,24 @@ logging.basicConfig(
 
 STATE_VERIFY_ID = 1
 STATE_UPDATE_LOCATION = 2
+
+# Fungsi Membaca Pangkalan Data Ahli daripada Fail CSV
+def baca_data_ahli(no_pekerja_dicari):
+    try:
+        if not os.path.exists("ahli.csv"):
+            return None
+        with open("ahli.csv", mode="r", encoding="utf-8") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                # Padankan no_pekerja (bersihkan sebarang ruang kosong)
+                if row["no_pekerja"].strip() == str(no_pekerja_dicari).strip():
+                    return {
+                        "nama": row["nama"].strip(),
+                        "lokasi": row["lokasi"].strip()
+                    }
+    except Exception as e:
+        logging.error(f"Ralat baca CSV: {e}")
+    return None
 
 def run_web_server():
     port = int(os.environ.get("PORT", 8080))
@@ -181,10 +191,9 @@ def get_elaun_4k_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard)
 
-# ==================== HANDLERS PENGESAHAN & LOKASI (ISOLASI SESI) ====================
+# ==================== HANDLERS PENGESAHAN & LOKASI ====================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Reset status verifikasi bagi sesi semasa
     context.user_data.clear()
     text = (
         "🔐 *PENGESAHAN KEAHLIAN KPPbNB*\n"
@@ -202,9 +211,11 @@ async def verify_employee_id(update: Update, context: ContextTypes.DEFAULT_TYPE)
     emp_id = update.message.text.strip()
     user = update.effective_user
 
-    if emp_id in SENARAI_AHLI_SAH:
-        data_ahli = SENARAI_AHLI_SAH[emp_id]
-        # Simpan secara khusus dalam user_data unik pengguna ini
+    # Baca data terus dari fail CSV berdasarkan no pekerja yang ditaip
+    data_ahli = baca_data_ahli(emp_id)
+
+    if data_ahli:
+        # Kunci data khusus ke dalam sesi individu ini
         context.user_data['emp_id'] = emp_id
         context.user_data['nama'] = data_ahli['nama']
         context.user_data['lokasi'] = data_ahli['lokasi']
@@ -226,7 +237,7 @@ async def verify_employee_id(update: Update, context: ContextTypes.DEFAULT_TYPE)
             f"👤 *Nama Telegram:* {user.full_name} (@{user.username or 'Tiada'})\n"
             f"🆔 *Telegram ID:* `{user.id}`\n"
             f"🔢 *No. Pekerja Dimasukkan:* `{emp_id}`\n"
-            "⚠️ *Status:* Gagal disahkan (Tiada dalam senarai induk)."
+            "⚠️ *Status:* Gagal disahkan (Tiada dalam fail CSV induk)."
         )
         try:
             await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=notis_admin, parse_mode='Markdown')
@@ -235,7 +246,7 @@ async def verify_employee_id(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
         error_text = (
             "❌ *RALAT: NOMBOR PEKERJA TIDAK DIJUMPAI*\n\n"
-            "Nombor pekerja yang anda masukkan tiada dalam rekod keahlian aktif KPPbNB.\n\n"
+            "Nombor pekerja yang anda masukkan tiada dalam rekod fail CSV kesatuan.\n\n"
             "📞 Sila berhubung terus dengan Setiausaha Agung Kesatuan untuk pendaftaran:\n"
             "• *Nama:* Pn. Farah Aqilah Binti Bardzan\n"
             "• *Emel SU:* `aqilah@bernas.com.my`\n\n"
@@ -257,7 +268,6 @@ async def receive_new_location(update: Update, context: ContextTypes.DEFAULT_TYP
     nama = context.user_data.get('nama', 'Ahli')
     user = update.effective_user
 
-    # Kemas kini lokasi spesifik untuk ahli ini sahaja
     context.user_data['lokasi'] = new_loc
 
     notis_group = (
@@ -378,7 +388,6 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
         text = "📢 *HEBAHAN KESATUAN*\n• CA-7 berkuatkuasa 2026-2028."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_back_button())
     elif data == 'menu_profil':
-        # Ambil data spesifik mengikut sesi ahli yang sedang log masuk
         emp_id = context.user_data.get('emp_id', 'Tidak Diketahui')
         nama = context.user_data.get('nama', 'Belum Disahkan')
         lokasi = context.user_data.get('lokasi', 'Tidak Diketahui')
@@ -457,7 +466,7 @@ async def async_main():
     async with app:
         await app.start()
         await app.updater.start_polling()
-        print("Bot KPPbNB LIVE dengan Pemisahan Sesi Pengesahan Ahli!")
+        print("Bot KPPbNB LIVE dengan Bacaan Fail CSV Penuh!")
         while True:
             await asyncio.sleep(3600)
 

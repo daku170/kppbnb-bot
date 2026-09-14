@@ -50,6 +50,7 @@ STATE_MINAT_JAWATAN = 11
 STATE_MINAT_TELEFON = 12
 STATE_MINAT_EMAIL = 13
 STATE_MINAT_PERTANYAAN = 14
+STATE_SAHABAT_SOALAN = 15
 
 # Fungsi Web Server untuk Render
 def run_web_server():
@@ -110,6 +111,7 @@ def get_main_keyboard():
          InlineKeyboardButton("📋 CA7", callback_data='menu_ca')],
         [InlineKeyboardButton("🧮 Kiraan OT & Elaun", callback_data='menu_kiraan'),
          InlineKeyboardButton("📝 Laporan / Aduan", callback_data='menu_aduan')],
+        [InlineKeyboardButton("🤝 Sahabat KPPbNB", callback_data='menu_sahabat')],
         [InlineKeyboardButton("📢 Hebahan Kesatuan", callback_data='menu_hebahan'),
          InlineKeyboardButton("📚 Dokumen Kesatuan", callback_data='menu_dokumen')],
         [InlineKeyboardButton("👤 Profil Saya", callback_data='menu_profil'),
@@ -1055,6 +1057,185 @@ async def terima_aduan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.pop('aduan_keterangan', None)
     return ConversationHandler.END
 
+# ==================== MODUL SAHABAT KPPbNB ====================
+# Modul ini berdiri sendiri dan tidak mengubah fungsi CA7, OT, Aduan, Ahli dll.
+# Memerlukan environment variable OPENAI_API_KEY untuk jawapan AI.
+
+SAHABAT_SYSTEM_PROMPT = """
+Anda ialah Sahabat KPPbNB, pembantu digital rasmi untuk ahli Kesatuan Pekerja-Pekerja
+Padiberas Nasional Berhad (KPPbNB).
+
+Tugas anda:
+1. Bantu ahli memahami CA-7, Akta/Peraturan kerja dan isu hubungan perusahaan.
+2. Jawab dalam Bahasa Malaysia yang mudah, ringkas dan mesra.
+3. Utamakan maklumat CA-7 yang diberikan dalam konteks. Jangan reka nombor artikel,
+   kadar, tempoh atau hak yang tiada dalam konteks.
+4. Jika maklumat tidak cukup atau isu memerlukan tafsiran/keputusan rasmi, nyatakan
+   bahawa Sahabat hanya memberi panduan umum dan rujuk pegawai Kesatuan.
+5. Isu serius seperti surat tunjuk sebab, amaran, siasatan disiplin, demotion,
+   penamatan/dismissal, pertikaian kompleks atau tafsiran CA-7 hendaklah dirujuk
+   kepada pegawai Kesatuan dan jangan buat keputusan bagi pihak Kesatuan.
+6. Rujukan pegawai:
+   - Isu strategik/pertikaian umum/keputusan Kesatuan: Bro Syahibudil
+   - Kilanan, disiplin, surat tunjuk sebab, hubungan perusahaan, keahlian: Sis Farah
+   - Gaji, elaun, OT dan kewangan: Bro Khairul
+   - Jika tidak pasti: rujuk Setiausaha Agung.
+7. Jika soalan berkaitan kiraan OT, arahkan ahli menggunakan menu Kiraan OT & Elaun
+   kerana modul tersebut mempunyai pengiraan khusus CA-7.
+8. Jangan mendakwa sebagai peguam atau membuat keputusan rasmi bagi KPPbNB.
+"""
+
+
+def _sahabat_baca_ca7():
+    # Fail CA7 txt sedia ada digunakan sebagai sumber rujukan tambahan.
+    candidates = ["ca7_kppbnb.txt", "/mnt/data/ca7_kppbnb.txt"]
+    for path in candidates:
+        try:
+            if os.path.exists(path):
+                with open(path, "r", encoding="utf-8") as f:
+                    text = f.read()
+                # Hadkan saiz supaya permintaan API tidak terlalu besar.
+                return text[:60000]
+        except Exception as e:
+            logging.error(f"Gagal baca sumber CA7 untuk Sahabat: {e}")
+    return ""
+
+async def _sahabat_tanya_ai(soalan: str) -> str:
+    api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+    if not api_key:
+        return (
+            "⚠️ *Sahabat KPPbNB belum diaktifkan sepenuhnya.*\n\n"
+            "Sila tetapkan `OPENAI_API_KEY` pada Environment Variables server bot.\n\n"
+            "Buat masa ini, gunakan menu *📖 Akta & Peraturan* dan *📋 CA7* untuk rujukan."
+        )
+
+    ca7 = _sahabat_baca_ca7()
+    prompt = (
+        "SUMBER CA-7 KPPbNB:\n"
+        + (ca7 if ca7 else "Sumber CA-7 tidak dapat dibaca sekarang.")
+        + "\n\nSOALAN AHLI:\n"
+        + soalan
+    )
+
+    try:
+        import json
+        import urllib.request
+        import urllib.error
+
+        payload = json.dumps({
+            "model": os.environ.get("SAHABAT_MODEL", "gpt-5.6-mini"),
+            "instructions": SAHABAT_SYSTEM_PROMPT,
+            "input": prompt,
+            "max_output_tokens": 700
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.openai.com/v1/responses",
+            data=payload,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}"
+            },
+            method="POST"
+        )
+
+        loop = asyncio.get_running_loop()
+        def call_api():
+            with urllib.request.urlopen(req, timeout=45) as response:
+                return json.loads(response.read().decode("utf-8"))
+
+        data = await loop.run_in_executor(None, call_api)
+        answer = data.get("output_text", "").strip()
+
+        if not answer:
+            # Fallback jika struktur output tidak menyediakan output_text.
+            parts = []
+            for item in data.get("output", []):
+                for content in item.get("content", []):
+                    if content.get("type") == "output_text":
+                        parts.append(content.get("text", ""))
+            answer = "\n".join(parts).strip()
+
+        return answer or "Maaf, Sahabat tidak dapat memberikan jawapan sekarang. Sila cuba semula."
+
+    except Exception as e:
+        logging.error(f"Ralat Sahabat KPPbNB: {e}")
+        return (
+            "❌ *Sahabat tidak dapat memproses soalan buat masa ini.*\n\n"
+            "Sila cuba semula sebentar lagi atau hubungi pihak Kesatuan."
+        )
+
+async def handle_sahabat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    if not is_session_active(context):
+        await query.message.reply_text(
+            "🔐 *Sesi anda telah tamat.*\n\nSila tekan /start untuk pengesahan semula.",
+            parse_mode='Markdown'
+        )
+        return ConversationHandler.END
+
+    if query.data == 'menu_utama':
+        nama = context.user_data.get('nama', 'Ahli')
+        await query.message.reply_text(
+            f"🏠 *MENU UTAMA KPPbNB*\n\nSelamat kembali, *{nama}*.\nSila pilih perkhidmatan di bawah:",
+            parse_mode='Markdown', reply_markup=get_main_keyboard()
+        )
+        return ConversationHandler.END
+
+    await query.message.reply_text(
+        "🤝 *SAHABAT KPPbNB*\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        "Saya boleh bantu hg faham perkara berkaitan *CA-7, Akta & Peraturan Kerja, "
+        "OT, gaji, elaun, cuti, disiplin, kilanan dan hubungan perusahaan*.\n\n"
+        "👉 Taip soalan hg dengan bahasa biasa. Contoh:\n"
+        "• Saya kena surat tunjuk sebab, apa saya perlu buat?\n"
+        "• Berapa kadar OT saya?\n"
+        "• Kalau bos suruh kerja hari rehat macam mana?\n"
+        "• Macam mana proses kilanan?\n\n"
+        "⚠️ Untuk kes serius, Sahabat akan cadangkan pegawai Kesatuan yang sesuai.\n\n"
+        "Taip *menu* untuk kembali ke Menu Utama.",
+        parse_mode='Markdown', reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')]
+        ])
+    )
+    return STATE_SAHABAT_SOALAN
+
+async def sahabat_soalan(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_session_active(context):
+        await update.message.reply_text(
+            "🔐 *Sesi anda telah tamat.*\n\nSila tekan /start untuk pengesahan semula.",
+            parse_mode='Markdown'
+        )
+        return ConversationHandler.END
+
+    soalan = update.message.text.strip()
+    if not soalan:
+        return STATE_SAHABAT_SOALAN
+
+    if soalan.lower() in {"menu", "menu utama", "keluar", "exit"}:
+        nama = context.user_data.get('nama', 'Ahli')
+        await update.message.reply_text(
+            f"🏠 *MENU UTAMA KPPbNB*\n\nSelamat kembali, *{nama}*.\nSila pilih perkhidmatan di bawah:",
+            parse_mode='Markdown', reply_markup=get_main_keyboard()
+        )
+        return ConversationHandler.END
+
+    await update.message.reply_text("🤔 Sahabat sedang semak soalan hg...", parse_mode='Markdown')
+    jawapan = await _sahabat_tanya_ai(soalan)
+    await update.message.reply_text(
+        "🤝 *Sahabat KPPbNB*\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        + jawapan,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')],
+            [InlineKeyboardButton("🤝 Tanya Lagi", callback_data='menu_sahabat')]
+        ])
+    )
+    return STATE_SAHABAT_SOALAN
+
 # ==================== MODUL LAIN (DOKUMEN, PROFIL, HUBUNGI) ====================
 async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -1178,6 +1359,19 @@ async def async_main():
         allow_reentry=True
     )
     app.add_handler(aduan_conv)
+
+    sahabat_conv = ConversationHandler(
+        entry_points=[CallbackQueryHandler(handle_sahabat, pattern='^(menu_sahabat|menu_utama)$')],
+        states={
+            STATE_SAHABAT_SOALAN: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, sahabat_soalan),
+                CallbackQueryHandler(handle_sahabat, pattern='^(menu_sahabat|menu_utama)$')
+            ]
+        },
+        fallbacks=[CommandHandler("start", start)],
+        allow_reentry=True
+    )
+    app.add_handler(sahabat_conv)
     app.add_handler(CallbackQueryHandler(handle_akta, pattern='^(menu_akta|akta_)'))
     app.add_handler(CallbackQueryHandler(handle_ca, pattern='^(menu_ca|ca_|art64_)'))
     app.add_handler(CallbackQueryHandler(handle_other_menus, pattern='^menu_(dokumen|hebahan|profil|hubungi|utama)$'))

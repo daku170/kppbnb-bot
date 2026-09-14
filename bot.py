@@ -1125,7 +1125,7 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
         import urllib.error
 
         payload = json.dumps({
-            "model": os.environ.get("SAHABAT_MODEL", "gpt-5.6-mini"),
+            "model": os.environ.get("SAHABAT_MODEL", "gpt-5.6-luna"),
             "instructions": SAHABAT_SYSTEM_PROMPT,
             "input": prompt,
             "max_output_tokens": 700

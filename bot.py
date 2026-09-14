@@ -214,83 +214,209 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data
 
     if data == 'menu_akta':
-        text = "📖 *1. AKTA & PERATURAN KERJA MALAYSIA*\n\nPilih topik statutori di bawah untuk rujukan terperinci:"
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
+        text = (
+            "📖 *1. AKTA & PERATURAN KERJA MALAYSIA*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "Pilih topik di bawah untuk rujukan hak minimum di bawah undang-undang "
+            "serta perbandingan dengan CA-7 BERNAS:"
+        )
+        await query.message.reply_text(
+            text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
+        )
+
     elif data == 'akta_waktu':
         text = (
             "⏰ *AKTA KERJA 1955: WAKTU BEKERJA (SEKSYEN 60A)*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Ketetapan Undang-undang:*\n"
-            "• Had maksimum waktu kerja biasa ialah *45 jam seminggu*.\n"
-            "• Pekerja tidak boleh diarahkan bekerja lebih daripada *8 jam sehari* tanpa dikira sebagai OT.\n"
-            "• Masa rehat minimum wajib diberikan sekurang-kurangnya *30 minit* bagi setiap 5 jam kerja berterusan.\n\n"
-            "📌 *Rujukan Bandingan CA-7 BERNAS (Artikel 29):*\n"
-            "• Purata 39 jam seminggu bagi bukan syif dan 42 jam seminggu bagi pekerja syif."
+            "📌 *APA AKTA TETAPKAN*\n"
+            "• Waktu kerja biasa tidak melebihi *45 jam seminggu*.\n"
+            "• Waktu kerja harian tertakluk kepada had yang ditetapkan di bawah Seksyen 60A.\n"
+            "• Pekerja berhak mendapat waktu rehat yang ditetapkan apabila bekerja secara berterusan.\n\n"
+            "⭐ *CA-7 BERNAS – ARTIKEL 29*\n"
+            "• Pekerja bukan syif: *39 jam seminggu*.\n"
+            "• Pekerja syif: purata *42 jam seminggu*.\n"
+            "• Sebarang perubahan jadual waktu bekerja, setakat yang praktik, "
+            "hendaklah dimaklumkan kepada Kesatuan dan pekerja terlibat sekurang-kurangnya "
+            "*3 hari sebelum* perubahan berkuat kuasa.\n\n"
+            "🟢 *KELEBIHAN CA-7*\n"
+            "CA-7 menetapkan waktu bekerja mingguan yang khusus untuk pekerja BERNAS."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
+        await query.message.reply_text(
+            text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
+        )
+
     elif data == 'akta_ot':
         text = (
-            "🧮 *AKTA KERJA 1955: KERJA LEBIH MASA / OT (SEKSYEN 60A)*\n"
+            "🧮 *AKTA KERJA 1955: KERJA LEBIH MASA / OT*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Kadar Bayaran Rasmi Akta:*\n"
-            "• *Hari Bekerja Biasa:* 1.5x daripada kadar gaji sejam.\n"
-            "• *Hari Rehat:* 2.0x | *Cuti Am:* 3.0x.\n"
-            "• Had maksimum OT: *104 jam sebulan*."
+            "📌 *APA AKTA TETAPKAN*\n"
+            "• Hari bekerja biasa: *1.5 × kadar gaji sejam*.\n"
+            "• Hari rehat: *2.0 × kadar gaji sejam*.\n"
+            "• Hari cuti am: *3.0 × kadar gaji sejam*.\n"
+            "• Had kerja lebih masa adalah tertakluk kepada peraturan had OT yang berkuat kuasa.\n\n"
+            "⭐ *CA-7 BERNAS – ARTIKEL 30 & 31*\n"
+            "• OT dilakukan atas permintaan BERNAS dengan persetujuan pekerja; "
+            "pekerja tidak boleh menolak tanpa alasan munasabah.\n"
+            "• Hari bekerja biasa: formula CA-7 menggunakan *Gaji Bulanan ÷ 26 × 1.5* "
+            "dan kadar jam kerja biasa.\n"
+            "• Jika pekerja dipanggil dari rumah untuk OT sebelum atau selepas waktu kerja, "
+            "BERNAS hendaklah membayar OT tersebut.\n"
+            "• CA-7 membenarkan sehingga *104 jam sebulan*; OT pada hari rehat/cuti umum "
+            "tidak termasuk dalam had tersebut, tertakluk kepada peraturan berkenaan.\n"
+            "• OT boleh digantikan dengan cuti gantian: *6–8 jam = 1 hari*; "
+            "*4–5 jam = 1/2 hari*, dan boleh dikumpulkan sehingga 6 bulan.\n\n"
+            "🟢 *KELEBIHAN CA-7*\n"
+            "Kemudahan cuti gantian OT dinyatakan secara khusus dalam CA-7."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
+        await query.message.reply_text(
+            text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
+        )
+
     elif data == 'akta_cuti':
         text = (
-            "🏖️ *AKTA KERJA 1955: KELAYAKAN CUTI BERGAJI (SEKSYEN 60E)*\n"
+            "🏖️ *AKTA KERJA 1955: CUTI TAHUNAN (SEKSYEN 60E)*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Kelebihan CA-7 BERNAS (Artikel 44):*\n"
-            "  👉 Khidmat < 2 tahun: *18 hari*\n"
-            "  👉 Khidmat 2 - 5 tahun: *22 hari*\n"
-            "  👉 Khidmat > 5 tahun: *24 hari*"
+            "📌 *MINIMUM DI BAWAH AKTA*\n"
+            "• Kurang 2 tahun: *8 hari setahun*.\n"
+            "• 2 hingga kurang 5 tahun: *12 hari setahun*.\n"
+            "• 5 tahun dan ke atas: *16 hari setahun*.\n\n"
+            "⭐ *CA-7 BERNAS – ARTIKEL 44*\n"
+            "• Kurang 2 tahun: *18 hari*.\n"
+            "• 2 hingga 5 tahun: *22 hari*.\n"
+            "• Lebih 5 tahun: *24 hari*.\n\n"
+            "🟢 *KELEBIHAN CA-7*\n"
+            "Kelayakan cuti tahunan CA-7 adalah lebih tinggi daripada minimum Akta.\n"
+            "• Baki cuti tertentu boleh dilanjutkan sehingga *30 Jun* tahun berikutnya, "
+            "tertakluk kepada syarat CA-7.\n"
+            "• Jika cuti sakit berlaku ketika cuti tahunan, hari yang dilindungi cuti sakit "
+            "tidak dianggap telah menggunakan cuti tahunan."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
+        await query.message.reply_text(
+            text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
+        )
+
     elif data == 'akta_mc':
         text = (
-            "🏥 *AKTA KERJA 1955: CUTI SAKIT & WAD (SEKSYEN 60F)*\n"
+            "🏥 *AKTA KERJA 1955: CUTI SAKIT & HOSPITALISASI (SEKSYEN 60F)*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 Cuti Masuk Wad diasingkan sehingga *60 hari setahun*.\n"
-            "📌 Wajib maklumkan kepada majikan dalam tempoh *48 jam*."
+            "📌 *MINIMUM DI BAWAH AKTA*\n"
+            "• Kurang 2 tahun: *14 hari* cuti sakit.\n"
+            "• 2 hingga kurang 5 tahun: *18 hari*.\n"
+            "• 5 tahun dan ke atas: *22 hari*.\n"
+            "• Jika hospitalisasi diperlukan: sehingga *60 hari* setahun, tertakluk kepada Akta.\n"
+            "• Pekerja hendaklah memaklumkan majikan mengenai ketidakhadiran kerana sakit "
+            "dalam tempoh yang ditetapkan undang-undang.\n\n"
+            "⭐ *CA-7 BERNAS – ARTIKEL 47*\n"
+            "• Cuti sakit biasa: *22 hari setahun*.\n"
+            "• Jika perlu dimasukkan ke hospital: *60 hari setahun* berdasarkan pengesahan "
+            "Doktor Pakar Panel BERNAS.\n\n"
+            "⭐ *CA-7 – ARTIKEL 46: KEMALANGAN PERUSAHAAN*\n"
+            "• Kemalangan perusahaan yang bukan kerana kecuaian sendiri boleh dipertimbangkan "
+            "untuk cuti sakit bergaji penuh sehingga pekerja benar-benar sembuh, "
+            "berdasarkan kes dan laporan doktor pakar.\n"
+            "• Cuti ini tidak dikira sebagai cuti sakit biasa."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
+        await query.message.reply_text(
+            text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
+        )
+
     elif data == 'akta_gaji':
         text = (
-            "💰 *AKTA KERJA 1955: PEMBAYARAN GAJI (SEK 19 & 24)*\n"
+            "💰 *AKTA KERJA 1955: PEMBAYARAN GAJI (SEKSYEN 19)*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 Gaji wajib dibayar selewat-lewatnya pada *hari ke-7* selepas tamat tempoh sebulan kerja."
+            "📌 *APA AKTA TETAPKAN*\n"
+            "• Gaji hendaklah dibayar *tidak lewat daripada hari ke-7* selepas tamat tempoh upah.\n\n"
+            "⭐ *CA-7 BERNAS*\n"
+            "• Takrif gaji dalam CA-7 dirujuk bersama peruntukan Akta Kerja 1955.\n\n"
+            "🟡 *KESIMPULAN*\n"
+            "Bagi perkara yang tiada faedah khusus lebih baik dalam CA-7, "
+            "minimum undang-undang terpakai."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
+        await query.message.reply_text(
+            text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
+        )
+
     elif data == 'akta_awol':
         text = (
-            "⚠️ *AWOL & DISIPLIN (SEK 14 & 15)*\n"
+            "⚠️ *AWOL / KETIDAKHADIRAN – SEKSYEN 15(2) & DISIPLIN*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 Tidak hadir >2 hari berturut-turut tanpa alasan dikira pecah kontrak. Siasatan adil wajib dijalankan."
+            "📌 *APA AKTA TETAPKAN*\n"
+            "• Jika pekerja tidak hadir *lebih daripada 2 hari bekerja berturut-turut* "
+            "tanpa kebenaran, ia boleh dianggap sebagai pelanggaran kontrak.\n"
+            "• Pengecualian: pekerja mempunyai alasan munasabah dan telah memaklumkan, "
+            "atau cuba memaklumkan, majikan pada peluang terawal.\n\n"
+            "⭐ *CA-7 BERNAS – ARTIKEL 28*\n"
+            "• CA-7 turut menetapkan peruntukan ketidakhadiran lebih daripada 2 hari "
+            "bekerja berturut-turut tanpa kebenaran, tertakluk kepada alasan munasabah "
+            "dan kewajipan memaklumkan BERNAS.\n\n"
+            "📌 *NOTA DISIPLIN*\n"
+            "Isu AWOL boleh membawa kepada tindakan tatatertib. Proses dan hukuman "
+            "hendaklah dirujuk kepada peruntukan disiplin yang berkuat kuasa."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
+        await query.message.reply_text(
+            text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
+        )
+
     elif data == 'akta_tamat':
         text = (
-            "🚪 *PENAMATAN KONTRAK & NOTIS (SEK 12)*\n"
+            "🚪 *PENAMATAN KONTRAK & NOTIS – SEKSYEN 12*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 Notis mengikut tempoh perkhidmatan (4 minggu hingga 8 minggu)."
+            "📌 *MINIMUM DI BAWAH AKTA*\n"
+            "• Kurang 2 tahun: *4 minggu notis*.\n"
+            "• 2 hingga kurang 5 tahun: *6 minggu notis*.\n"
+            "• 5 tahun dan ke atas: *8 minggu notis*.\n\n"
+            "⭐ *CA-7 BERNAS – ARTIKEL 27*\n"
+            "• Kurang 2 tahun: *4 minggu*.\n"
+            "• 2 hingga 5 tahun: *6 minggu*.\n"
+            "• Lebih 5 tahun: *8 minggu*.\n\n"
+            "🟡 *KESIMPULAN*\n"
+            "Kadar notis CA-7 adalah selaras dengan tempoh minimum yang dinyatakan "
+            "dalam Akta."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
+        await query.message.reply_text(
+            text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
+        )
+
     elif data == 'akta_osha':
         text = (
-            "🦺 *OSHA 1994 (SEKSYEN 26A)*\n"
+            "🦺 *OSHA 1994 – SEKSYEN 26A*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 Hak pekerja menolak kerja berisiko tinggi atau bahaya ketara di tempat kerja."
+            "📌 *HAK PEKERJA*\n"
+            "• Pekerja mempunyai hak untuk menjauhkan diri daripada bahaya serius dan "
+            "hampir pasti berlaku selepas memaklumkan majikan mengenai bahaya tersebut "
+            "dan majikan gagal mengambil tindakan untuk menghapuskan bahaya.\n"
+            "• Pekerja tidak boleh didiskriminasi kerana menggunakan hak tersebut.\n\n"
+            "⭐ *CA-7 BERNAS – ARTIKEL 69*\n"
+            "• CA-7 mempunyai peruntukan khusus mengenai *Jawatankuasa Keselamatan, "
+            "Kesihatan Pekerjaan dan Persekitaran*.\n\n"
+            "⚠️ *PENTING*\n"
+            "Hak di bawah Seksyen 26A bukan bermaksud pekerja boleh menolak sebarang "
+            "kerja yang dirasakan berisiko. Syarat dan keadaan yang ditetapkan undang-undang "
+            "perlu dipenuhi."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
+        await query.message.reply_text(
+            text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
+        )
+
     elif data == 'akta_perkeso':
         text = (
-            "🛡️ *PERKESO (SKIM BENCANA PEKERJAAN)*\n"
+            "🛡️ *PERKESO – SKIM BENCANA PEKERJAAN*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 Melindungi kemalangan di tempat kerja serta kemalangan perjalanan pergi/balik bertugas."
+            "📌 *PERLINDUNGAN*\n"
+            "• Meliputi kemalangan yang berlaku akibat pekerjaan serta perlindungan "
+            "yang berkaitan di bawah skim bencana pekerjaan, tertakluk kepada syarat PERKESO.\n"
+            "• Kemalangan perjalanan pergi dan balik kerja juga boleh dilindungi "
+            "tertakluk kepada syarat undang-undang.\n\n"
+            "⭐ *CA-7 BERNAS – ARTIKEL 42*\n"
+            "• Pekerja yang terlibat dalam kemalangan perusahaan menerima pampasan "
+            "mengikut peruntukan dan kelulusan Akta Keselamatan Sosial Pekerja 1969.\n\n"
+            "⭐ *CA-7 – ARTIKEL 46*\n"
+            "• Kemalangan perusahaan yang bukan kerana kecuaian sendiri boleh dipertimbangkan "
+            "untuk cuti sakit bergaji penuh sehingga sembuh, tertakluk kepada syarat CA-7."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
+        await query.message.reply_text(
+            text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
+        )
 
 # ==================== MODUL CA-7 ====================
 async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):

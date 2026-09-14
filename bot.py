@@ -914,7 +914,6 @@ def get_aduan_keyboard():
 async def handle_aduan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    context.user_data['last_active'] = time.time()
     data = query.data
 
     if not is_session_active(context):
@@ -1124,12 +1123,25 @@ async def async_main():
     app.add_handler(ot_conv)
 
     aduan_conv = ConversationHandler(
-        entry_points=[CallbackQueryHandler(handle_aduan, pattern='^(menu_aduan|aduan_isu|aduan_gaji|aduan_kebajikan|aduan_keselamatan|aduan_lain|menu_utama)$')],
+        entry_points=[
+            CallbackQueryHandler(
+                handle_aduan,
+                pattern='^(menu_aduan|aduan_isu|aduan_gaji|aduan_kebajikan|aduan_keselamatan|aduan_lain|menu_utama)$'
+            )
+        ],
         states={
-            STATE_ADUAN_JENIS: [CallbackQueryHandler(handle_aduan, pattern='^(aduan_isu|aduan_gaji|aduan_kebajikan|aduan_keselamatan|aduan_lain)$')],
-            STATE_ADUAN_KETERANGAN: [MessageHandler(filters.TEXT & ~filters.COMMAND, terima_aduan)]
+            STATE_ADUAN_JENIS: [
+                CallbackQueryHandler(
+                    handle_aduan,
+                    pattern='^(aduan_isu|aduan_gaji|aduan_kebajikan|aduan_keselamatan|aduan_lain|menu_utama)$'
+                )
+            ],
+            STATE_ADUAN_KETERANGAN: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, terima_aduan)
+            ]
         },
-        fallbacks=[CommandHandler("start", start)]
+        fallbacks=[CommandHandler("start", start)],
+        allow_reentry=True
     )
     app.add_handler(aduan_conv)
     app.add_handler(CallbackQueryHandler(handle_akta, pattern='^(menu_akta|akta_)'))

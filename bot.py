@@ -23,8 +23,8 @@ GROQ_API_KEY = "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"
 # ID Rasmi GROUP ADUAN KPPbNB
 ADMIN_CHAT_ID = -1003958495436
 
-# Pautan Spesifik Dokumen Google Drive & SharePoint
-URL_KILANAN = "https://drive.google.com/file/d/1CRrSFRlZgWtN5tUVlwj2iOsFbpmjJvMl/view?usp=drive_link"
+# Pautan Spesifik Dokumen Google Drive & SharePoint (Kemas Kini Borang Kilanan Baru)
+URL_KILANAN = "https://drive.google.com/file/d/1KLmiSGJcnV_Wmcwkfyj6LZ17KGdJp92w/view?usp=drive_link"
 URL_CA1 = "https://drive.google.com/file/d/1s0KkAqdb2i2XMAg8HgoEvh0tWhiTMcYB/view?usp=drive_link"
 URL_CA2 = "https://drive.google.com/file/d/1piIG4_2V8o0ZpQhpvf6pUo9kJutKUKXr/view?usp=drive_link"
 URL_CA3 = "https://drive.google.com/file/d/1ZyaSF0CoaY_jrgCS8C2I53kTVC1qb__X/view?usp=drive_link"
@@ -490,7 +490,7 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
             [InlineKeyboardButton("⚖️ Buku Tatatertib BERNAS Edisi 5", url=URL_TATATERTIB)],
             [InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')]
         ]
-        await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
+        await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_back_button())
     elif data == 'menu_hebahan':
         text = "📢 *HEBAHAN KESATUAN*\n• CA-7 berkuatkuasa 2026-2028.\n• Pastikan semakan yuran kesatuan teratur."
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_back_button())

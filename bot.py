@@ -6,6 +6,7 @@ import socketserver
 import logging
 import random
 import csv
+import time
 from datetime import datetime
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
@@ -43,7 +44,7 @@ logging.basicConfig(
 STATE_VERIFY_ID = 1
 STATE_UPDATE_LOCATION = 2
 
-# Fungsi Membaca Pangkalan Data Ahli daripada Fail CSV
+# Fungsi Membaca Data Ahli dari Fail CSV
 def baca_data_ahli(no_pekerja_dicari):
     try:
         if not os.path.exists("ahli.csv"):
@@ -51,7 +52,6 @@ def baca_data_ahli(no_pekerja_dicari):
         with open("ahli.csv", mode="r", encoding="utf-8") as file:
             reader = csv.DictReader(file)
             for row in reader:
-                # Padankan no_pekerja (bersihkan sebarang ruang kosong)
                 if row["no_pekerja"].strip() == str(no_pekerja_dicari).strip():
                     return {
                         "nama": row["nama"].strip(),
@@ -60,6 +60,16 @@ def baca_data_ahli(no_pekerja_dicari):
     except Exception as e:
         logging.error(f"Ralat baca CSV: {e}")
     return None
+
+# Fungsi Semak Adakah Sesi Masih Aktif (< 15 Minit)
+def is_session_active(context: ContextTypes.DEFAULT_TYPE) -> bool:
+    verified = context.user_data.get('verified', False)
+    last_active = context.user_data.get('last_active', 0)
+    # 15 minit = 900 saat
+    if verified and (time.time() - last_active < 900):
+        context.user_data['last_active'] = time.time()  # Perbarui masa aktif
+        return True
+    return False
 
 def run_web_server():
     port = int(os.environ.get("PORT", 8080))
@@ -194,11 +204,21 @@ def get_elaun_4k_keyboard():
 # ==================== HANDLERS PENGESAHAN & LOKASI ====================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data.clear()
+    # Semak sama ada sesi masih aktif (< 15 minit)
+    if is_session_active(context):
+        nama = context.user_data.get('nama', 'Ahli')
+        text = f"Hi kembali, *{nama}*! 👋\n\nAnda sudah disahkan sebelum ini. Sila pilih perkhidmatan di bawah:"
+        if update.message:
+            await update.message.reply_text(text, parse_mode='Markdown', reply_markup=get_main_keyboard())
+        elif update.callback_query:
+            await update.callback_query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_main_keyboard())
+        return ConversationHandler.END
+
+    # Jika sudah lebih 15 minit atau belum pernah sah, minta nombor pekerja
     text = (
         "🔐 *PENGESAHAN KEAHLIAN KPPbNB*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        "Selamat datang ke Bot Rasmi KPPbNB BERNAS.\n\n"
+        "Sesi anda telah tamat tempoh atau belum disahkan.\n\n"
         "👉 Sila masukkan *Nombor Pekerja* sah anda untuk meneruskan:"
     )
     if update.message:
@@ -211,15 +231,14 @@ async def verify_employee_id(update: Update, context: ContextTypes.DEFAULT_TYPE)
     emp_id = update.message.text.strip()
     user = update.effective_user
 
-    # Baca data terus dari fail CSV berdasarkan no pekerja yang ditaip
     data_ahli = baca_data_ahli(emp_id)
 
     if data_ahli:
-        # Kunci data khusus ke dalam sesi individu ini
         context.user_data['emp_id'] = emp_id
         context.user_data['nama'] = data_ahli['nama']
         context.user_data['lokasi'] = data_ahli['lokasi']
         context.user_data['verified'] = True
+        context.user_data['last_active'] = time.time()  # Rekod masa mula aktif
         
         welcome_text = (
             f"Hi *{data_ahli['nama']}*! 👋\n\n"
@@ -269,6 +288,7 @@ async def receive_new_location(update: Update, context: ContextTypes.DEFAULT_TYP
     user = update.effective_user
 
     context.user_data['lokasi'] = new_loc
+    context.user_data['last_active'] = time.time()  # Kemas kini masa aktif
 
     notis_group = (
         "📍 *NOTIFIKASI KEMAS KINI LOKASI AHLI*\n"
@@ -295,6 +315,7 @@ async def receive_new_location(update: Update, context: ContextTypes.DEFAULT_TYP
 async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+    context.user_data['last_active'] = time.time()
     data = query.data
 
     if data == 'menu_akta':
@@ -331,6 +352,7 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+    context.user_data['last_active'] = time.time()
     data = query.data
 
     if data == 'menu_ca':
@@ -370,6 +392,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+    context.user_data['last_active'] = time.time()
     data = query.data
 
     if data == 'menu_dokumen':
@@ -413,15 +436,21 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
             "• *Bendahari:* En. Khairul Faiz (`khairulfaiz@bernas.com.my`)"
         )
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_back_button())
+    elif data == 'menu_utama':
+        nama = context.user_data.get('nama', 'Ahli')
+        text = f"🏠 *MENU UTAMA KPPbNB*\n\nSelamat kembali, *{nama}*.\nSila pilih perkhidmatan di bawah:"
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_main_keyboard())
 
 async def handle_ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text or update.message.text.startswith('/'):
         return
     
-    if not context.user_data.get('verified'):
-        await update.message.reply_text("🔐 Sila masukkan Nombor Pekerja yang sah terlebih dahulu dengan menaip /start")
+    # Semak adakah sesi aktif
+    if not is_session_active(context):
+        await update.message.reply_text("🔐 Sesi anda telah tamat tempoh atau belum disahkan. Sila taip /start semula.")
         return
 
+    context.user_data['last_active'] = time.time()
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
     loop = asyncio.get_running_loop()
     ai_raw = await loop.run_in_executor(None, query_groq_ai, update.message.text.strip())
@@ -457,16 +486,15 @@ async def async_main():
     app.add_handler(verify_conv)
     app.add_handler(location_conv)
     
-    app.add_handler(CallbackQueryHandler(start, pattern='^menu_utama$'))
     app.add_handler(CallbackQueryHandler(handle_akta, pattern='^(menu_akta|akta_)'))
     app.add_handler(CallbackQueryHandler(handle_ca, pattern='^(menu_ca|ca_|art64_)'))
-    app.add_handler(CallbackQueryHandler(handle_other_menus, pattern='^menu_(dokumen|hebahan|profil|hubungi)$'))
+    app.add_handler(CallbackQueryHandler(handle_other_menus, pattern='^menu_(dokumen|hebahan|profil|hubungi|utama)$'))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_ai_chat))
 
     async with app:
         await app.start()
         await app.updater.start_polling()
-        print("Bot KPPbNB LIVE dengan Bacaan Fail CSV Penuh!")
+        print("Bot KPPbNB LIVE dengan Sistem Timeout Sesi 15 Minit!")
         while True:
             await asyncio.sleep(3600)
 

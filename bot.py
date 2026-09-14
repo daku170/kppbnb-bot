@@ -41,6 +41,8 @@ STATE_OT_ZONE = 2
 STATE_OT_DAY = 3
 STATE_OT_SALARY = 4
 STATE_OT_HOURS = 5
+STATE_ADUAN_JENIS = 6
+STATE_ADUAN_KETERANGAN = 7
 
 # Fungsi Web Server untuk Render
 def run_web_server():
@@ -806,6 +808,129 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
 
+# ==================== MODUL LAPORAN / ADUAN ====================
+def get_aduan_keyboard():
+    keyboard = [
+        [InlineKeyboardButton("⚠️ Isu Pekerjaan", callback_data='aduan_isu')],
+        [InlineKeyboardButton("💰 Gaji / Elaun / OT", callback_data='aduan_gaji')],
+        [InlineKeyboardButton("👥 Kebajikan / Perkhidmatan", callback_data='aduan_kebajikan')],
+        [InlineKeyboardButton("🦺 Keselamatan / Tempat Kerja", callback_data='aduan_keselamatan')],
+        [InlineKeyboardButton("📋 Lain-lain", callback_data='aduan_lain')],
+        [InlineKeyboardButton("🔙 Menu Utama", callback_data='menu_utama')]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+async def handle_aduan(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    context.user_data['last_active'] = time.time()
+    data = query.data
+
+    if not is_session_active(context):
+        await query.message.reply_text(
+            "🔐 *Sesi anda telah tamat.*\n\nSila tekan /start untuk pengesahan semula.",
+            parse_mode='Markdown'
+        )
+        return ConversationHandler.END
+
+    if data == 'menu_aduan':
+        text = (
+            "📝 *LAPORAN / ADUAN KPPbNB*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "Saluran ini digunakan untuk ahli melaporkan isu, masalah atau perkara berkaitan pekerjaan kepada Kesatuan.\n\n"
+            "📌 Pilih kategori laporan/aduan di bawah:"
+        )
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_aduan_keyboard())
+        return STATE_ADUAN_JENIS
+
+    jenis_map = {
+        'aduan_isu': 'Isu Pekerjaan',
+        'aduan_gaji': 'Gaji / Elaun / OT',
+        'aduan_kebajikan': 'Kebajikan / Perkhidmatan',
+        'aduan_keselamatan': 'Keselamatan / Tempat Kerja',
+        'aduan_lain': 'Lain-lain'
+    }
+
+    if data in jenis_map:
+        context.user_data['aduan_jenis'] = jenis_map[data]
+        await query.message.reply_text(
+            f"📝 *Kategori:* {jenis_map[data]}\n\n"
+            "Sila taip *keterangan aduan/laporan* dengan jelas.\n\n"
+            "Contoh:\n"
+            "• Tarikh kejadian\n"
+            "• Lokasi\n"
+            "• Apa yang berlaku\n"
+            "• Tindakan yang telah diambil (jika ada)\n"
+            "• Apa bantuan/tindakan yang diperlukan daripada Kesatuan",
+            parse_mode='Markdown'
+        )
+        return STATE_ADUAN_KETERANGAN
+
+    if data == 'menu_utama':
+        nama = context.user_data.get('nama', 'Ahli')
+        await query.message.reply_text(
+            f"🏠 *MENU UTAMA KPPbNB*\n\nSelamat kembali, *{nama}*.\nSila pilih perkhidmatan di bawah:",
+            parse_mode='Markdown', reply_markup=get_main_keyboard()
+        )
+        return ConversationHandler.END
+
+    return STATE_ADUAN_JENIS
+
+async def terima_aduan(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_session_active(context):
+        await update.message.reply_text(
+            "🔐 *Sesi anda telah tamat.*\n\nSila tekan /start untuk pengesahan semula.",
+            parse_mode='Markdown'
+        )
+        return ConversationHandler.END
+
+    keterangan = update.message.text.strip()
+    if not keterangan:
+        await update.message.reply_text("❌ Sila masukkan keterangan aduan.")
+        return STATE_ADUAN_KETERANGAN
+
+    context.user_data['aduan_keterangan'] = keterangan
+    jenis = context.user_data.get('aduan_jenis', 'Lain-lain')
+    nama = context.user_data.get('nama', 'Tidak Diketahui')
+    emp_id = context.user_data.get('emp_id', 'Tidak Diketahui')
+    lokasi = context.user_data.get('lokasi', 'Tidak Diketahui')
+    user = update.effective_user
+    masa = time.strftime('%d/%m/%Y %H:%M:%S')
+
+    text = (
+        "📨 *LAPORAN / ADUAN BAHARU*\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        f"👤 *Nama:* {nama}\n"
+        f"🔢 *No. Pekerja:* `{emp_id}`\n"
+        f"📍 *Lokasi:* {lokasi}\n"
+        f"📂 *Kategori:* {jenis}\n"
+        f"🕐 *Masa Laporan:* {masa}\n\n"
+        "📄 *Keterangan:*\n"
+        f"{keterangan}\n\n"
+        f"🆔 *Telegram ID:* `{user.id}`\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        "⚠️ *Untuk tindakan / semakan AJK KPPbNB*"
+    )
+
+    try:
+        await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=text, parse_mode='Markdown')
+        await update.message.reply_text(
+            "✅ *LAPORAN BERJAYA DIHANTAR*\n\n"
+            "Aduan anda telah dihantar terus ke *Group Aduan KPPbNB* untuk semakan dan tindakan AJK.\n\n"
+            "📌 Jika perkara ini memerlukan proses kilanan rasmi, pihak Kesatuan akan memaklumkan tindakan seterusnya.",
+            parse_mode='Markdown', reply_markup=get_back_button()
+        )
+    except Exception as e:
+        logging.error(f"Gagal hantar laporan/aduan ke group: {e}")
+        await update.message.reply_text(
+            "❌ *Laporan tidak dapat dihantar buat masa ini.*\n\nSila cuba semula atau hubungi pihak Kesatuan.",
+            parse_mode='Markdown', reply_markup=get_back_button()
+        )
+
+    context.user_data.pop('aduan_jenis', None)
+    context.user_data.pop('aduan_keterangan', None)
+    return ConversationHandler.END
+
 # ==================== MODUL LAIN (DOKUMEN, PROFIL, HUBUNGI) ====================
 async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -883,6 +1008,16 @@ async def async_main():
         fallbacks=[CommandHandler("start", start)]
     )
     app.add_handler(ot_conv)
+
+    aduan_conv = ConversationHandler(
+        entry_points=[CallbackQueryHandler(handle_aduan, pattern='^(menu_aduan|aduan_isu|aduan_gaji|aduan_kebajikan|aduan_keselamatan|aduan_lain|menu_utama)$')],
+        states={
+            STATE_ADUAN_JENIS: [CallbackQueryHandler(handle_aduan, pattern='^(aduan_isu|aduan_gaji|aduan_kebajikan|aduan_keselamatan|aduan_lain)$')],
+            STATE_ADUAN_KETERANGAN: [MessageHandler(filters.TEXT & ~filters.COMMAND, terima_aduan)]
+        },
+        fallbacks=[CommandHandler("start", start)]
+    )
+    app.add_handler(aduan_conv)
     app.add_handler(CallbackQueryHandler(handle_akta, pattern='^(menu_akta|akta_)'))
     app.add_handler(CallbackQueryHandler(handle_ca, pattern='^(menu_ca|ca_|art64_)'))
     app.add_handler(CallbackQueryHandler(handle_other_menus, pattern='^menu_(dokumen|hebahan|profil|hubungi|utama)$'))

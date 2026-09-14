@@ -17,7 +17,9 @@ from telegram.ext import (
     filters
 )
 
-BOT_TOKEN = "8938997589:AAHac3AbBUvhxTBTq6nj8UQkV-2K2MUB-qc"
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "").strip()
+if not BOT_TOKEN:
+    raise RuntimeError("BOT_TOKEN belum ditetapkan dalam Environment Variables")
 ADMIN_CHAT_ID = -1003958495436
 
 # Pautan Dokumen Google Drive & SharePoint

@@ -349,7 +349,6 @@ async def aduan_desc_received(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     tiket = f"KPPbNB-{datetime.now().year}-{random.randint(100,999)}"
 
-    # Mesej pengesahan kepada ahli
     await update.message.reply_text(
         f"✅ *ADUAN BERJAYA DIHANTAR*\n"
         f"No. Tiket Rujukan: `{tiket}`\n"
@@ -359,7 +358,6 @@ async def aduan_desc_received(update: Update, context: ContextTypes.DEFAULT_TYPE
         reply_markup=get_back_button()
     )
 
-    # Notifikasi automatik masuk ke Group Aduan KPPbNB
     notis_group = (
         "🚨 *ADUAN / LAPORAN BAHARU MASUK*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
@@ -377,7 +375,7 @@ async def aduan_desc_received(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     return ConversationHandler.END
 
-# ==================== MODUL UTAMA (AKTA & CA7) ====================
+# ==================== MODUL UTAMA (AKTA & CA7 TERPERINCI) ====================
 
 async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -573,10 +571,21 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
     elif data == 'ca_gred':
         text = (
-            "📊 *CA-7: STRUKTUR TANGGA GAJI (LAMPIRAN I)*\n"
+            "📊 *CA-7: STRUKTUR TANGGA GAJI & GRED (LAMPIRAN I)*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "🔧 *Gred T (Teknikal):* T1 (RM1.7k-2.8k) hingga T5 (RM3.0k-6.3k).\n"
-            "💼 *Gred S (Sokongan):* S1 (RM1.7k-2.8k) hingga S5 (RM2.8k-5.4k)."
+            "🔧 *1. KUMPULAN TEKNIKAL (GRED T):*\n"
+            "• *T1:* RM1,700 – RM2,800\n"
+            "• *T2:* RM2,000 – RM3,500\n"
+            "• *T3:* RM2,300 – RM4,500\n"
+            "• *T4:* RM2,600 – RM5,400\n"
+            "• *T5:* RM3,000 – RM6,300\n\n"
+            "💼 *2. KUMPULAN SOKONGAN (GRED S):*\n"
+            "• *S1:* RM1,700 – RM2,800\n"
+            "• *S2:* RM2,000 – RM3,300\n"
+            "• *S3:* RM2,300 – RM4,000\n"
+            "• *S4:* RM2,500 – RM4,700\n"
+            "• *S5:* RM2,800 – RM5,400\n\n"
+            "📌 *Nota Rujukan:* Pelarasan kenaikan gaji tahunan dan merit berjalan mengikut penilaian prestasi tahun semasa."
         )
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
 
@@ -694,7 +703,7 @@ async def async_main():
     async with app:
         await app.start()
         await app.updater.start_polling()
-        print("Bot KPPbNB LIVE dengan Modul Aduan & Semua Fungsi Sempurna!")
+        print("Bot KPPbNB LIVE dengan Perincian Gred T & S Sempurna!")
         while True:
             await asyncio.sleep(3600)
 

@@ -20,6 +20,17 @@ from telegram.ext import (
 BOT_TOKEN = "8938997589:AAHac3AbBUvhxTBTq6nj8UQkV-2K2MUB-qc"
 ADMIN_CHAT_ID = -1003958495436
 
+# Pautan Dokumen Google Drive & SharePoint
+URL_KILANAN = "https://drive.google.com/file/d/1KLmiSGJcnV_Wmcwkfyj6LZ17KGdJp92w/view?usp=drive_link"
+URL_CA1 = "https://drive.google.com/file/d/1s0KkAqdb2i2XMAg8HgoEvh0tWhiTMcYB/view?usp=drive_link"
+URL_CA2 = "https://drive.google.com/file/d/1piIG4_2V8o0ZpQhpvf6pUo9kJutKUKXr/view?usp=drive_link"
+URL_CA3 = "https://drive.google.com/file/d/1ZyaSF0CoaY_jrgCS8C2I53kTVC1qb__X/view?usp=drive_link"
+URL_CA4 = "https://drive.google.com/file/d/1Hro24UiRlpAP7xQpQ_iuo0iyAMszorFt/view?usp=drive_link"
+URL_CA5 = "https://drive.google.com/file/d/1Z41lso7fi3GlVG_UvGpncUkIndN1GaL3/view?usp=drive_link"
+URL_CA6 = "https://drive.google.com/file/d/19kQw-6Klinuq1ErF-raLs8-9xoosYroi/view?usp=drive_link"
+URL_AKTA = "https://drive.google.com/file/d/1zR2l8JhjjP5udVwnpaq9v_iVuZrreJ-g/view?usp=sharing"
+URL_TATATERTIB = "https://padiberasnasional.sharepoint.com/sites/RiCentre/Prosedur%20Operasi%20Standard%20HR/Forms/AllItems.aspx?id=%2Fsites%2FRiCentre%2FProsedur%20Operasi%20Standard%20HR%2FHRD%2DIR%2D50%2DSOP%2D01%2DE%20PERATURAN%20DAN%20PROSEDUR%20TATATERTIB%20BAGI%20BERNAS%20EDISI%20KELIMA%2Epdf&parent=%2Fsites%2FRiCentre%2FProsedur%20Operasi%20Standard%20HR"
+
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -69,11 +80,11 @@ def is_session_active(context: ContextTypes.DEFAULT_TYPE) -> bool:
     verified = context.user_data.get('verified', False)
     last_active = context.user_data.get('last_active', 0)
     if verified and (time.time() - last_active < 900):
-        context.user_data['last_active'] = time.time()  # Perbarui masa aktif setiap kali berinteraksi
+        context.user_data['last_active'] = time.time()
         return True
     return False
 
-# ==================== KEYBOARD MENU UTAMA ====================
+# ==================== KEYBOARDS ====================
 def get_main_keyboard():
     keyboard = [
         [InlineKeyboardButton("📖 Akta & Peraturan", callback_data='menu_akta'),
@@ -90,115 +101,6 @@ def get_main_keyboard():
 def get_back_button():
     return InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')]])
 
-# Langkah 1: Mula bot minta No Pekerja (Semak Sesi 15 Minit)
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if is_session_active(context):
-        nama = context.user_data.get('nama', 'Ahli')
-        text = f"Hi kembali, *{nama}*! 👋\n\nSesi anda masih aktif. Sila pilih perkhidmatan di bawah:"
-        if update.message:
-            await update.message.reply_text(text, parse_mode='Markdown', reply_markup=get_main_keyboard())
-        elif update.callback_query:
-            await update.callback_query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_main_keyboard())
-        return ConversationHandler.END
-
-    text = (
-        "🔐 *PENGESAHAN KEAHLIAN KPPbNB*\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        "Sesi anda telah tamat tempoh (selepas 15 minit) atau belum disahkan.\n\n"
-        "👉 Sila masukkan *Nombor Pekerja* sah anda untuk meneruskan:"
-    )
-    if update.message:
-        await update.message.reply_text(text, parse_mode='Markdown')
-    elif update.callback_query:
-        await update.callback_query.message.reply_text(text, parse_mode='Markdown')
-    return STATE_VERIFY_ID
-
-# Langkah 2: Semak No Pekerja & Set Masa Sesi Aktif
-async def verify_employee_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    emp_id = update.message.text.strip()
-    user = update.effective_user
-
-    data_ahli = baca_data_ahli(emp_id)
-
-    if data_ahli:
-        context.user_data['emp_id'] = emp_id
-        context.user_data['nama'] = data_ahli['nama']
-        context.user_data['lokasi'] = data_ahli['lokasi']
-        context.user_data['verified'] = True
-        context.user_data['last_active'] = time.time()  # Rekod masa mula log masuk
-        
-        welcome_text = (
-            f"Hi *{data_ahli['nama']}*! 👋\n\n"
-            "✅ *PENGESAHAN BERJAYA!*\n"
-            "Keahlian anda disahkan aktif. Sila pilih perkhidmatan di bawah:"
-        )
-        await update.message.reply_text(welcome_text, parse_mode='Markdown', reply_markup=get_main_keyboard())
-        return ConversationHandler.END
-    else:
-        notis_admin = (
-            "🚨 *PERCUBAAN AKSES BOT TIDAK SAH*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            f"👤 *Nama Telegram:* {user.full_name} (@{user.username or 'Tiada'})\n"
-            f"🆔 *Telegram ID:* `{user.id}`\n"
-            f"🔢 *No. Pekerja Dimasukkan:* `{emp_id}`\n"
-            "⚠️ *Status:* Gagal disahkan (Tiada dalam fail CSV induk)."
-        )
-        try:
-            await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=notis_admin, parse_mode='Markdown')
-        except Exception as e:
-            logging.error(f"Gagal hantar notis keselamatan ke group: {e}")
-
-        error_text = (
-            "❌ *RALAT: NOMBOR PEKERJA TIDAK DIJUMPAI*\n\n"
-            "Nombor pekerja anda tiada dalam rekod keahlian aktif KPPbNB.\n"
-            "Notifikasi kegagalan telah disalurkan kepada pihak pentadbir.\n\n"
-            "📞 Sila hubungi Setiausaha Agung (Pn. Farah Aqilah: aqilah@bernas.com.my) untuk bantuan.\n\n"
-            "Sila cuba masukkan semula Nombor Pekerja yang sah:"
-        )
-        await update.message.reply_text(error_text, parse_mode='Markdown')
-        return STATE_VERIFY_ID
-
-# Handler Callback untuk Butang Menu Utama (Kemas kini masa aktif sesi)
-async def handle_menu_utama(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    
-    if not is_session_active(context):
-        await query.message.reply_text("🔐 Sesi anda telah tamat tempoh selepas 15 minit tidak aktif. Sila taip /start semula.")
-        return
-
-    nama = context.user_data.get('nama', 'Ahli')
-    text = f"🏠 *MENU UTAMA KPPbNB*\n\nSelamat kembali, *{nama}*.\nSila pilih perkhidmatan di bawah:"
-    await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_main_keyboard())
-
-# Main Runner
-async def async_main():
-    threading.Thread(target=run_web_server, daemon=True).start()
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
-
-    verify_conv = ConversationHandler(
-        entry_points=[CommandHandler("start", start)],
-        states={
-            STATE_VERIFY_ID: [MessageHandler(filters.TEXT & ~filters.COMMAND, verify_employee_id)]
-        },
-        fallbacks=[CommandHandler("start", start)]
-    )
-
-    app.add_handler(verify_conv)
-    app.add_handler(CallbackQueryHandler(handle_menu_utama, pattern='^menu_utama$'))
-
-    async with app:
-        await app.start()
-        await app.updater.start_polling()
-        print("Bot KPPbNB LIVE dengan Timeout Sesi 15 Minit!")
-        while True:
-            await asyncio.sleep(3600)
-
-def main():
-    asyncio.run(async_main())
-
-if __name__ == '__main__':
-    main()
 def get_akta_keyboard():
     keyboard = [
         [InlineKeyboardButton("⏰ Waktu Bekerja (Sek 60A)", callback_data='akta_waktu'),
@@ -237,6 +139,72 @@ def get_elaun_4k_keyboard():
         [InlineKeyboardButton("🔙 Kembali ke Menu CA7", callback_data='menu_ca')]
     ]
     return InlineKeyboardMarkup(keyboard)
+
+# ==================== HANDLERS PENGESAHAN ====================
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if is_session_active(context):
+        nama = context.user_data.get('nama', 'Ahli')
+        text = f"Hi kembali, *{nama}*! 👋\n\nSesi anda masih aktif. Sila pilih perkhidmatan di bawah:"
+        if update.message:
+            await update.message.reply_text(text, parse_mode='Markdown', reply_markup=get_main_keyboard())
+        elif update.callback_query:
+            await update.callback_query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_main_keyboard())
+        return ConversationHandler.END
+
+    text = (
+        "🔐 *PENGESAHAN KEAHLIAN KPPbNB*\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        "Sesi anda telah tamat tempoh (selepas 15 minit) atau belum disahkan.\n\n"
+        "👉 Sila masukkan *Nombor Pekerja* sah anda untuk meneruskan:"
+    )
+    if update.message:
+        await update.message.reply_text(text, parse_mode='Markdown')
+    elif update.callback_query:
+        await update.callback_query.message.reply_text(text, parse_mode='Markdown')
+    return STATE_VERIFY_ID
+
+async def verify_employee_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    emp_id = update.message.text.strip()
+    user = update.effective_user
+
+    data_ahli = baca_data_ahli(emp_id)
+
+    if data_ahli:
+        context.user_data['emp_id'] = emp_id
+        context.user_data['nama'] = data_ahli['nama']
+        context.user_data['lokasi'] = data_ahli['lokasi']
+        context.user_data['verified'] = True
+        context.user_data['last_active'] = time.time()
+        
+        welcome_text = (
+            f"Hi *{data_ahli['nama']}*! 👋\n\n"
+            "✅ *PENGESAHAN BERJAYA!*\n"
+            "Keahlian anda disahkan aktif. Sila pilih perkhidmatan di bawah:"
+        )
+        await update.message.reply_text(welcome_text, parse_mode='Markdown', reply_markup=get_main_keyboard())
+        return ConversationHandler.END
+    else:
+        notis_admin = (
+            "🚨 *PERCUBAAN AKSES BOT TIDAK SAH*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            f"👤 *Nama Telegram:* {user.full_name} (@{user.username or 'Tiada'})\n"
+            f"🆔 *Telegram ID:* `{user.id}`\n"
+            f"🔢 *No. Pekerja Dimasukkan:* `{emp_id}`\n"
+            "⚠️ *Status:* Gagal disahkan (Tiada dalam fail CSV induk)."
+        )
+        try:
+            await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=notis_admin, parse_mode='Markdown')
+        except Exception as e:
+            logging.error(f"Gagal hantar notis keselamatan ke group: {e}")
+
+        error_text = (
+            "❌ *RALAT: NOMBOR PEKERJA TIDAK DIJUMPAI*\n\n"
+            "Nombor pekerja anda tiada dalam rekod fail CSV kesatuan.\n\n"
+            "📞 Sila hubungi Setiausaha Agung (Pn. Farah Aqilah: aqilah@bernas.com.my) untuk bantuan.\n\n"
+            "Sila cuba masukkan semula Nombor Pekerja yang sah:"
+        )
+        await update.message.reply_text(error_text, parse_mode='Markdown')
+        return STATE_VERIFY_ID
 
 # ==================== MODUL AKTA & PERATURAN ====================
 async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -420,3 +388,34 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
         nama = context.user_data.get('nama', 'Ahli')
         text = f"🏠 *MENU UTAMA KPPbNB*\n\nSelamat kembali, *{nama}*.\nSila pilih perkhidmatan di bawah:"
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_main_keyboard())
+
+# ==================== MAIN ====================
+async def async_main():
+    threading.Thread(target=run_web_server, daemon=True).start()
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+
+    verify_conv = ConversationHandler(
+        entry_points=[CommandHandler("start", start)],
+        states={
+            STATE_VERIFY_ID: [MessageHandler(filters.TEXT & ~filters.COMMAND, verify_employee_id)]
+        },
+        fallbacks=[CommandHandler("start", start)]
+    )
+
+    app.add_handler(verify_conv)
+    app.add_handler(CallbackQueryHandler(handle_akta, pattern='^(menu_akta|akta_)'))
+    app.add_handler(CallbackQueryHandler(handle_ca, pattern='^(menu_ca|ca_|art64_)'))
+    app.add_handler(CallbackQueryHandler(handle_other_menus, pattern='^menu_(dokumen|hebahan|profil|hubungi|utama)$'))
+
+    async with app:
+        await app.start()
+        await app.updater.start_polling()
+        print("Bot KPPbNB LIVE dengan Sub-Menu Terperinci!")
+        while True:
+            await asyncio.sleep(3600)
+
+def main():
+    asyncio.run(async_main())
+
+if __name__ == '__main__':
+    main()

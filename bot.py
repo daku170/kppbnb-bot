@@ -20,7 +20,7 @@ from telegram.ext import (
 BOT_TOKEN = "8938997589:AAHac3AbBUvhxTBTq6nj8UQkV-2K2MUB-qc"
 ADMIN_CHAT_ID = -1003958495436
 
-# Pautan Spesifik Dokumen Google Drive & SharePoint
+# Pautan Dokumen Google Drive & SharePoint
 URL_KILANAN = "https://drive.google.com/file/d/1KLmiSGJcnV_Wmcwkfyj6LZ17KGdJp92w/view?usp=drive_link"
 URL_CA1 = "https://drive.google.com/file/d/1s0KkAqdb2i2XMAg8HgoEvh0tWhiTMcYB/view?usp=drive_link"
 URL_CA2 = "https://drive.google.com/file/d/1piIG4_2V8o0ZpQhpvf6pUo9kJutKUKXr/view?usp=drive_link"
@@ -38,6 +38,7 @@ logging.basicConfig(
 
 STATE_VERIFY_ID = 1
 
+# Fungsi Web Server untuk Render
 def run_web_server():
     port = int(os.environ.get("PORT", 8080))
     class SimpleHandler(http.server.SimpleHTTPRequestHandler):
@@ -57,6 +58,7 @@ def run_web_server():
     except Exception as e:
         print(f"Web server note: {e}")
 
+# Fungsi Membaca Fail ahli.csv
 def baca_data_ahli(no_pekerja_dicari):
     try:
         if not os.path.exists("ahli.csv"):
@@ -73,6 +75,7 @@ def baca_data_ahli(no_pekerja_dicari):
         logging.error(f"Ralat baca CSV: {e}")
     return None
 
+# Fungsi Semak Adakah Sesi Masih Aktif (< 15 Minit / 900 Saat)
 def is_session_active(context: ContextTypes.DEFAULT_TYPE) -> bool:
     verified = context.user_data.get('verified', False)
     last_active = context.user_data.get('last_active', 0)
@@ -141,7 +144,7 @@ def get_elaun_4k_keyboard():
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if is_session_active(context):
         nama = context.user_data.get('nama', 'Ahli')
-        text = f"Hi kembali, *{nama}*! 👋\n\nSesi masih aktif. Sila pilih perkhidmatan di bawah:"
+        text = f"Hi kembali, *{nama}*! 👋\n\nSesi anda masih aktif. Sila pilih perkhidmatan di bawah:"
         if update.message:
             await update.message.reply_text(text, parse_mode='Markdown', reply_markup=get_main_keyboard())
         elif update.callback_query:
@@ -151,7 +154,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
         "🔐 *PENGESAHAN KEAHLIAN KPPbNB*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        "Sesi tamat tempoh atau belum disahkan.\n\n"
+        "Sesi anda telah tamat tempoh (selepas 15 minit) atau belum disahkan.\n\n"
         "👉 Sila masukkan *Nombor Pekerja* sah anda untuk meneruskan:"
     )
     if update.message:
@@ -313,7 +316,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_elaun_4k_keyboard())
     elif data in ['art64_zona', 'art64_zonb', 'art64_syif']:
         text = "🍱 *ARTIKEL 64.3: ELAUN MAKAN*\n• 2-5 jam: RM25 | >5 jam: RM50."
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_elaun_4k_keyboard())
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
     elif data == 'ca_cuti':
         text = "🏖️ *CA-7: CUTI KHAS*\n• Haji: 54 hari | Bersalin: 98 hari | Paterniti: 7 hari."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
@@ -405,9 +408,10 @@ async def async_main():
     app.add_handler(CallbackQueryHandler(handle_other_menus, pattern='^menu_(dokumen|hebahan|profil|hubungi|utama)$'))
 
     async with app:
+        await app.bot.delete_webhook(drop_pending_updates=True)
         await app.start()
         await app.updater.start_polling()
-        print("Bot KPPbNB LIVE dengan Sub-Menu Terperinci!")
+        print("Bot KPPbNB LIVE penuh dari awal sampai akhir!")
         while True:
             await asyncio.sleep(3600)
 

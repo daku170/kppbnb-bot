@@ -37,6 +37,10 @@ logging.basicConfig(
 )
 
 STATE_VERIFY_ID = 1
+STATE_OT_ZONE = 2
+STATE_OT_DAY = 3
+STATE_OT_SALARY = 4
+STATE_OT_HOURS = 5
 
 # Fungsi Web Server untuk Render
 def run_web_server():
@@ -420,6 +424,181 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
         )
 
+# ==================== KIRAAN OT CA-7 ====================
+def get_ot_zone_keyboard():
+    keyboard = [
+        [InlineKeyboardButton("🇲🇾 Zon A — Isnin–Jumaat", callback_data='ot_zon_a')],
+        [InlineKeyboardButton("🇲🇾 Zon B — Ahad–Khamis", callback_data='ot_zon_b')],
+        [InlineKeyboardButton("🔙 Menu Utama", callback_data='menu_utama')]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def get_ot_day_keyboard(zone):
+    if zone == 'A':
+        keyboard = [
+            [InlineKeyboardButton("📅 Hari Bekerja (Isnin–Jumaat)", callback_data='ot_hari_biasa')],
+            [InlineKeyboardButton("🛌 Hari Rehat (Sabtu/Ahad)", callback_data='ot_hari_rehat')],
+            [InlineKeyboardButton("🎉 Cuti Am", callback_data='ot_cuti_am')],
+            [InlineKeyboardButton("🔙 Pilih Zon", callback_data='menu_kiraan')]
+        ]
+    else:
+        keyboard = [
+            [InlineKeyboardButton("📅 Hari Bekerja (Ahad–Rabu)", callback_data='ot_hari_biasa_8')],
+            [InlineKeyboardButton("📅 Khamis (8am–4pm)", callback_data='ot_hari_biasa_7')],
+            [InlineKeyboardButton("🛌 Hari Rehat (Jumaat/Sabtu)", callback_data='ot_hari_rehat')],
+            [InlineKeyboardButton("🎉 Cuti Am", callback_data='ot_cuti_am')],
+            [InlineKeyboardButton("🔙 Pilih Zon", callback_data='menu_kiraan')]
+        ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+async def handle_ot_calculator(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    context.user_data['last_active'] = time.time()
+    data = query.data
+
+    if data == 'menu_kiraan':
+        context.user_data.pop('ot_zone', None)
+        context.user_data.pop('ot_day_hours', None)
+        text = (
+            "🧮 *KIRAAN ANGGARAN BAYARAN OT — CA-7*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "Sila pilih zon waktu bekerja kerana hari rehat berbeza mengikut jadual CA-7.\n\n"
+            "🇲🇾 *Zon A:* Isnin–Jumaat\n"
+            "• Waktu biasa: 8.30 pagi–5.30 petang\n"
+            "• Rehat: 1.00–2.00 petang\n"
+            "• Jumaat: rehat 12.30 tengah hari–2.30 petang\n\n"
+            "🇲🇾 *Zon B:* Ahad–Khamis\n"
+            "• Ahad–Rabu: 8.00 pagi–5.00 petang\n"
+            "• Khamis: 8.00 pagi–4.00 petang\n"
+            "• Waktu rehat: 1.00–2.00 petang\n\n"
+            "📌 *Nota:* Ini ialah anggaran berdasarkan formula CA-7 Artikel 31."
+        )
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ot_zone_keyboard())
+        return STATE_OT_ZONE
+
+    if data in ('ot_zon_a', 'ot_zon_b'):
+        zone = 'A' if data == 'ot_zon_a' else 'B'
+        context.user_data['ot_zone'] = zone
+        context.user_data.pop('ot_day_hours', None)
+        if zone == 'A':
+            text = (
+                "🇲🇾 *ZON A — ISNIN HINGGA JUMAAT*\n\n"
+                "Sila pilih hari OT:\n"
+                "• Hari bekerja biasa\n"
+                "• Hari rehat\n"
+                "• Cuti am\n\n"
+                "Artikel 29 CA-7 menetapkan waktu biasa 8.30 pagi–5.30 petang, dengan waktu makan 1.00–2.00 petang; Jumaat 12.30–2.30 petang."
+            )
+        else:
+            text = (
+                "🇲🇾 *ZON B — AHAD HINGGA KHAMIS*\n\n"
+                "Sila pilih hari OT:\n"
+                "• Ahad–Rabu (8 jam kerja biasa)\n"
+                "• Khamis (7 jam kerja biasa)\n"
+                "• Hari rehat\n"
+                "• Cuti am\n\n"
+                "Artikel 29 CA-7 menetapkan Ahad–Rabu 8.00 pagi–5.00 petang dan Khamis 8.00 pagi–4.00 petang, dengan waktu makan 1.00–2.00 petang."
+            )
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ot_day_keyboard(zone))
+        return STATE_OT_DAY
+
+    if data in ('ot_hari_biasa', 'ot_hari_biasa_8', 'ot_hari_biasa_7'):
+        if data == 'ot_hari_biasa_7':
+            context.user_data['ot_day_hours'] = 7
+        else:
+            context.user_data['ot_day_hours'] = 8
+        context.user_data['ot_day_type'] = 'Hari bekerja biasa'
+    elif data == 'ot_hari_rehat':
+        context.user_data['ot_day_type'] = 'Hari rehat'
+        context.user_data['ot_day_hours'] = None
+    elif data == 'ot_cuti_am':
+        context.user_data['ot_day_type'] = 'Cuti am'
+        context.user_data['ot_day_hours'] = None
+
+    if data in ('ot_hari_rehat', 'ot_cuti_am'):
+        text = (
+            "ℹ️ *KIRAAN OT HARI REHAT / CUTI AM*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "Untuk ketepatan, kadar bayaran hari rehat/cuti am tidak aku andaikan daripada formula Hari Bekerja Biasa dalam Artikel 31.\n\n"
+            "📌 Artikel 31 CA-7 yang dinyatakan secara jelas memberi formula:\n"
+            "*Gaji bulanan × 1.5 × jumlah jam kerja* ÷ *(26 × jumlah jam kerja biasa)* untuk *hari kerja biasa*.\n\n"
+            "👉 Untuk kiraan automatik yang tepat bagi hari rehat/cuti am, rujuk kadar berkenaan di bawah Akta/Peraturan dan rekod HR/payroll."
+        )
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+        return ConversationHandler.END
+
+    await query.message.reply_text(
+        "💰 *Masukkan gaji bulanan asas (RM)*\n\n"
+        "Contoh: `3000`",
+        parse_mode='Markdown'
+    )
+    return STATE_OT_SALARY
+
+
+async def ot_get_salary(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        salary = float(update.message.text.replace(',', '').strip())
+        if salary <= 0:
+            raise ValueError
+    except ValueError:
+        await update.message.reply_text("❌ Masukkan jumlah gaji yang sah. Contoh: `3000`", parse_mode='Markdown')
+        return STATE_OT_SALARY
+
+    context.user_data['ot_salary'] = salary
+    await update.message.reply_text(
+        "⏱️ *Masukkan jumlah jam OT*\n\n"
+        "Contoh: `4` atau `4.5`",
+        parse_mode='Markdown'
+    )
+    return STATE_OT_HOURS
+
+
+async def ot_get_hours(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        hours = float(update.message.text.replace(',', '').strip())
+        if hours <= 0:
+            raise ValueError
+    except ValueError:
+        await update.message.reply_text("❌ Masukkan jumlah jam OT yang sah. Contoh: `4.5`", parse_mode='Markdown')
+        return STATE_OT_HOURS
+
+    salary = context.user_data.get('ot_salary', 0)
+    normal_hours = context.user_data.get('ot_day_hours', 8)
+    zone = context.user_data.get('ot_zone', 'A')
+    day_type = context.user_data.get('ot_day_type', 'Hari bekerja biasa')
+
+    hourly_rate = salary / (26 * normal_hours)
+    ot_rate = hourly_rate * 1.5
+    estimate = ot_rate * hours
+
+    zone_text = 'Zon A — Isnin–Jumaat' if zone == 'A' else 'Zon B — Ahad–Khamis'
+    text = (
+        "🧮 *ANGGARAN BAYARAN OT CA-7*\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        f"📍 Zon: *{zone_text}*\n"
+        f"📅 Jenis hari: *{day_type}*\n"
+        f"💰 Gaji asas: *RM{salary:,.2f}*\n"
+        f"⏱️ Jam OT: *{hours:g} jam*\n"
+        f"🕐 Jam kerja biasa: *{normal_hours:g} jam/hari*\n\n"
+        f"Kadar sejam = RM{salary:,.2f} ÷ (26 × {normal_hours:g})\n"
+        f"= *RM{hourly_rate:,.2f}/jam*\n\n"
+        f"Kadar OT hari bekerja biasa = RM{hourly_rate:,.2f} × 1.5\n"
+        f"= *RM{ot_rate:,.2f}/jam*\n\n"
+        f"💵 *Anggaran bayaran OT = RM{estimate:,.2f}*\n\n"
+        "📌 Berdasarkan formula CA-7 Artikel 31. Jumlah sebenar tertakluk kepada rekod payroll, kelayakan OT dan potongan/ketetapan yang berkenaan.\n"
+        "⚠️ Artikel 31 menetapkan had OT sehingga 104 jam sebulan, tidak termasuk OT hari rehat/cuti umum seperti dinyatakan dalam CA-7."
+    )
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔄 Kira Semula OT", callback_data='menu_kiraan')],
+        [InlineKeyboardButton("📋 Menu CA-7", callback_data='menu_ca')],
+        [InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')]
+    ])
+    await update.message.reply_text(text, parse_mode='Markdown', reply_markup=keyboard)
+    return ConversationHandler.END
+
 # ==================== MODUL CA-7 ====================
 async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -470,7 +649,11 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "• Had OT: sehingga *104 jam sebulan* bagi bulan berkenaan, tidak termasuk OT hari rehat/cuti umum seperti diperuntukkan.\n"
             "• OT boleh diganti cuti: *6–8 jam = 1 hari*; *4–5 jam = ½ hari*, tertakluk syarat CA-7."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🧮 Kira Anggaran Bayaran OT", callback_data='menu_kiraan')],
+            [InlineKeyboardButton("🔙 Kembali CA-7", callback_data='menu_ca')]
+        ])
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=keyboard)
 
     elif data == 'ca_cuti':
         text = (
@@ -688,6 +871,18 @@ async def async_main():
     )
 
     app.add_handler(verify_conv)
+
+    ot_conv = ConversationHandler(
+        entry_points=[CallbackQueryHandler(handle_ot_calculator, pattern='^(menu_kiraan|ot_zon_a|ot_zon_b|ot_hari_biasa|ot_hari_biasa_8|ot_hari_biasa_7|ot_hari_rehat|ot_cuti_am)$')],
+        states={
+            STATE_OT_ZONE: [CallbackQueryHandler(handle_ot_calculator, pattern='^(ot_zon_a|ot_zon_b)$')],
+            STATE_OT_DAY: [CallbackQueryHandler(handle_ot_calculator, pattern='^(ot_hari_biasa|ot_hari_biasa_8|ot_hari_biasa_7|ot_hari_rehat|ot_cuti_am)$')],
+            STATE_OT_SALARY: [MessageHandler(filters.TEXT & ~filters.COMMAND, ot_get_salary)],
+            STATE_OT_HOURS: [MessageHandler(filters.TEXT & ~filters.COMMAND, ot_get_hours)]
+        },
+        fallbacks=[CommandHandler("start", start)]
+    )
+    app.add_handler(ot_conv)
     app.add_handler(CallbackQueryHandler(handle_akta, pattern='^(menu_akta|akta_)'))
     app.add_handler(CallbackQueryHandler(handle_ca, pattern='^(menu_ca|ca_|art64_)'))
     app.add_handler(CallbackQueryHandler(handle_other_menus, pattern='^menu_(dokumen|hebahan|profil|hubungi|utama)$'))

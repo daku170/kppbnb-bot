@@ -1160,6 +1160,21 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
 
         return answer or "Maaf, Sahabat tidak dapat memberikan jawapan sekarang. Sila cuba semula."
 
+    except urllib.error.HTTPError as e:
+        # Simpan butiran HTTP error untuk diagnosis tanpa mendedahkan API key.
+        try:
+            raw_body = e.read().decode("utf-8", errors="replace")
+        except Exception:
+            raw_body = ""
+        retry_after = e.headers.get("Retry-After") if getattr(e, "headers", None) else None
+        logging.error(
+            "Ralat Sahabat KPPbNB: HTTP %s | Retry-After=%s | Body=%s",
+            e.code, retry_after or "-", raw_body[:2000]
+        )
+        return (
+            "❌ *Sahabat tidak dapat memproses soalan buat masa ini.*\n\n"
+            "Sila cuba semula sebentar lagi. Jika masalah berterusan, hubungi pihak Kesatuan."
+        )
     except Exception as e:
         logging.error(f"Ralat Sahabat KPPbNB: {e}")
         return (

@@ -662,7 +662,22 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
         text = f"👤 *PROFIL AHLI*\nNama: {user.full_name}\nStatus: Aktif"
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_back_button())
     elif data == 'menu_hubungi':
-        text = "☎️ *HUBUNGI KESATUAN*\nNo 2190 KM20 Jalan Kodiang, 06000 Jitra, Kedah."
+        text = (
+            "☎️ *HUBUNGI KESATUAN (KPPbNB)*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "🏛️ *Ibu Pejabat Kesatuan:*\n"
+            "No 2190 KM20 Jalan Kodiang, 06000 Jitra, Kedah Darul Aman.\n\n"
+            "📌 *Barisan Kepimpinan Rasmi:*\n"
+            "• *Presiden:*\n"
+            "  En. SYAHIBUDIL ASSAUFI BIN ABDUL KUDUS\n"
+            "  📩 syahibudil@bernas.com.my\n\n"
+            "• *Setiausaha Agung:*\n"
+            "  Pn. FARAH AQILAH BINTI BARDZAN\n"
+            "  📩 aqilah@bernas.com.my\n\n"
+            "• *Bendahari Kesatuan:*\n"
+            "  En. KHAIRUL FAIZ BIN RAMIZAN\n"
+            "  📩 khairulfaiz@bernas.com.my"
+        )
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_back_button())
 
 async def handle_ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):

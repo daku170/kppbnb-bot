@@ -154,3 +154,25 @@ def main():
 
 if __name__ == '__main__':
     main()
+def get_main_keyboard():
+    keyboard = [
+        [InlineKeyboardButton("📖 Akta & Peraturan", callback_data='menu_akta'),
+         InlineKeyboardButton("📋 CA7", callback_data='menu_ca')],
+        [InlineKeyboardButton("🧮 Kiraan OT & Elaun", callback_data='menu_kiraan'),
+         InlineKeyboardButton("📝 Laporan / Aduan", callback_data='menu_aduan')],
+        [InlineKeyboardButton("📢 Hebahan Kesatuan", callback_data='menu_hebahan'),
+         InlineKeyboardButton("📚 Dokumen Kesatuan", callback_data='menu_dokumen')],
+        [InlineKeyboardButton("👤 Profil Saya", callback_data='menu_profil'),
+         InlineKeyboardButton("☎️ Hubungi Kesatuan", callback_data='menu_hubungi')]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+async def handle_menu_utama(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    nama = context.user_data.get('nama', 'Ahli')
+    text = f"🏠 *MENU UTAMA KPPbNB*\n\nSelamat kembali, *{nama}*.\nSila pilih perkhidmatan di bawah:"
+    await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_main_keyboard())
+
+# Daftar handler ini dalam async_main():
+app.add_handler(CallbackQueryHandler(handle_menu_utama, pattern='^menu_utama$'))

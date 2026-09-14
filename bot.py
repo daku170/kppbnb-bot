@@ -34,15 +34,13 @@ URL_CA6 = "https://drive.google.com/file/d/19kQw-6Klinuq1ErF-raLs8-9xoosYroi/vie
 URL_AKTA = "https://drive.google.com/file/d/1zR2l8JhjjP5udVwnpaq9v_iVuZrreJ-g/view?usp=sharing"
 URL_TATATERTIB = "https://padiberasnasional.sharepoint.com/sites/RiCentre/Prosedur%20Operasi%20Standard%20HR/Forms/AllItems.aspx?id=%2Fsites%2FRiCentre%2FProsedur%20Operasi%20Standard%20HR%2FHRD%2DIR%2D50%2DSOP%2D01%2DE%20PERATURAN%20DAN%20PROSEDUR%20TATATERTIB%20BAGI%20BERNAS%20EDISI%20KELIMA%2Epdf&parent=%2Fsites%2FRiCentre%2FProsedur%20Operasi%20Standard%20HR"
 
-# Pangkalan Data Ahli Rasmi (No Pekerja : {Nama Penuh, Lokasi/Kompleks})
-# Faiz boleh terus tambah senarai nama/no pekerja daripada rujukan gambar di sini
+# Pangkalan Data Ahli Rasmi (No Pekerja : {Nama Penuh, Lokasi})
 SENARAI_AHLI_SAH = {
     "1001": {"nama": "KHAIRUL FAIZ BIN RAMIZAN", "lokasi": "Kompleks Jitra, Kedah"},
     "1002": {"nama": "SYAHIBUDIL ASSAUFI BIN ABDUL KUDUS", "lokasi": "Ibu Pejabat Kuala Lumpur"},
     "1003": {"nama": "FARAH AQILAH BINTI BARDZAN", "lokasi": "Ibu Pejabat Kuala Lumpur"},
-    "2850": {"nama": "MOHD FAIZAL BIN AHMAD", "lokasi": "Kompleks Alor Setar"},
-    "3120": {"nama": "AZMAN BIN OTHMAN", "lokasi": "Kompleks Shah Alam"},
-    # Sila masukkan data nombor pekerja lain mengikut senarai imej
+    "10455": {"nama": "MOHD FAIZAL BIN AHMAD", "lokasi": "Kompleks Alor Setar, Kedah"},
+    "2850": {"nama": "AZMAN BIN OTHMAN", "lokasi": "Kompleks Shah Alam, Selangor"},
 }
 
 logging.basicConfig(
@@ -50,21 +48,9 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-# States untuk Conversation
+# States
 STATE_VERIFY_ID = 1
 STATE_UPDATE_LOCATION = 2
-(
-    STATE_GRADE, 
-    STATE_SCHEDULE, 
-    STATE_DAY_TYPE, 
-    STATE_SALARY, 
-    STATE_HOURS, 
-    STATE_GRED_S_HOURS,
-    STATE_MILEAGE_VEHICLE,
-    STATE_MILEAGE_KM,
-    STATE_ADUAN_CAT,
-    STATE_ADUAN_DESC
-) = range(10)
 
 def run_web_server():
     port = int(os.environ.get("PORT", 8080))
@@ -196,7 +182,7 @@ def get_elaun_4k_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard)
 
-# ==================== PENGESAHAN & UPDATE LOCATION ====================
+# ==================== HANDLERS PENGESAHAN & LOKASI ====================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
@@ -220,6 +206,7 @@ async def verify_employee_id(update: Update, context: ContextTypes.DEFAULT_TYPE)
         context.user_data['emp_id'] = emp_id
         context.user_data['nama'] = data_ahli['nama']
         context.user_data['lokasi'] = data_ahli['lokasi']
+        context.user_data['verified'] = True  # Penanda sah
         
         welcome_text = (
             f"Hi *{data_ahli['nama']}*! 👋\n\n"
@@ -258,7 +245,7 @@ async def verify_employee_id(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def start_update_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    text = "📍 *KEMAS KINI LOKASI / KOPLEKS*\n\nSila taip nama Lokasi atau Kompleks baharu anda yang betul:"
+    text = "📍 *KEMAS KINI LOKASI / KOMPLEKS*\n\nSila taip nama Lokasi atau Kompleks baharu anda yang betul:"
     await query.message.reply_text(text, parse_mode='Markdown')
     return STATE_UPDATE_LOCATION
 
@@ -268,10 +255,8 @@ async def receive_new_location(update: Update, context: ContextTypes.DEFAULT_TYP
     nama = context.user_data.get('nama', 'Ahli')
     user = update.effective_user
 
-    # Kemas kini lokasi dalam sesi
     context.user_data['lokasi'] = new_loc
 
-    # Hantar notifikasi kemas kini lokasi ke Group Aduan KPPbNB
     notis_group = (
         "📍 *NOTIFIKASI KEMAS KINI LOKASI AHLI*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
@@ -292,7 +277,7 @@ async def receive_new_location(update: Update, context: ContextTypes.DEFAULT_TYP
     )
     return ConversationHandler.END
 
-# ==================== MODUL UTAMA (AKTA, CA7, KIRAAN, ADUAN, DLL) ====================
+# ==================== MODUL UTAMA ====================
 
 async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -418,6 +403,12 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def handle_ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text or update.message.text.startswith('/'):
         return
+    
+    # Pastikan ahli sudah melepasi pengesahan nombor pekerja sebelum boleh tanya AI
+    if not context.user_data.get('verified'):
+        await update.message.reply_text("🔐 Sila masukkan Nombor Pekerja yang sah terlebih dahulu dengan menaip /start")
+        return
+
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
     loop = asyncio.get_running_loop()
     ai_raw = await loop.run_in_executor(None, query_groq_ai, update.message.text.strip())
@@ -434,16 +425,16 @@ async def async_main():
     threading.Thread(target=run_web_server, daemon=True).start()
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    # Handler untuk pengesahan & kemas kini lokasi
+    # Conversation untuk pengesahan nombor pekerja (Hanya terima nombor semasa fasa mula)
     verify_conv = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
-            STATE_VERIFY_ID: [MessageHandler(filters.TEXT & ~filters.COMMAND, verify_employee_id)],
-            STATE_UPDATE_LOCATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_new_location)]
+            STATE_VERIFY_ID: [MessageHandler(filters.TEXT & ~filters.COMMAND, verify_employee_id)]
         },
         fallbacks=[CommandHandler("start", start)]
     )
 
+    # Conversation untuk kemas kini lokasi
     location_conv = ConversationHandler(
         entry_points=[CallbackQueryHandler(start_update_location, pattern='^update_location_start$')],
         states={
@@ -452,32 +443,8 @@ async def async_main():
         fallbacks=[CallbackQueryHandler(cancel_handler, pattern='^menu_utama$'), CommandHandler("start", start)]
     )
 
-    kiraan_conv = ConversationHandler(
-        entry_points=[
-            CallbackQueryHandler(lambda u, c: u.callback_query.answer() or u.callback_query.message.reply_text("🧮 *MODUL KIRAAN OT*", parse_mode='Markdown', reply_markup=get_kiraan_keyboard()), pattern='^menu_kiraan$'),
-            CallbackQueryHandler(start_calc_ot := lambda u, c: u.callback_query.answer(), pattern='^calc_start_ot$'), 
-            CallbackQueryHandler(start_calc_mileage := lambda u, c: u.callback_query.answer(), pattern='^calc_start_mileage$')
-        ],
-        states={},
-        fallbacks=[CallbackQueryHandler(cancel_handler, pattern='^menu_utama$'), CommandHandler("start", start)]
-    )
-
-    aduan_conv = ConversationHandler(
-        entry_points=[
-            CallbackQueryHandler(lambda u, c: u.callback_query.answer() or u.callback_query.message.reply_text("📝 Pilih Kategori Aduan:", reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("💰 Isu Gaji", callback_data='aduan_gaji'), InlineKeyboardButton("⏰ Isu OT", callback_data='aduan_ot')],
-                [InlineKeyboardButton("🏖️ Isu Cuti", callback_data='aduan_cuti'), InlineKeyboardButton("🚗 Isu Elaun", callback_data='aduan_elaun')],
-                [InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')]
-            ])), pattern='^menu_aduan$')
-        ],
-        states={},
-        fallbacks=[CallbackQueryHandler(cancel_handler, pattern='^menu_utama$'), CommandHandler("start", start)]
-    )
-
     app.add_handler(verify_conv)
     app.add_handler(location_conv)
-    app.add_handler(kiraan_conv)
-    app.add_handler(aduan_conv)
     
     app.add_handler(CallbackQueryHandler(start, pattern='^menu_utama$'))
     app.add_handler(CallbackQueryHandler(handle_akta, pattern='^(menu_akta|akta_)'))
@@ -488,7 +455,7 @@ async def async_main():
     async with app:
         await app.start()
         await app.updater.start_polling()
-        print("Bot KPPbNB LIVE dengan Pengesahan Nama Penuh & Kemas Kini Lokasi!")
+        print("Bot KPPbNB LIVE dengan Pengesahan Sempurna!")
         while True:
             await asyncio.sleep(3600)
 

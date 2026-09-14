@@ -23,7 +23,7 @@ GROQ_API_KEY = "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"
 # ID Rasmi GROUP ADUAN KPPbNB
 ADMIN_CHAT_ID = -1003958495436
 
-# Pautan Spesifik Dokumen Google Drive & SharePoint (Kemas Kini Borang Kilanan Baru)
+# Pautan Spesifik Dokumen Google Drive & SharePoint
 URL_KILANAN = "https://drive.google.com/file/d/1KLmiSGJcnV_Wmcwkfyj6LZ17KGdJp92w/view?usp=drive_link"
 URL_CA1 = "https://drive.google.com/file/d/1s0KkAqdb2i2XMAg8HgoEvh0tWhiTMcYB/view?usp=drive_link"
 URL_CA2 = "https://drive.google.com/file/d/1piIG4_2V8o0ZpQhpvf6pUo9kJutKUKXr/view?usp=drive_link"
@@ -472,7 +472,7 @@ async def aduan_desc_received(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     return ConversationHandler.END
 
-# ==================== 5. MODUL DOKUMEN (PILIHAN FAIL SPESIFIK) ====================
+# ==================== 5. MODUL DOKUMEN & LAIN-LAIN ====================
 
 async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -490,7 +490,7 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
             [InlineKeyboardButton("⚖️ Buku Tatatertib BERNAS Edisi 5", url=URL_TATATERTIB)],
             [InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')]
         ]
-        await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_back_button())
+        await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
     elif data == 'menu_hebahan':
         text = "📢 *HEBAHAN KESATUAN*\n• CA-7 berkuatkuasa 2026-2028.\n• Pastikan semakan yuran kesatuan teratur."
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=get_back_button())
@@ -550,7 +550,10 @@ async def async_main():
     app.add_handler(CallbackQueryHandler(handle_akta, pattern='^(menu_akta|akta_)'))
     app.add_handler(CallbackQueryHandler(handle_ca, pattern='^(menu_ca|ca_|art64_)'))
     app.add_handler(CallbackQueryHandler(handle_kiraan_menu, pattern='^menu_kiraan$'))
-    app.add_handler(CallbackQueryHandler(handle_other_menus, pattern='^(.?menu_.*)$'))
+    
+    # Pengendali menu utama, dokumen, hebahan, profil, dan hubungi
+    app.add_handler(CallbackQueryHandler(handle_other_menus, pattern='^menu_(dokumen|hebahan|profil|hubungi)$'))
+    
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_ai_chat))
 
     async with app:

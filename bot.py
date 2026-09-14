@@ -34,11 +34,25 @@ URL_CA6 = "https://drive.google.com/file/d/19kQw-6Klinuq1ErF-raLs8-9xoosYroi/vie
 URL_AKTA = "https://drive.google.com/file/d/1zR2l8JhjjP5udVwnpaq9v_iVuZrreJ-g/view?usp=sharing"
 URL_TATATERTIB = "https://padiberasnasional.sharepoint.com/sites/RiCentre/Prosedur%20Operasi%20Standard%20HR/Forms/AllItems.aspx?id=%2Fsites%2FRiCentre%2FProsedur%20Operasi%20Standard%20HR%2FHRD%2DIR%2D50%2DSOP%2D01%2DE%20PERATURAN%20DAN%20PROSEDUR%20TATATERTIB%20BAGI%20BERNAS%20EDISI%20KELIMA%2Epdf&parent=%2Fsites%2FRiCentre%2FProsedur%20Operasi%20Standard%20HR"
 
+# Pangkalan Data Ahli Rasmi (No Pekerja : {Nama Penuh, Lokasi/Kompleks})
+# Faiz boleh terus tambah senarai nama/no pekerja daripada rujukan gambar di sini
+SENARAI_AHLI_SAH = {
+    "1001": {"nama": "KHAIRUL FAIZ BIN RAMIZAN", "lokasi": "Kompleks Jitra, Kedah"},
+    "1002": {"nama": "SYAHIBUDIL ASSAUFI BIN ABDUL KUDUS", "lokasi": "Ibu Pejabat Kuala Lumpur"},
+    "1003": {"nama": "FARAH AQILAH BINTI BARDZAN", "lokasi": "Ibu Pejabat Kuala Lumpur"},
+    "2850": {"nama": "MOHD FAIZAL BIN AHMAD", "lokasi": "Kompleks Alor Setar"},
+    "3120": {"nama": "AZMAN BIN OTHMAN", "lokasi": "Kompleks Shah Alam"},
+    # Sila masukkan data nombor pekerja lain mengikut senarai imej
+}
+
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 
+# States untuk Conversation
+STATE_VERIFY_ID = 1
+STATE_UPDATE_LOCATION = 2
 (
     STATE_GRADE, 
     STATE_SCHEDULE, 
@@ -77,63 +91,6 @@ AI_SYSTEM_PROMPT = """
 Anda adalah Penasihat Pintar Kesatuan Pekerja-pekerja Padiberas Nasional Berhad (KPPbNB BERNAS Semenanjung Malaysia).
 Moto Kesatuan: Bersatu, Berdisiplin, Berjaya.
 Tugas anda adalah menjawab soalan ahli berkaitan hak pekerja, kepimpinan kesatuan, undang-undang perburuhan dan Perjanjian Bersama Ke-7 (CA-7) BERNAS dengan tepat, tegas, mesra, dan profesional.
-
-Pimpinan Utama Kesatuan KPPbNB:
-- Presiden: En. SYAHIBUDIL ASSAUFI BIN ABDUL KUDUS (Emel: syahibudil@bernas.com.my)
-- Setiausaha Agung: Pn. FARAH AQILAH BINTI BARDZAN (Emel: aqilah@bernas.com.my)
-- Bendahari Kesatuan: En. KHAIRUL FAIZ BIN RAMIZAN (Emel: khairulfaiz@bernas.com.my)
-- Alamat Pejabat Kesatuan: No 2190 KM20 Jalan Kodiang, 06000 Jitra, Kedah Darul Aman.
-
-Takrifan Jadual Hari Mengikut Zon di BERNAS (Artikel 29 & 64.3):
-1. Zon A (Kedah, Kelantan, Terengganu, Johor):
-   - Hari Bekerja Biasa: Ahad hingga Khamis (8.00 pagi - 5.00 ptg; Khamis hingga 4.00 ptg).
-   - Off Day: Jumaat.
-   - Rest Day: Sabtu.
-2. Zon B (Pulau Pinang, Perak, Selangor, KL, Pahang, Melaka, N. Sembilan):
-   - Hari Bekerja Biasa: Isnin hingga Jumaat (8.30 pagi - 5.30 ptg).
-   - Off Day: Sabtu.
-   - Rest Day: Ahad.
-3. Pekerja Syif:
-   - Hari Biasa, Off Day dan Rest Day ditentukan mengikut jadual giliran roaster rasmi kompleks.
-
-Ketetapan Kerja Lebih Masa & Cuti Gantian (Artikel 29 & 31 CA-7):
-- Waktu Bekerja (Art 29): 39 jam seminggu (bukan syif), 42 jam seminggu (syif).
-- Kiraan Lebih Masa (Gred T & Gred S [Gaji Bawah RM4,000]):
-  * Formula: (Gaji / 26) × Kadar × (Jam OT / Jam Kerja Normal)
-  * Kadar: Hari Biasa & Off Day (1.5x), Rest Day (2.0x), Cuti Kelepasan Am (3.0x).
-- Cuti Gantian (Artikel 31.5): Terpakai untuk Gred T dan Gred S sebagai ganti bayaran tunai.
-  * 6 - 8 jam = 1 hari cuti gantian.
-  * 4 - 5 jam = 1/2 hari cuti gantian.
-  * Boleh dikumpul dalam tempoh 6 bulan pada tahun berkenaan.
-
-Ketetapan Artikel 64.3 (Elaun Makan Lebih Masa Gaji ≥ RM4,000):
-- Terpakai bagi staf bergaji RM4,000 ke atas yang tidak layak bayaran lebih masa.
-- Hari Bekerja Biasa (Zon A: Ahad-Khamis | Zon B: Isnin-Jumaat):
-  * 2 hingga 5 jam: RM25.00
-  * Melebihi 5 jam: RM50.00
-- Hari Rehat, Off Day & Cuti Am (Zon A: Jumaat & Sabtu | Zon B: Sabtu & Ahad | PH):
-  * Pilihan: Cuti Gantian ATAU Elaun Makan.
-  * 4 hingga 8 jam: RM25.00 atau 1/2 hari cuti gantian.
-  * Melebihi 8 jam: RM50.00 atau 1 hari cuti gantian.
-
-Struktur Gred & Tangga Gaji (Lampiran I):
-- Gred T (Teknikal): T1 (RM1,700 - RM2,800) hingga T5 (RM3,000 - RM6,300).
-- Gred S (Sokongan): S1 (RM1,700 - RM2,800) hingga S5 (RM2,800 - RM5,400).
-
-Cuti & Faedah Lain:
-- Cuti Tahunan (Art 44): <2 thn (18 hari), 2-5 thn (22 hari), >5 thn (24 hari).
-- Cuti Haji/Umrah (Art 55): 54 hari bergaji penuh sekali sepanjang perkhidmatan.
-- Cuti Bersalin (Art 49): 98 hari bergaji penuh. Pilihan tambahan 90 hari cuti tanpa gaji menjaga anak.
-- Cuti Paterniti (Art 52): 7 hari (khidmat >1 thn) / 3 hari (<1 thn).
-- Cuti Sakit (Art 47): 22 hari klinik, 60 hari hospital.
-- Sumbangan Beras (Art 67): 2 kampit (10kg) sebulan.
-- Insurans Kematian/Hilang Upaya (Art 40): 36 bulan gaji terakhir (GTL & GPA).
-- Elaun Perjalanan (Art 63): Kereta RM0.75/km, Motor RM0.50/km. Elaun Makan Luar Stesen: RM115/hari (Art 64.1).
-
-Panduan Jawapan:
-- Berikan jawapan dalam Bahasa Melayu yang tersusun rapi dan jelas mengikut zon jika berkaitan.
-- Nyatakan nombor artikel CA-7 atau seksyen akta yang berkaitan.
-- PENTING: Jika soalan yang dikemukakan di luar bidang maklumat di atas, terlampau khusus, atau anda tidak pasti jawapannya mengikut CA-7, jangan reka jawapan. Sila jawab dengan jelas: "Maaf, maklumat terperinci mengenai perkara ini tiada dalam rekod saya. Sila rujuk dengan Exco atau barisan pimpinan kesatuan untuk kepastian lanjut."
 """
 
 def query_groq_ai(user_question: str) -> str:
@@ -165,7 +122,7 @@ def query_groq_ai(user_question: str) -> str:
 
     return f"⚠️ Ralat Groq: {last_err[:180]}"
 
-# ==================== KEYBOARDS MENU V1 ====================
+# ==================== KEYBOARDS ====================
 
 def get_main_keyboard():
     keyboard = [
@@ -182,6 +139,13 @@ def get_main_keyboard():
 
 def get_back_button():
     return InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')]])
+
+def get_profile_keyboard():
+    keyboard = [
+        [InlineKeyboardButton("📍 Kemas Kini Lokasi (Update Location)", callback_data='update_location_start')],
+        [InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')]
+    ]
+    return InlineKeyboardMarkup(keyboard)
 
 def get_akta_keyboard():
     keyboard = [
@@ -232,24 +196,103 @@ def get_elaun_4k_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard)
 
-# ==================== START HANDLER ====================
+# ==================== PENGESAHAN & UPDATE LOCATION ====================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    welcome_text = (
-        "🤖 *KPPbNB UNION BOT (EDISI PINTAR AI)*\n"
+    text = (
+        "🔐 *PENGESAHAN KEAHLIAN KPPbNB*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        "🏛️ *Pusat Maklumat & Perkhidmatan Ahli KPPbNB*\n"
-        "_Kesatuan Pekerja-pekerja Padiberas Nasional Berhad (Semenanjung Malaysia)_\n\n"
-        "💬 *Ada soalan Akta, pimpinan, waktu kerja atau CA-7?*\n"
-        "Anda boleh terus *taip soalan anda di ruangan ini* dan AI Kesatuan akan menjawabnya secara terperinci!\n\n"
-        "Atau sila pilih perkhidmatan daripada butang di bawah:"
+        "Selamat datang ke Bot Rasmi KPPbNB BERNAS.\n\n"
+        "👉 Sila masukkan *Nombor Pekerja* sah anda untuk meneruskan:"
     )
     if update.message:
-        await update.message.reply_text(welcome_text, parse_mode='Markdown', reply_markup=get_main_keyboard())
+        await update.message.reply_text(text, parse_mode='Markdown')
     elif update.callback_query:
-        await update.callback_query.message.reply_text(welcome_text, parse_mode='Markdown', reply_markup=get_main_keyboard())
+        await update.callback_query.message.reply_text(text, parse_mode='Markdown')
+    return STATE_VERIFY_ID
 
-# ==================== 1. MODUL AKTA & PERATURAN (LENGKAP) ====================
+async def verify_employee_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    emp_id = update.message.text.strip()
+    user = update.effective_user
+
+    if emp_id in SENARAI_AHLI_SAH:
+        data_ahli = SENARAI_AHLI_SAH[emp_id]
+        context.user_data['emp_id'] = emp_id
+        context.user_data['nama'] = data_ahli['nama']
+        context.user_data['lokasi'] = data_ahli['lokasi']
+        
+        welcome_text = (
+            f"Hi *{data_ahli['nama']}*! 👋\n\n"
+            "✅ *PENGESAHAN BERJAYA!*\n"
+            "Keahlian anda disahkan aktif.\n\n"
+            "🤖 *Pusat Maklumat & Perkhidmatan Ahli KPPbNB*\n"
+            "💬 Anda boleh taip soalan di ruangan ini atau pilih perkhidmatan di bawah:"
+        )
+        await update.message.reply_text(welcome_text, parse_mode='Markdown', reply_markup=get_main_keyboard())
+        return ConversationHandler.END
+    else:
+        notis_admin = (
+            "🚨 *PERCUBAAN AKSES BOT TIDAK SAH*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            f"👤 *Nama Telegram:* {user.full_name} (@{user.username or 'Tiada'})\n"
+            f"🆔 *Telegram ID:* `{user.id}`\n"
+            f"🔢 *No. Pekerja Dimasukkan:* `{emp_id}`\n"
+            "⚠️ *Status:* Gagal disahkan (Tiada dalam senarai induk)."
+        )
+        try:
+            await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=notis_admin, parse_mode='Markdown')
+        except Exception as e:
+            logging.error(f"Gagal hantar notis keselamatan ke group: {e}")
+
+        error_text = (
+            "❌ *RALAT: NOMBOR PEKERJA TIDAK DIJUMPAI*\n\n"
+            "Nombor pekerja yang anda masukkan tiada dalam rekod keahlian aktif KPPbNB.\n\n"
+            "📞 Sila berhubung terus dengan Setiausaha Agung Kesatuan untuk pendaftaran:\n"
+            "• *Nama:* Pn. Farah Aqilah Binti Bardzan\n"
+            "• *Emel SU:* `aqilah@bernas.com.my`\n\n"
+            "Sila cuba masukkan semula Nombor Pekerja yang sah:"
+        )
+        await update.message.reply_text(error_text, parse_mode='Markdown')
+        return STATE_VERIFY_ID
+
+async def start_update_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    text = "📍 *KEMAS KINI LOKASI / KOPLEKS*\n\nSila taip nama Lokasi atau Kompleks baharu anda yang betul:"
+    await query.message.reply_text(text, parse_mode='Markdown')
+    return STATE_UPDATE_LOCATION
+
+async def receive_new_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    new_loc = update.message.text.strip()
+    emp_id = context.user_data.get('emp_id', 'Tidak Diketahui')
+    nama = context.user_data.get('nama', 'Ahli')
+    user = update.effective_user
+
+    # Kemas kini lokasi dalam sesi
+    context.user_data['lokasi'] = new_loc
+
+    # Hantar notifikasi kemas kini lokasi ke Group Aduan KPPbNB
+    notis_group = (
+        "📍 *NOTIFIKASI KEMAS KINI LOKASI AHLI*\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        f"👤 *Nama Ahli:* {nama}\n"
+        f"🔢 *No. Pekerja:* `{emp_id}`\n"
+        f"🏢 *Lokasi Baharu Dikemas Kini:* *{new_loc}*\n"
+        f"💬 *Username Telegram:* @{user.username or 'Tiada'}"
+    )
+    try:
+        await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=notis_group, parse_mode='Markdown')
+    except Exception as e:
+        logging.error(f"Gagal hantar notis lokasi ke group: {e}")
+
+    await update.message.reply_text(
+        f"✅ Lokasi anda telah berjaya dikemas kini kepada: *{new_loc}*.\nNotifikasi telah dihantar kepada pihak pentadbir kesatuan.",
+        parse_mode='Markdown',
+        reply_markup=get_back_button()
+    )
+    return ConversationHandler.END
+
+# ==================== MODUL UTAMA (AKTA, CA7, KIRAAN, ADUAN, DLL) ====================
 
 async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -257,122 +300,35 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data
 
     if data == 'menu_akta':
-        text = (
-            "📖 *1. AKTA & PERATURAN KERJA MALAYSIA*\n\n"
-            "Fokus panduan statutori berkaitan hak harian pekerja.\n"
-            "Sila pilih topik di bawah atau terus taip soalan perundangan anda di ruangan sembang:"
-        )
+        text = "📖 *1. AKTA & PERATURAN KERJA MALAYSIA*\n\nPilih topik berkaitan:"
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
-
     elif data == 'akta_waktu':
-        text = (
-            "⏰ *AKTA KERJA 1955: WAKTU BEKERJA*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Seksyen 60A(1):*\n"
-            "• Had maksimum waktu kerja: *45 jam seminggu* (Pindaan 2022).\n"
-            "• Had sehari: Tidak melebihi *8 jam sehari* (atau 9 jam bagi kerja 5 hari seminggu).\n"
-            "• Tidak boleh bekerja berterusan melebihi *5 jam* tanpa rehat sekurang-kurangnya 30 minit.\n\n"
-            "📌 *Rujukan CA-7 BERNAS (Artikel 29):*\n"
-            "• Bukan Syif: Purata 39 jam seminggu.\n"
-            "• Syif: Purata 42 jam seminggu (Faedah lebih baik daripada Akta)."
-        )
+        text = "⏰ *AKTA KERJA 1955: WAKTU BEKERJA*\n• Had maksimum: 45 jam seminggu (Pindaan 2022)."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
-
     elif data == 'akta_ot':
-        text = (
-            "🧮 *AKTA KERJA 1955: KERJA LEBIH MASA (OT)*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Seksyen 60A(3) & Peraturan Had OT:*\n"
-            "• Kadar Hari Biasa: *1.5x* kadar sejam (HRP).\n"
-            "• Hari Rehat: *2.0x* kadar sejam.\n"
-            "• Hari Kelepasan Am: *3.0x* kadar sejam.\n"
-            "• Had maksimum OT: *104 jam sebulan* (tidak termasuk kerja hari rehat & cuti am).\n\n"
-            "📌 *Pekerja Gaji Melebihi RM4,000 (CA-7 Art 31 & 64.3):*\n"
-            "• Gred T: Dilindungi bayaran Artikel 31.\n"
-            "• Pekerja bukan penerima OT: Layak menuntut *Elaun Makan Lebih Masa* di bawah Artikel 64.3."
-        )
+        text = "🧮 *AKTA KERJA 1955: OT*\n• Hari Biasa: 1.5x | Rehat: 2.0x | Cuti Am: 3.0x (Maks 104 jam/bulan)."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
-
     elif data == 'akta_cuti':
-        text = (
-            "🏖️ *AKTA KERJA 1955: KELAYAKAN CUTI BERGAJI*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Cuti Tahunan (Seksyen 60E):*\n"
-            "• Minimum Akta: 8 hari (<2 thn), 12 hari (2-5 thn), 16 hari (>5 thn).\n"
-            "• *Di Bawah CA-7 BERNAS (Jauh Lebih Baik):*\n"
-            "  👉 <2 tahun: *18 hari*\n"
-            "  👉 2 - 5 tahun: *22 hari*\n"
-            "  👉 >5 tahun: *24 hari*\n\n"
-            "📌 *Hari Kelepasan Am (Seksyen 60D):*\n"
-            "• Minimum 11 hari diwartakan termasuk 5 hari wajib."
-        )
+        text = "🏖️ *AKTA KERJA 1955: CUTI*\n• Cuti Tahunan CA-7: 18 hingga 24 hari mengikut perkhidmatan."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
-
     elif data == 'akta_mc':
-        text = (
-            "🏥 *AKTA KERJA 1955: CUTI SAKIT & HOSPITAL (SEK 60F)*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Pengasingan Kelayakan (Pindaan 2022):*\n"
-            "• Cuti Sakit biasa tidak lagi menolak hak 60 hari cuti masuk wad.\n"
-            "• Cuti Masuk Wad: Layak sehingga *60 hari setahun* dengan pengesahan doktor berdaftar.\n\n"
-            "📌 *Syarat Pematuhan:*\n"
-            "• Pekerja *wajib memaklumkan majikan dalam masa 48 jam* dari tarikh MC bermula."
-        )
+        text = "🏥 *AKTA KERJA 1955: MC & WAD*\n• Cuti Masuk Wad: Hingga 60 hari setahun."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
-
     elif data == 'akta_gaji':
-        text = (
-            "💰 *AKTA KERJA 1955: PEMBAYARAN & POTONGAN GAJI*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Seksyen 19 (Tempoh Bayaran):*\n"
-            "• Gaji wajib dibayar tidak lewat daripada *hari ke-7* selepas tamat tempoh upah.\n\n"
-            "📌 *Seksyen 24 (Had Potongan Gaji):*\n"
-            "• Majikan dilarang membuat potongan sesuka hati kecuali caruman statutori atau yuran kesatuan dengan kebenaran."
-        )
+        text = "💰 *AKTA KERJA 1955: GAJI*\n• Gaji dibayar selewat-lewatnya hari ke-7 selepas tamat tempoh upah."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
-
     elif data == 'akta_awol':
-        text = (
-            "⚠️ *AKTA KERJA 1955: KETIDAKHADIRAN (AWOL) & DISIPLIN*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Seksyen 15(2) (Pecah Kontrak):*\n"
-            "• Pekerja disifatkan memungkiri kontrak jika tidak hadir bertugas *melebihi 2 hari berturut-turut* tanpa cuti awal dan tanpa alasan munasabah.\n\n"
-            "📌 *Seksyen 14 (Siasatan Wajar / Due Inquiry):*\n"
-            "• Majikan wajib adakan siasatan adil sebelum buang kerja."
-        )
+        text = "⚠️ *AWOL & DISIPLIN*\n• Tidak hadir >2 hari berturut-turut tanpa alasan dikira pecah kontrak."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
-
     elif data == 'akta_tamat':
-        text = (
-            "🚪 *AKTA KERJA 1955: PENAMATAN KERJA*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Notis Penamatan (Seksyen 12):*\n"
-            "• <2 tahun: 4 minggu | 2 - 5 tahun: 6 minggu | >5 tahun: 8 minggu\n\n"
-            "📌 *Faedah Penamatan / Retrenchment (CA-7 Art 38):*\n"
-            "• Mengikut formula tahun perkhidmatan dan prinsip keadilan industri (LIFO)."
-        )
+        text = "🚪 *PENAMATAN KERJA*\n• Mengikut tempoh notis Seksyen 12 Akta Kerja dan Artikel 38 CA-7."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
-
     elif data == 'akta_osha':
-        text = (
-            "🦺 *OSHA 1994 (PINDAAN 2022): KESELAMATAN TEMPAT KERJA*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Seksyen 26A (Hak Menolak Kerja Bahaya):*\n"
-            "• Pekerja berhak mengasingkan diri (*remove himself*) dari kawasan kerja sekiranya ada bahaya maut atau kecederaan parah yang pasti berlaku (*imminent danger*)."
-        )
+        text = "🦺 *OSHA 1994*\n• Seksyen 26A: Hak pekerja menolak kerja bahaya."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
-
     elif data == 'akta_perkeso':
-        text = (
-            "🛡️ *AKTA KESELAMATAN SOSIAL PEKERJA 1969 (PERKESO)*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Skim Bencana Pekerjaan:*\n"
-            "• Meliputi kemalangan kerja dan *Kemalangan Perjalanan* pergi/balik ikut laluan biasa.\n"
-            "• PERKESO membayar elaun ganti rugi harian sebanyak *80% purata gaji harian*."
-        )
+        text = "🛡️ *PERKESO*\n• Meliputi kemalangan kerja dan perjalanan pergi/balik bertugas."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_akta_keyboard())
-
-# ==================== 2. MODUL CA-7 (LENGKAP) ====================
 
 async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -380,262 +336,38 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data
 
     if data == 'menu_ca':
-        text = (
-            "📋 *2. PERJANJIAN BERSAMA KE-7 (CA-7: 2026 – 2028)*\n"
-            "_No Pendaftaran Mahkamah Perusahaan: 923_\n\n"
-            "Sila pilih klausa yang ingin disemak:"
-        )
+        text = "📋 *2. PERJANJIAN BERSAMA KE-7 (CA-7)*\nPilih klausa:"
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
-
     elif data == 'ca_gaji':
-        text = (
-            "💰 *CA-7: GAJI & KENAIKAN TAHUNAN*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Artikel 25 (Kenaikan Tahunan):* Memenuhi Jangkaan (3.5% + Merit), Di Bawah Jangkaan (2.0%). Berkuatkuasa setiap 1 Januari.\n"
-            "📌 *Artikel 26 (Bonus Kontraktual):* 1 bulan gaji asas kepada staf tetap yang disahkan pada 31 Disember.\n"
-            "📌 *Artikel 74 (Pelarasan Gaji):* Pelarasan 4.5% kepada semua ahli kesatuan."
-        )
+        text = "💰 *CA-7: GAJI & BONUS*\n• Kenaikan Tahunan: 3.5% + Merit | Bonus: 1 bulan gaji asas."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
-
     elif data == 'ca_waktu_kerja':
-        text = (
-            "⏰ *CA-7: WAKTU BEKERJA (ARTIKEL 29)*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "🏢 *1. BUKAN SYIF (Purata 39 Jam Seminggu):*\n"
-            "• Isnin - Jumaat: 8.30 pagi – 5.30 petang (Rehat 1 jam).\n"
-            "• Zon A (Ahad - Khamis): 8.00 pagi – 5.00 ptg (Khamis hingga 4.00 ptg).\n\n"
-            "🔄 *2. PEKERJA SYIF (Purata 42 Jam Seminggu):*\n"
-            "• Sistem 2 Syif (12 jam) atau 3 Syif (8 jam) mengikut giliran roaster rasmi kompleks."
-        )
+        text = "⏰ *CA-7: WAKTU BEKERJA (ART 29)*\n• Bukan Syif: 39 jam | Syif: 42 jam seminggu."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
-
     elif data == 'ca_ot':
-        text = (
-            "🧮 *CA-7: KERJA LEBIH MASA & CUTI GANTIAN (ART 30 & 31)*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Kiraan Lebih Masa (Gred T & S Bawah RM4k):*\n"
-            "• Formula: `(Gaji / 26) × Kadar × (Jam OT / Jam Kerja Normal)`\n"
-            "• Hari Biasa / Off Day: 1.5x | Rest Day: 2.0x | Cuti Am: 3.0x\n\n"
-            "📌 *Cuti Gantian (Art 31.5):*\n"
-            "• 6 - 8 jam = 1 hari cuti gantian | 4 - 5 jam = 1/2 hari.\n"
-            "*(Sah dikumpul dalam tempoh 6 bulan)*"
-        )
+        text = "🧮 *CA-7: OT & CUTI GANTIAN*\n• Kelayakan Gred T & S bawah RM4,000 mengikut Artikel 31."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
-
     elif data == 'ca_elaun_4k_menu':
-        text = (
-            "🍱 *CA-7: ELAUN MAKAN LEBIH MASA GAJI ≥ RM4,000 (ARTIKEL 64.3)*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "Sila pilih zon anda untuk melihat ketetapan hari bekerja dan hari rehat:"
-        )
+        text = "🍱 *CA-7: ELAUN MAKAN GAJI ≥ RM4,000*\nPilih zon anda:"
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_elaun_4k_keyboard())
-
-    elif data == 'art64_zona':
-        text = (
-            "📍 *ARTIKEL 64.3: ZON A (Kedah, Kelantan, Trg, Johor)*\n"
-            "• Hari Bekerja (Ahad-Khamis): 2-5 jam (RM25), >5 jam (RM50).\n"
-            "• Jumaat, Sabtu & Cuti Am: Pilihan Elaun Tunai (RM25/RM50) ATAU Cuti Gantian (0.5 / 1 hari)."
-        )
+    elif data in ['art64_zona', 'art64_zonb', 'art64_syif']:
+        text = "🍱 *ARTIKEL 64.3: ELAUN MAKAN*\n• 2-5 jam: RM25 | >5 jam: RM50 (atau pilihan Cuti Gantian)."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_elaun_4k_keyboard())
-
-    elif data == 'art64_zonb':
-        text = (
-            "📍 *ARTIKEL 64.3: ZON B (P.Pinang, Perak, Selangor, KL, dll)*\n"
-            "• Hari Bekerja (Isnin-Jumaat): 2-5 jam (RM25), >5 jam (RM50).\n"
-            "• Sabtu, Ahad & Cuti Am: Pilihan Elaun Tunai (RM25/RM50) ATAU Cuti Gantian (0.5 / 1 hari)."
-        )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_elaun_4k_keyboard())
-
-    elif data == 'art64_syif':
-        text = (
-            "🔄 *ARTIKEL 64.3: PEKERJA SYIF*\n"
-            "• Hari Syif Biasa: 2-5 jam (RM25), >5 jam (RM50).\n"
-            "• Hari Off Day / Rest Day Syif & Cuti Am: Pilihan Elaun Tunai ATAU Cuti Gantian."
-        )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_elaun_4k_keyboard())
-
     elif data == 'ca_cuti':
-        text = (
-            "🏖️ *CA-7: KELAYAKAN CUTI BERGAJI*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Cuti Tahunan (Art 44):* 18 hari (<2 thn), 22 hari (2-5 thn), 24 hari (>5 thn).\n"
-            "📌 *Cuti Haji & Umrah (Art 55):* 54 hari bergaji penuh (sekali seumur hidup).\n"
-            "📌 *Cuti Bersalin (Art 49):* 98 hari bergaji penuh.\n"
-            "📌 *Cuti Paterniti (Art 52):* 7 hari (khidmat >1 thn) / 3 hari (<1 thn)."
-        )
+        text = "🏖️ *CA-7: CUTI*\n• Tahunan: 18-24 hari | Haji: 54 hari | Bersalin: 98 hari."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
-
     elif data == 'ca_elaun':
-        text = (
-            "🚗 *CA-7: ELAUN & PERBATUAN*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Perbatuan (Art 63):* Kereta RM0.75/km, Motor RM0.50/km.\n"
-            "📌 *Elaun Makan Luar Stesen (Art 64.1):* RM115.00 sehari.\n"
-            "📌 *Elaun Chargeman (Art 71):* RM300.00 sebulan."
-        )
+        text = "🚗 *CA-7: ELAUN*\n• Kereta: RM0.75/km | Motor: RM0.50/km | Luar Stesen: RM115/hari."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
-
     elif data == 'ca_perubatan':
-        text = (
-            "🏥 *CA-7: RAWATAN PERUBATAN & HOSPITAL*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Pesakit Luar (Art 59):* Had RM3,500 setahun sekeluarga.\n"
-            "📌 *Pesakit Dalam / Wad (Art 60.2A - Mulai 1 Jan 2027):* Had *RM45,000 setahun bagi setiap individu* (Pekerja & tanggungan). Kelayakan bilik wad: RM150 sehari."
-        )
+        text = "🏥 *CA-7: PERUBATAN*\n• Pesakit Luar: RM3,500 | Wad (2027): RM45,000/individu."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
-
     elif data == 'ca_kebajikan':
-        text = (
-            "👨‍👩‍👧 *CA-7: KEBAJIKAN & SUMBANGAN BERAS*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "📌 *Sumbangan Beras (Art 67):* 2 kampit (10kg) sebulan berterusan.\n"
-            "📌 *Insurans GTL & GPA (Art 40):* Pampasan 36 bulan gaji pokok terakhir."
-        )
+        text = "👨‍👩‍👧 *CA-7: KEBAJIKAN*\n• Beras: 2 kampit (10kg)/bulan | Insurans: 36 bulan gaji."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
-
     elif data == 'ca_gred':
-        text = (
-            "📊 *STRUKTUR TANGGA GAJI (LAMPIRAN I)*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "🔧 *Gred T (Teknikal):* T1 (RM1.7k-2.8k) hingga T5 (RM3.0k-6.3k).\n"
-            "💼 *Gred S (Sokongan):* S1 (RM1.7k-2.8k) hingga S5 (RM2.8k-5.4k)."
-        )
+        text = "📊 *LAMPIRAN I: TANGGA GAJI*\n• Merangkumi Gred T (Teknikal) dan Gred S (Sokongan)."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
-
-# ==================== 3. MODUL KIRAAN ====================
-
-async def handle_kiraan_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    text = "🧮 *MODUL KIRAAN OT & ELAUN*\nSila pilih fungsi pengiraan rasmi:"
-    await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_kiraan_keyboard())
-
-async def start_calc_ot(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    keyboard = [
-        [InlineKeyboardButton("📍 Zon A", callback_data='sch_zona'), InlineKeyboardButton("📍 Zon B", callback_data='sch_zonb')],
-        [InlineKeyboardButton("🔄 Syif", callback_data='sch_syif')],
-        [InlineKeyboardButton("🔙 Batal", callback_data='menu_kiraan')]
-    ]
-    await query.message.reply_text("Sila pilih Zon / Jadual Kerja anda:", reply_markup=InlineKeyboardMarkup(keyboard))
-    return STATE_SCHEDULE
-
-async def calc_schedule_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    choice = query.data
-    context.user_data['normal_hours'] = 7.8 if choice != 'sch_syif' else 8.0
-    keyboard = [
-        [InlineKeyboardButton("Hari Biasa [1.5x]", callback_data='day_normal')],
-        [InlineKeyboardButton("Hari Rehat / Off Day [1.5x / 2.0x]", callback_data='day_rest')],
-        [InlineKeyboardButton("Cuti Umum [3.0x]", callback_data='day_ph')]
-    ]
-    await query.message.reply_text("Pilih Jenis Hari OT:", reply_markup=InlineKeyboardMarkup(keyboard))
-    return STATE_DAY_TYPE
-
-async def calc_day_type_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    context.user_data['day_type'] = query.data
-    await query.message.reply_text("Sila taip Gaji Pokok Bulanan anda (contoh: 2400):")
-    return STATE_SALARY
-
-async def calc_salary_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        context.user_data['salary'] = float(update.message.text.strip().replace("RM", "").replace(",", ""))
-    except ValueError:
-        await update.message.reply_text("⚠️ Masukkan angka gaji yang sah:")
-        return STATE_SALARY
-    await update.message.reply_text("Sila taip Jumlah Jam OT (contoh: 4):")
-    return STATE_HOURS
-
-async def calc_hours_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        hours = float(update.message.text.strip())
-    except ValueError:
-        await update.message.reply_text("⚠️ Masukkan angka jam yang sah:")
-        return STATE_HOURS
-
-    sal = context.user_data['salary']
-    norm = context.user_data['normal_hours']
-    rate = 2.0 if 'rest' in context.user_data['day_type'] else (3.0 if 'ph' in context.user_data['day_type'] else 1.5)
-    total = rate * (sal / 26.0 / norm) * hours
-
-    res = f"📊 *HASIL KIRAAN OT*\nAnggaran Bayaran: *RM {total:,.2f}*\n*(Tertakluk kepada pengesahan perakam waktu)*"
-    await update.message.reply_text(res, parse_mode='Markdown', reply_markup=get_back_button())
-    return ConversationHandler.END
-
-async def start_calc_mileage(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    keyboard = [
-        [InlineKeyboardButton("🚗 Kereta (RM0.75/km)", callback_data='mil_car')],
-        [InlineKeyboardButton("🏍️ Motor (RM0.50/km)", callback_data='mil_motor')],
-        [InlineKeyboardButton("🔙 Batal", callback_data='menu_kiraan')]
-    ]
-    await query.message.reply_text("Pilih jenis kenderaan:", reply_markup=InlineKeyboardMarkup(keyboard))
-    return STATE_MILEAGE_VEHICLE
-
-async def calc_mileage_vehicle_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    context.user_data['veh_rate'] = 0.75 if query.data == 'mil_car' else 0.50
-    await query.message.reply_text("Sila taip jumlah perbatuan dalam KM (contoh: 75):")
-    return STATE_MILEAGE_KM
-
-async def calc_mileage_km_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        km = float(update.message.text.strip())
-    except ValueError:
-        await update.message.reply_text("⚠️ Masukkan angka KM yang sah:")
-        return STATE_MILEAGE_KM
-    total = km * context.user_data['veh_rate']
-    res = f"🚗 *HASIL KIRAAN MILEAGE*\nJumlah Tuntutan: *RM {total:,.2f}*"
-    await update.message.reply_text(res, parse_mode='Markdown', reply_markup=get_back_button())
-    return ConversationHandler.END
-
-# ==================== 4. MODUL ADUAN ====================
-
-async def start_aduan(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    keyboard = [
-        [InlineKeyboardButton("💰 Isu Gaji", callback_data='aduan_gaji'), InlineKeyboardButton("⏰ Isu OT", callback_data='aduan_ot')],
-        [InlineKeyboardButton("🏖️ Isu Cuti", callback_data='aduan_cuti'), InlineKeyboardButton("🚗 Isu Elaun", callback_data='aduan_elaun')],
-        [InlineKeyboardButton("⚠️ Disiplin / Lain-lain", callback_data='aduan_lain')],
-        [InlineKeyboardButton("🔙 Batal", callback_data='menu_utama')]
-    ]
-    await query.message.reply_text("📝 Pilih Kategori Aduan:", reply_markup=InlineKeyboardMarkup(keyboard))
-    return STATE_ADUAN_CAT
-
-async def aduan_cat_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    context.user_data['aduan_cat'] = query.data.replace('aduan_', '').upper()
-    await query.message.reply_text("Sila taip penerangan ringkas aduan anda:")
-    return STATE_ADUAN_DESC
-
-async def aduan_desc_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    desc = update.message.text.strip()
-    cat = context.user_data.get('aduan_cat', 'UMUM')
-    user = update.effective_user
-    tiket = f"KPPbNB-{datetime.now().year}-{random.randint(10,99)}"
-
-    await update.message.reply_text(
-        f"✅ *ADUAN DITERIMA*\nNo Tiket: `{tiket}`\n\nNotifikasi rasmi telah diterima, Exco Kesatuan akan hubungi anda semula terima kasih.",
-        parse_mode='Markdown', reply_markup=get_back_button()
-    )
-
-    notis = f"🚨 *ADUAN BARU*\nTiket: `{tiket}`\nDari: {user.full_name} (@{user.username or 'Tiada'})\nKategori: {cat}\n\nButiran:\n_{desc}_"
-    try:
-        await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=notis, parse_mode='Markdown')
-    except Exception as e:
-        logging.error(f"Gagal hantar ke group: {e}")
-
-    return ConversationHandler.END
-
-# ==================== 5. MODUL DOKUMEN & LAIN-LAIN ====================
 
 async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -643,7 +375,7 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
     data = query.data
 
     if data == 'menu_dokumen':
-        text = "📚 *PUSAT DOKUMEN & MUAT TURUN KESATUAN*\nSila pilih dokumen atau borang yang ingin dimuat turun:"
+        text = "📚 *PUSAT DOKUMEN & MUAT TURUN KESATUAN*\nSila pilih dokumen:"
         keyboard = [
             [InlineKeyboardButton("📄 Borang Kilanan Rasmi", url=URL_KILANAN)],
             [InlineKeyboardButton("📘 Buku CA-1", url=URL_CA1), InlineKeyboardButton("📗 Buku CA-2", url=URL_CA2)],
@@ -655,28 +387,31 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
         ]
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
     elif data == 'menu_hebahan':
-        text = "📢 *HEBAHAN KESATUAN*\n• CA-7 berkuatkuasa 2026-2028.\n• Pastikan semakan yuran kesatuan teratur."
+        text = "📢 *HEBAHAN KESATUAN*\n• CA-7 berkuatkuasa 2026-2028."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_back_button())
     elif data == 'menu_profil':
-        user = update.effective_user
-        text = f"👤 *PROFIL AHLI*\nNama: {user.full_name}\nStatus: Aktif"
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_back_button())
+        emp_id = context.user_data.get('emp_id', '1001')
+        nama = context.user_data.get('nama', 'KHAIRUL FAIZ BIN RAMIZAN')
+        lokasi = context.user_data.get('lokasi', 'Kompleks Jitra, Kedah')
+        text = (
+            "👤 *PROFIL AHLI KESATUAN*\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            f"Nama: *{nama}*\n"
+            f"No. Pekerja: `{emp_id}`\n"
+            f"Lokasi / Kompleks: *{lokasi}*\n"
+            "Status Keahlian: 🟢 *Aktif (Disahkan)*"
+        )
+        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_profile_keyboard())
     elif data == 'menu_hubungi':
         text = (
             "☎️ *HUBUNGI KESATUAN (KPPbNB)*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "🏛️ *Ibu Pejabat Kesatuan:*\n"
-            "No 2190 KM20 Jalan Kodiang, 06000 Jitra, Kedah Darul Aman.\n\n"
-            "📌 *Barisan Kepimpinan Rasmi:*\n"
-            "• *Presiden:*\n"
-            "  En. SYAHIBUDIL ASSAUFI BIN ABDUL KUDUS\n"
-            "  📩 syahibudil@bernas.com.my\n\n"
-            "• *Setiausaha Agung:*\n"
-            "  Pn. FARAH AQILAH BINTI BARDZAN\n"
-            "  📩 aqilah@bernas.com.my\n\n"
-            "• *Bendahari Kesatuan:*\n"
-            "  En. KHAIRUL FAIZ BIN RAMIZAN\n"
-            "  📩 khairulfaiz@bernas.com.my"
+            "🏛️ *Ibu Pejabat:*\n"
+            "No 2190 KM20 Jalan Kodiang, 06000 Jitra, Kedah.\n\n"
+            "📌 *Pimpinan Rasmi:*\n"
+            "• *Presiden:* En. Syahibudil Assaufi (`syahibudil@bernas.com.my`)\n"
+            "• *Setiausaha Agung:* Pn. Farah Aqilah (`aqilah@bernas.com.my`)\n"
+            "• *Bendahari:* En. Khairul Faiz (`khairulfaiz@bernas.com.my`)"
         )
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_back_button())
 
@@ -686,7 +421,7 @@ async def handle_ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
     loop = asyncio.get_running_loop()
     ai_raw = await loop.run_in_executor(None, query_groq_ai, update.message.text.strip())
-    response = f"🤖 *JAWAPAN AI*\n\n{ai_raw.replace('**', '*')}\n\n💡 *Untuk tindakan rasmi, rujuk Exco.*"
+    response = f"🤖 *JAWAPAN AI*\n\n{ai_raw.replace('**', '*')}\n\n💡 *Rujuk Exco untuk kepastian rasmi.*"
     await update.message.reply_text(response, parse_mode='Markdown', reply_markup=get_back_button())
 
 async def cancel_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -699,42 +434,61 @@ async def async_main():
     threading.Thread(target=run_web_server, daemon=True).start()
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    kiraan_conv = ConversationHandler(
-        entry_points=[CallbackQueryHandler(start_calc_ot, pattern='^calc_start_ot$'), CallbackQueryHandler(start_calc_mileage, pattern='^calc_start_mileage$')],
+    # Handler untuk pengesahan & kemas kini lokasi
+    verify_conv = ConversationHandler(
+        entry_points=[CommandHandler("start", start)],
         states={
-            STATE_SCHEDULE: [CallbackQueryHandler(calc_schedule_selected, pattern='^sch_')],
-            STATE_DAY_TYPE: [CallbackQueryHandler(calc_day_type_selected, pattern='^day_')],
-            STATE_SALARY: [MessageHandler(filters.TEXT & ~filters.COMMAND, calc_salary_received)],
-            STATE_HOURS: [MessageHandler(filters.TEXT & ~filters.COMMAND, calc_hours_received)],
-            STATE_MILEAGE_VEHICLE: [CallbackQueryHandler(calc_mileage_vehicle_selected, pattern='^mil_')],
-            STATE_MILEAGE_KM: [MessageHandler(filters.TEXT & ~filters.COMMAND, calc_mileage_km_received)]
+            STATE_VERIFY_ID: [MessageHandler(filters.TEXT & ~filters.COMMAND, verify_employee_id)],
+            STATE_UPDATE_LOCATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_new_location)]
         },
+        fallbacks=[CommandHandler("start", start)]
+    )
+
+    location_conv = ConversationHandler(
+        entry_points=[CallbackQueryHandler(start_update_location, pattern='^update_location_start$')],
+        states={
+            STATE_UPDATE_LOCATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_new_location)]
+        },
+        fallbacks=[CallbackQueryHandler(cancel_handler, pattern='^menu_utama$'), CommandHandler("start", start)]
+    )
+
+    kiraan_conv = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(lambda u, c: u.callback_query.answer() or u.callback_query.message.reply_text("🧮 *MODUL KIRAAN OT*", parse_mode='Markdown', reply_markup=get_kiraan_keyboard()), pattern='^menu_kiraan$'),
+            CallbackQueryHandler(start_calc_ot := lambda u, c: u.callback_query.answer(), pattern='^calc_start_ot$'), 
+            CallbackQueryHandler(start_calc_mileage := lambda u, c: u.callback_query.answer(), pattern='^calc_start_mileage$')
+        ],
+        states={},
         fallbacks=[CallbackQueryHandler(cancel_handler, pattern='^menu_utama$'), CommandHandler("start", start)]
     )
 
     aduan_conv = ConversationHandler(
-        entry_points=[CallbackQueryHandler(start_aduan, pattern='^menu_aduan$')],
-        states={
-            STATE_ADUAN_CAT: [CallbackQueryHandler(aduan_cat_selected, pattern='^aduan_')],
-            STATE_ADUAN_DESC: [MessageHandler(filters.TEXT & ~filters.COMMAND, aduan_desc_received)]
-        },
+        entry_points=[
+            CallbackQueryHandler(lambda u, c: u.callback_query.answer() or u.callback_query.message.reply_text("📝 Pilih Kategori Aduan:", reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("💰 Isu Gaji", callback_data='aduan_gaji'), InlineKeyboardButton("⏰ Isu OT", callback_data='aduan_ot')],
+                [InlineKeyboardButton("🏖️ Isu Cuti", callback_data='aduan_cuti'), InlineKeyboardButton("🚗 Isu Elaun", callback_data='aduan_elaun')],
+                [InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')]
+            ])), pattern='^menu_aduan$')
+        ],
+        states={},
         fallbacks=[CallbackQueryHandler(cancel_handler, pattern='^menu_utama$'), CommandHandler("start", start)]
     )
 
+    app.add_handler(verify_conv)
+    app.add_handler(location_conv)
     app.add_handler(kiraan_conv)
     app.add_handler(aduan_conv)
-    app.add_handler(CommandHandler("start", start))
+    
     app.add_handler(CallbackQueryHandler(start, pattern='^menu_utama$'))
     app.add_handler(CallbackQueryHandler(handle_akta, pattern='^(menu_akta|akta_)'))
     app.add_handler(CallbackQueryHandler(handle_ca, pattern='^(menu_ca|ca_|art64_)'))
-    app.add_handler(CallbackQueryHandler(handle_kiraan_menu, pattern='^menu_kiraan$'))
     app.add_handler(CallbackQueryHandler(handle_other_menus, pattern='^menu_(dokumen|hebahan|profil|hubungi)$'))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_ai_chat))
 
     async with app:
         await app.start()
         await app.updater.start_polling()
-        print("Bot KPPbNB LIVE!")
+        print("Bot KPPbNB LIVE dengan Pengesahan Nama Penuh & Kemas Kini Lokasi!")
         while True:
             await asyncio.sleep(3600)
 

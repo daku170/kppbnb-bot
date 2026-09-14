@@ -48,7 +48,6 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-# States
 STATE_VERIFY_ID = 1
 STATE_UPDATE_LOCATION = 2
 
@@ -182,9 +181,11 @@ def get_elaun_4k_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard)
 
-# ==================== HANDLERS PENGESAHAN & LOKASI ====================
+# ==================== HANDLERS PENGESAHAN & LOKASI (ISOLASI SESI) ====================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Reset status verifikasi bagi sesi semasa
+    context.user_data.clear()
     text = (
         "🔐 *PENGESAHAN KEAHLIAN KPPbNB*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
@@ -203,10 +204,11 @@ async def verify_employee_id(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     if emp_id in SENARAI_AHLI_SAH:
         data_ahli = SENARAI_AHLI_SAH[emp_id]
+        # Simpan secara khusus dalam user_data unik pengguna ini
         context.user_data['emp_id'] = emp_id
         context.user_data['nama'] = data_ahli['nama']
         context.user_data['lokasi'] = data_ahli['lokasi']
-        context.user_data['verified'] = True  # Penanda sah
+        context.user_data['verified'] = True
         
         welcome_text = (
             f"Hi *{data_ahli['nama']}*! 👋\n\n"
@@ -255,6 +257,7 @@ async def receive_new_location(update: Update, context: ContextTypes.DEFAULT_TYP
     nama = context.user_data.get('nama', 'Ahli')
     user = update.effective_user
 
+    # Kemas kini lokasi spesifik untuk ahli ini sahaja
     context.user_data['lokasi'] = new_loc
 
     notis_group = (
@@ -375,9 +378,11 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
         text = "📢 *HEBAHAN KESATUAN*\n• CA-7 berkuatkuasa 2026-2028."
         await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_back_button())
     elif data == 'menu_profil':
-        emp_id = context.user_data.get('emp_id', '1001')
-        nama = context.user_data.get('nama', 'KHAIRUL FAIZ BIN RAMIZAN')
-        lokasi = context.user_data.get('lokasi', 'Kompleks Jitra, Kedah')
+        # Ambil data spesifik mengikut sesi ahli yang sedang log masuk
+        emp_id = context.user_data.get('emp_id', 'Tidak Diketahui')
+        nama = context.user_data.get('nama', 'Belum Disahkan')
+        lokasi = context.user_data.get('lokasi', 'Tidak Diketahui')
+        
         text = (
             "👤 *PROFIL AHLI KESATUAN*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
@@ -404,7 +409,6 @@ async def handle_ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text or update.message.text.startswith('/'):
         return
     
-    # Pastikan ahli sudah melepasi pengesahan nombor pekerja sebelum boleh tanya AI
     if not context.user_data.get('verified'):
         await update.message.reply_text("🔐 Sila masukkan Nombor Pekerja yang sah terlebih dahulu dengan menaip /start")
         return
@@ -425,7 +429,6 @@ async def async_main():
     threading.Thread(target=run_web_server, daemon=True).start()
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    # Conversation untuk pengesahan nombor pekerja (Hanya terima nombor semasa fasa mula)
     verify_conv = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
@@ -434,7 +437,6 @@ async def async_main():
         fallbacks=[CommandHandler("start", start)]
     )
 
-    # Conversation untuk kemas kini lokasi
     location_conv = ConversationHandler(
         entry_points=[CallbackQueryHandler(start_update_location, pattern='^update_location_start$')],
         states={
@@ -455,7 +457,7 @@ async def async_main():
     async with app:
         await app.start()
         await app.updater.start_polling()
-        print("Bot KPPbNB LIVE dengan Pengesahan Sempurna!")
+        print("Bot KPPbNB LIVE dengan Pemisahan Sesi Pengesahan Ahli!")
         while True:
             await asyncio.sleep(3600)
 

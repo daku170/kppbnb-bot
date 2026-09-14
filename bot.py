@@ -23,8 +23,15 @@ GROQ_API_KEY = "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"
 # ID Rasmi GROUP ADUAN KPPbNB
 ADMIN_CHAT_ID = -1003958495436
 
-# Pautan Folder Google Drive Rasmi KPPbNB
-DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/1R7PB93gHWmL9Y6DtZ4BJXAcsiXYhPbah?usp=drive_link"
+# Pautan Spesifik Dokumen Google Drive
+URL_KILANAN = "https://drive.google.com/file/d/1CRrSFRlZgWtN5tUVlwj2iOsFbpmjJvMl/view?usp=drive_link"
+URL_CA1 = "https://drive.google.com/file/d/1s0KkAqdb2i2XMAg8HgoEvh0tWhiTMcYB/view?usp=drive_link"
+URL_CA2 = "https://drive.google.com/file/d/1piIG4_2V8o0ZpQhpvf6pUo9kJutKUKXr/view?usp=drive_link"
+URL_CA3 = "https://drive.google.com/file/d/1ZyaSF0CoaY_jrgCS8C2I53kTVC1qb__X/view?usp=drive_link"
+URL_CA4 = "https://drive.google.com/file/d/1Hro24UiRlpAP7xQpQ_iuo0iyAMszorFt/view?usp=drive_link"
+URL_CA5 = "https://drive.google.com/file/d/1Z41lso7fi3GlVG_UvGpncUkIndN1GaL3/view?usp=drive_link"
+URL_CA6 = "https://drive.google.com/file/d/19kQw-6Klinuq1ErF-raLs8-9xoosYroi/view?usp=drive_link"
+URL_AKTA = "https://drive.google.com/file/d/1zR2l8JhjjP5udVwnpaq9v_iVuZrreJ-g/view?usp=sharing"
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -451,13 +458,11 @@ async def aduan_desc_received(update: Update, context: ContextTypes.DEFAULT_TYPE
     user = update.effective_user
     tiket = f"KPPbNB-{datetime.now().year}-{random.randint(10,99)}"
 
-    # Mesej ke ahli
     await update.message.reply_text(
         f"✅ *ADUAN DITERIMA*\nNo Tiket: `{tiket}`\n\nNotifikasi rasmi telah diterima, Exco Kesatuan akan hubungi anda semula terima kasih.",
         parse_mode='Markdown', reply_markup=get_back_button()
     )
 
-    # Mesej ke group admin
     notis = f"🚨 *ADUAN BARU*\nTiket: `{tiket}`\nDari: {user.full_name} (@{user.username or 'Tiada'})\nKategori: {cat}\n\nButiran:\n_{desc}_"
     try:
         await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=notis, parse_mode='Markdown')
@@ -466,7 +471,7 @@ async def aduan_desc_received(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     return ConversationHandler.END
 
-# ==================== 5. MODUL DOKUMEN (GOOGLE DRIVE) ====================
+# ==================== 5. MODUL DOKUMEN (PILIHAN FAIL SPESIFIK) ====================
 
 async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -474,12 +479,14 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
     data = query.data
 
     if data == 'menu_dokumen':
-        text = "📚 *PUSAT DOKUMEN & MUAT TURUN KESATUAN*\nSila pilih kategori rujukan dokumen:"
+        text = "📚 *PUSAT DOKUMEN & MUAT TURUN KESATUAN*\nSila pilih dokumen atau borang yang ingin dimuat turun:"
         keyboard = [
-            [InlineKeyboardButton("📑 Arkib CA (1 - 7)", url=DRIVE_FOLDER_URL)],
-            [InlineKeyboardButton("📝 Borang Rasmi Kesatuan", url=DRIVE_FOLDER_URL)],
-            [InlineKeyboardButton("⚖️ Akta Kerja & Rujukan", url=DRIVE_FOLDER_URL)],
-            [InlineKeyboardButton("📘 Buku Tatatertib PNC", url="https://portal.bernas.com.my")],
+            [InlineKeyboardButton("📄 Borang Kilanan Rasmi", url=URL_KILANAN)],
+            [InlineKeyboardButton("📘 Buku CA-1", url=URL_CA1), InlineKeyboardButton("📗 Buku CA-2", url=URL_CA2)],
+            [InlineKeyboardButton("📙 Buku CA-3", url=URL_CA3), InlineKeyboardButton("📕 Buku CA-4", url=URL_CA4)],
+            [InlineKeyboardButton("📒 Buku CA-5", url=URL_CA5), InlineKeyboardButton("📓 Buku CA-6", url=URL_CA6)],
+            [InlineKeyboardButton("📜 Buku Akta Kerja & Rujukan", url=URL_AKTA)],
+            [InlineKeyboardButton("📘 Portal / Buku Tatatertib PNC", url="https://portal.bernas.com.my")],
             [InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')]
         ]
         await query.edit_message_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
@@ -542,7 +549,7 @@ async def async_main():
     app.add_handler(CallbackQueryHandler(handle_akta, pattern='^(menu_akta|akta_)'))
     app.add_handler(CallbackQueryHandler(handle_ca, pattern='^(menu_ca|ca_|art64_)'))
     app.add_handler(CallbackQueryHandler(handle_kiraan_menu, pattern='^menu_kiraan$'))
-    app.add_handler(CallbackQueryHandler(handle_other_menus, pattern='^(menu_hebahan|menu_dokumen|menu_profil|menu_hubungi)$'))
+    app.add_handler(CallbackQueryHandler(handle_other_menus, pattern='^(.?menu_.*)$'))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_ai_chat))
 
     async with app:

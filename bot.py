@@ -611,17 +611,11 @@ async def handle_ot_calculator(update: Update, context: ContextTypes.DEFAULT_TYP
         context.user_data['ot_day_type'] = 'Cuti am'
         context.user_data['ot_day_hours'] = None
 
-    if data in ('ot_hari_rehat', 'ot_cuti_am'):
-        text = (
-            "ℹ️ *KIRAAN OT HARI REHAT / CUTI AM*\n"
-            "━━━━━━━━━━━━━━━━━━━━\n"
-            "Untuk ketepatan, kadar bayaran hari rehat/cuti am tidak aku andaikan daripada formula Hari Bekerja Biasa dalam Artikel 31.\n\n"
-            "📌 Artikel 31 CA-7 yang dinyatakan secara jelas memberi formula:\n"
-            "*Gaji bulanan × 1.5 × jumlah jam kerja* ÷ *(26 × jumlah jam kerja biasa)* untuk *hari kerja biasa*.\n\n"
-            "👉 Untuk kiraan automatik yang tepat bagi hari rehat/cuti am, rujuk kadar berkenaan di bawah Akta/Peraturan dan rekod HR/payroll."
-        )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
-        return ConversationHandler.END
+    # Hari rehat dan cuti am turut melalui kiraan, menggunakan kadar berkanun
+    # yang dirujuk oleh CA-7 Artikel 31.2. Gaji harian = gaji bulanan / 26.
+    # Hari rehat: <= 1/2 jam biasa = 0.5 hari; >1/2 hingga jam biasa = 1 hari;
+    # lebihan jam = 2x kadar sejam. Cuti am: jam biasa = 2 hari; lebihan jam = 3x kadar sejam.
+    # Untuk kedua-duanya, pengguna masih masukkan gaji dan jumlah jam bekerja.
 
     await query.message.reply_text(
         "💰 *Masukkan gaji bulanan asas (RM)*\n\n"
@@ -659,13 +653,56 @@ async def ot_get_hours(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return STATE_OT_HOURS
 
     salary = context.user_data.get('ot_salary', 0)
-    normal_hours = context.user_data.get('ot_day_hours', 8)
     zone = context.user_data.get('ot_zone', 'A')
     day_type = context.user_data.get('ot_day_type', 'Hari bekerja biasa')
 
+    # Hari bekerja biasa menggunakan jam biasa mengikut zon.
+    # Hari rehat/cuti am menggunakan jam biasa 8 jam secara default;
+    # Khamis Zon B kekal 7 jam jika pengguna memilih hari bekerja Khamis.
+    normal_hours = context.user_data.get('ot_day_hours') or 8
     hourly_rate = salary / (26 * normal_hours)
-    ot_rate = hourly_rate * 1.5
-    estimate = ot_rate * hours
+    daily_rate = salary / 26
+
+    if day_type == 'Hari rehat':
+        half_day_hours = normal_hours / 2
+        if hours <= half_day_hours:
+            estimate = daily_rate * 0.5
+            rate_desc = f"≤ {half_day_hours:g} jam = 0.5 × gaji harian"
+        elif hours <= normal_hours:
+            estimate = daily_rate
+            rate_desc = f"> {half_day_hours:g} hingga {normal_hours:g} jam = 1 × gaji harian"
+        else:
+            excess_hours = hours - normal_hours
+            estimate = daily_rate + (excess_hours * hourly_rate * 2)
+            rate_desc = f"{normal_hours:g} jam pertama = 1 × gaji harian; lebihan = 2 × kadar sejam"
+        formula_text = (
+            f"Gaji harian = RM{salary:,.2f} ÷ 26 = *RM{daily_rate:,.2f}*\n"
+            f"Kadar sejam = RM{salary:,.2f} ÷ (26 × {normal_hours:g}) = *RM{hourly_rate:,.2f}/jam*\n"
+            f"Kadar hari rehat: *{rate_desc}*"
+        )
+        note = "📌 Kiraan hari rehat dibuat mengikut kadar yang dirujuk di bawah Akta Kerja 1955."
+    elif day_type == 'Cuti am':
+        if hours <= normal_hours:
+            estimate = daily_rate * 2
+            rate_desc = f"sehingga {normal_hours:g} jam = 2 × gaji harian"
+        else:
+            excess_hours = hours - normal_hours
+            estimate = (daily_rate * 2) + (excess_hours * hourly_rate * 3)
+            rate_desc = f"{normal_hours:g} jam pertama = 2 × gaji harian; lebihan = 3 × kadar sejam"
+        formula_text = (
+            f"Gaji harian = RM{salary:,.2f} ÷ 26 = *RM{daily_rate:,.2f}*\n"
+            f"Kadar sejam = RM{salary:,.2f} ÷ (26 × {normal_hours:g}) = *RM{hourly_rate:,.2f}/jam*\n"
+            f"Kadar cuti am: *{rate_desc}*"
+        )
+        note = "📌 Kiraan cuti am dibuat mengikut kadar yang dirujuk di bawah Akta Kerja 1955."
+    else:
+        ot_rate = hourly_rate * 1.5
+        estimate = ot_rate * hours
+        formula_text = (
+            f"Kadar sejam = RM{salary:,.2f} ÷ (26 × {normal_hours:g}) = *RM{hourly_rate:,.2f}/jam*\n"
+            f"Kadar OT hari bekerja biasa = RM{hourly_rate:,.2f} × 1.5 = *RM{ot_rate:,.2f}/jam*"
+        )
+        note = "📌 Berdasarkan formula CA-7 Artikel 31.1."
 
     zone_text = 'Zon A — Isnin–Jumaat' if zone == 'A' else 'Zon B — Ahad–Khamis'
     text = (
@@ -674,15 +711,12 @@ async def ot_get_hours(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"📍 Zon: *{zone_text}*\n"
         f"📅 Jenis hari: *{day_type}*\n"
         f"💰 Gaji asas: *RM{salary:,.2f}*\n"
-        f"⏱️ Jam OT: *{hours:g} jam*\n"
+        f"⏱️ Jam bekerja/OT: *{hours:g} jam*\n"
         f"🕐 Jam kerja biasa: *{normal_hours:g} jam/hari*\n\n"
-        f"Kadar sejam = RM{salary:,.2f} ÷ (26 × {normal_hours:g})\n"
-        f"= *RM{hourly_rate:,.2f}/jam*\n\n"
-        f"Kadar OT hari bekerja biasa = RM{hourly_rate:,.2f} × 1.5\n"
-        f"= *RM{ot_rate:,.2f}/jam*\n\n"
-        f"💵 *Anggaran bayaran OT = RM{estimate:,.2f}*\n\n"
-        "📌 Berdasarkan formula CA-7 Artikel 31. Jumlah sebenar tertakluk kepada rekod payroll, kelayakan OT dan potongan/ketetapan yang berkenaan.\n"
-        "⚠️ Artikel 31 menetapkan had OT sehingga 104 jam sebulan, tidak termasuk OT hari rehat/cuti umum seperti dinyatakan dalam CA-7."
+        f"{formula_text}\n\n"
+        f"💵 *Anggaran bayaran = RM{estimate:,.2f}*\n\n"
+        f"{note}\n"
+        "⚠️ Jumlah sebenar tertakluk kepada rekod payroll dan kelayakan tuntutan."
     )
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("🔄 Kira Semula OT", callback_data='menu_kiraan')],

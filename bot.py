@@ -1210,6 +1210,7 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
         # petikan/keyword atau had 60,000 aksara.
         store_name = os.environ.get("GEMINI_FILE_SEARCH_STORE", "").strip()
         model = "gemini-3.6-flash"
+        backup_model = os.environ.get("GEMINI_BACKUP_MODEL", "gemini-2.5-flash")
 
         if store_name:
             payload = json.dumps({
@@ -1266,22 +1267,33 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
             }).encode("utf-8")
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
-        req = urllib.request.Request(
-            url,
-            data=payload,
-            headers={
-                "Content-Type": "application/json",
-                "x-goog-api-key": api_key
-            },
-            method="POST"
-        )
-
-        loop = asyncio.get_running_loop()
-        def call_api():
+        def make_request(current_model):
+            request_payload = payload
+            if store_name:
+                request_obj = json.loads(payload.decode("utf-8"))
+                request_obj["model"] = current_model
+                request_payload = json.dumps(request_obj).encode("utf-8")
+            req = urllib.request.Request(
+                url,
+                data=request_payload,
+                headers={
+                    "Content-Type": "application/json",
+                    "x-goog-api-key": api_key
+                },
+                method="POST"
+            )
             with urllib.request.urlopen(req, timeout=60) as response:
                 return json.loads(response.read().decode("utf-8"))
 
-        data = await loop.run_in_executor(None, call_api)
+        loop = asyncio.get_running_loop()
+        try:
+            data = await loop.run_in_executor(None, lambda: make_request(model))
+        except urllib.error.HTTPError as e:
+            if e.code in (500, 502, 503) and backup_model and backup_model != model:
+                logging.warning(f"Gemini {model} HTTP {e.code}; cuba backup {backup_model}")
+                data = await loop.run_in_executor(None, lambda: make_request(backup_model))
+            else:
+                raise
 
         answer = ""
         if store_name:

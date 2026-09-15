@@ -1085,6 +1085,11 @@ Tugas anda:
 7. Jika soalan berkaitan kiraan OT, arahkan ahli menggunakan menu Kiraan OT & Elaun
    kerana modul tersebut mempunyai pengiraan khusus CA-7.
 8. Jangan mendakwa sebagai peguam atau membuat keputusan rasmi bagi KPPbNB.
+9. Pastikan jawapan SENTIASA lengkap dan tidak terhenti di tengah ayat. Sebelum menghantar,
+   semak bahawa ayat terakhir telah selesai.
+10. Untuk soalan fakta mudah, jawab terus dengan fakta utama dahulu. Jika sesuai, gunakan
+    2-4 poin ringkas dan nyatakan nombor seksyen/artikel hanya jika disokong oleh sumber.
+11. Jangan mulakan dengan salam atau mukadimah panjang; terus jawab soalan ahli.
 """
 
 
@@ -1195,44 +1200,72 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
             "Buat masa ini, gunakan menu *📖 Akta & Peraturan* dan *📋 CA7* untuk rujukan."
         )
 
-    ca7 = _sahabat_baca_ca7()
-    rujukan = _sahabat_pilih_rujukan(soalan, ca7)
-    prompt = (
-        "ARAHAN RUJUKAN:\n"
-        "Jawab berdasarkan teks CA-7 yang diberikan di bawah. Jangan reka kadar, "
-        "nombor artikel, syarat atau hak yang tidak terdapat dalam rujukan. "
-        "Jika rujukan tidak cukup untuk menjawab, nyatakan dengan jelas bahawa "
-        "maklumat tidak ditemui dalam petikan yang dipilih dan cadangkan menu CA-7 "
-        "atau pegawai Kesatuan yang sesuai.\n\n"
-        "PETIKAN CA-7 YANG RELEVAN:\n"
-        + (rujukan if rujukan else "Sumber CA-7 tidak dapat dibaca sekarang.")
-        + "\n\nSOALAN AHLI:\n"
-        + soalan
-    )
-
     try:
         import json
         import urllib.request
         import urllib.error
 
-        # Gemini 3.6 Flash ialah model stabil semasa. Jika Render mempunyai
-        # SAHABAT_MODEL, nilai itu masih boleh digunakan tanpa mengubah modul lain.
+        # Jika File Search Store telah disediakan, Sahabat akan mencari seluruh
+        # dokumen CA-7 secara semantik. Ini mengelakkan kebergantungan kepada
+        # petikan/keyword atau had 60,000 aksara.
+        store_name = os.environ.get("GEMINI_FILE_SEARCH_STORE", "").strip()
         model = "gemini-3.6-flash"
-        payload = json.dumps({
-            "systemInstruction": {
-                "parts": [{"text": SAHABAT_SYSTEM_PROMPT}]
-            },
-            "contents": [{
-                "role": "user",
-                "parts": [{"text": prompt}]
-            }],
-            "generationConfig": {
-                "maxOutputTokens": 700,
-                "temperature": 0.3
-            }
-        }).encode("utf-8")
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        if store_name:
+            payload = json.dumps({
+                "model": model,
+                "input": soalan,
+                "system_instruction": SAHABAT_SYSTEM_PROMPT + "\n\n"
+                    "Gunakan File Search sebagai sumber utama CA-7 KPPbNB. "
+                    "Jawab hanya berdasarkan maklumat yang ditemui dalam dokumen. "
+                    "Jika maklumat tidak ditemui, nyatakan dengan jelas bahawa "
+                    "dokumen CA-7 tidak memberikan maklumat yang mencukupi. "
+                    "Jika soalan meminta tafsiran/keputusan rasmi, rujuk pegawai Kesatuan. "
+                    "Pastikan jawapan lengkap, jangan berhenti di tengah ayat, dan jawab terus "
+                    "soalan ahli sebelum memberi penjelasan tambahan.",
+                "tools": [{
+                    "type": "file_search",
+                    "file_search_store_names": [store_name],
+                    "top_k": 8
+                }],
+                "store": False,
+                "generation_config": {
+                    "temperature": 0.2,
+                    "max_output_tokens": 1200
+                }
+            }).encode("utf-8")
+            url = "https://generativelanguage.googleapis.com/v1beta/interactions"
+        else:
+            # Fallback: rujukan tempatan sedia ada jika File Search Store belum
+            # ditetapkan. Fungsi bot lain tidak terjejas.
+            ca7 = _sahabat_baca_ca7()
+            rujukan = _sahabat_pilih_rujukan(soalan, ca7)
+            payload = json.dumps({
+                "systemInstruction": {
+                    "parts": [{"text": SAHABAT_SYSTEM_PROMPT}]
+                },
+                "contents": [{
+                    "role": "user",
+                    "parts": [{"text": (
+                        "ARAHAN RUJUKAN:\n"
+                        "Jawab berdasarkan teks CA-7 yang diberikan di bawah. Jangan reka kadar, "
+                        "nombor artikel, syarat atau hak yang tidak terdapat dalam rujukan. "
+                        "Jika rujukan tidak cukup untuk menjawab, nyatakan dengan jelas bahawa "
+                        "maklumat tidak ditemui dalam petikan yang dipilih dan cadangkan menu CA-7 "
+                        "atau pegawai Kesatuan yang sesuai.\n\n"
+                        "PETIKAN CA-7 YANG RELEVAN:\n"
+                        + (rujukan if rujukan else "Sumber CA-7 tidak dapat dibaca sekarang.")
+                        + "\n\nSOALAN AHLI:\n" + soalan
+                    + "\n\nPENTING: Berikan jawapan lengkap dan berhenti hanya selepas ayat terakhir selesai."
+                    )}]
+                }],
+                "generationConfig": {
+                    "maxOutputTokens": 1200,
+                    "temperature": 0.3
+                }
+            }).encode("utf-8")
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+
         req = urllib.request.Request(
             url,
             data=payload,
@@ -1245,42 +1278,46 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
 
         loop = asyncio.get_running_loop()
         def call_api():
-            with urllib.request.urlopen(req, timeout=45) as response:
+            with urllib.request.urlopen(req, timeout=60) as response:
                 return json.loads(response.read().decode("utf-8"))
 
         data = await loop.run_in_executor(None, call_api)
 
         answer = ""
-        candidates = data.get("candidates", [])
-        if candidates:
-            content = candidates[0].get("content", {})
-            parts = content.get("parts", [])
-            answer = "\n".join(
-                part.get("text", "") for part in parts if part.get("text")
-            ).strip()
+        if store_name:
+            # Interactions API returns model output inside steps[].content[].
+            for step in data.get("steps", []):
+                if step.get("type") == "model_output":
+                    for block in step.get("content", []):
+                        if block.get("type") == "text" and block.get("text"):
+                            answer += block["text"] + "\n"
+        else:
+            candidates = data.get("candidates", [])
+            if candidates:
+                content = candidates[0].get("content", {})
+                parts = content.get("parts", [])
+                answer = "\n".join(
+                    part.get("text", "") for part in parts if part.get("text")
+                )
 
-        return answer or "Maaf, Sahabat tidak dapat memberikan jawapan sekarang. Sila cuba semula."
+        return answer.strip() or "Maaf, Sahabat tidak dapat memberikan jawapan sekarang. Sila cuba semula."
 
     except urllib.error.HTTPError as e:
         try:
-            raw_body = e.read().decode("utf-8", errors="replace")
+            body = e.read().decode("utf-8", errors="ignore")
+            logging.error(f"Sahabat Gemini HTTP {e.code}: {body[:2000]}")
         except Exception:
-            raw_body = ""
-        retry_after = e.headers.get("Retry-After") if getattr(e, "headers", None) else None
-        logging.error(
-            "Ralat Sahabat KPPbNB Gemini: HTTP %s | Retry-After=%s | Body=%s",
-            e.code, retry_after or "-", raw_body[:2000]
-        )
-        return (
-            "❌ *Sahabat tidak dapat memproses soalan buat masa ini.*\n\n"
-            "Sila cuba semula sebentar lagi. Jika masalah berterusan, hubungi pihak Kesatuan."
-        )
+            pass
+        if e.code == 404:
+            return "⚠️ Sumber File Search Sahabat tidak dijumpai. Sila semak `GEMINI_FILE_SEARCH_STORE` di Render."
+        if e.code in (401, 403):
+            return "⚠️ GEMINI_API_KEY tidak sah atau tiada akses kepada Gemini API."
+        if e.code == 429:
+            return "⚠️ Had penggunaan Gemini API telah dicapai. Sila cuba semula kemudian."
+        return "⚠️ Sahabat tidak dapat menghubungi Gemini sekarang. Sila cuba semula."
     except Exception as e:
-        logging.error(f"Ralat Sahabat KPPbNB Gemini: {e}")
-        return (
-            "❌ *Sahabat tidak dapat memproses soalan buat masa ini.*\n\n"
-            "Sila cuba semula sebentar lagi atau hubungi pihak Kesatuan."
-        )
+        logging.exception(f"Sahabat Gemini gagal: {e}")
+        return "⚠️ Sahabat mengalami masalah teknikal. Sila cuba semula."
 
 async def handle_sahabat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query

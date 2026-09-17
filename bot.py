@@ -1191,7 +1191,85 @@ def _sahabat_pilih_rujukan(soalan: str, ca7: str) -> str:
     return "\n\n====================\n\n".join(chunks)
 
 
+def _sahabat_jawapan_pantas(soalan: str):
+    """Jawapan segera untuk soalan fakta CA-7 yang lazim.
+    Sumber fakta diambil daripada CA-7 KPPbNB; AI hanya digunakan untuk soalan
+    yang memerlukan carian/penjelasan lebih kompleks.
+    """
+    import re
+    q = soalan.lower().strip()
+
+    # Waktu kerja biasa — Artikel 29.1/29.4
+    if (re.search(r"\bberapa\s+jam\b", q) and ("waktu kerja" in q or "waktu bekerja" in q or "jam kerja" in q)) or "39 jam" in q:
+        return (
+            "📌 **Waktu kerja biasa mengikut CA-7:**\n"
+            "• Pekerja bukan syif: **39 jam seminggu**.\n"
+            "• Pekerja syif: **purata 42 jam seminggu**.\n"
+            "• Jadual biasa bergantung kepada lokasi/jabatan dan ditetapkan BERNAS.\n\n"
+            "Rujukan: **Artikel 29.1 CA-7**."
+        )
+
+    # Mileage / perjalanan — Artikel 63
+    if any(x in q for x in ["mileage", "elaun perjalanan", "berapa sen km", "berapa/km", "per km", "per kilometer"]):
+        return (
+            "📌 **Elaun perjalanan CA-7:**\n"
+            "• Kereta sendiri: **RM0.75/km**\n"
+            "• Motosikal sendiri: **RM0.50/km**\n"
+            "• Tol, parking dan feri boleh dituntut dengan resit; kes tanpa resit tertakluk kepada pengesahan Ketua Bahagian.\n\n"
+            "Rujukan: **Artikel 63 CA-7**."
+        )
+
+    # Chargeman — Artikel 71
+    if "chargeman" in q:
+        return (
+            "📌 **Elaun Chargeman:** **RM300 sebulan** bagi pekerja yang mempunyai sijil kelayakan Chargeman dan menjalankan tugas sebagai Chargeman.\n\n"
+            "Rujukan: **Artikel 71 CA-7**."
+        )
+
+    # Shift allowance — Artikel 72
+    if any(x in q for x in ["elaun syif", "elaun shift", "shift allowance", "syif berapa"]):
+        return (
+            "📌 **Elaun syif:** CA-7 memperuntukkan bayaran Elaun Syif kepada pekerja yang diarahkan bekerja secara syif.\n"
+            "Untuk kadar mengikut waktu/lokasi, sila beri **lokasi dan waktu syif** supaya Sahabat semak ketetapan yang tepat dalam Artikel 72.\n\n"
+            "Rujukan: **Artikel 72 CA-7**."
+        )
+
+    # OT limit — Artikel 31.4
+    if ("ot" in q or "kerja lebih masa" in q or "overtime" in q) and any(x in q for x in ["berapa jam", "had", "maksimum", "dibenarkan", "sebulan"]):
+        return (
+            "📌 **Had kerja lebih masa CA-7:** pekerja dibenarkan membuat kerja lebih masa sehingga **104 jam sebulan**.\n"
+            "Artikel 31.4 menyatakan had ini tidak termasuk kerja lebih masa pada hari rehat atau hari cuti umum yang diwartakan, tertakluk kepada peraturan berkaitan.\n\n"
+            "Rujukan: **Artikel 31.4 CA-7**."
+        )
+
+    # OT rate — Artikel 31.1
+    if ("ot" in q or "kerja lebih masa" in q or "overtime" in q) and any(x in q for x in ["kadar", "berapa", "rate", "bayaran"]):
+        return (
+            "📌 **Kadar OT hari kerja biasa:** CA-7 menetapkan bayaran berdasarkan formula **gaji bulanan ÷ 26 × 1.5 × (jumlah jam kerja ÷ jumlah jam kerja biasa)**.\n"
+            "Untuk hari rehat/cuti am, pengiraan berbeza dan boleh dikira melalui menu **🧮 Kiraan OT & Elaun**.\n\n"
+            "Rujukan: **Artikel 31 CA-7**."
+        )
+
+    # Leave annual — Article 44, using exact rates already embedded in bot's CA7 knowledge.
+    if "cuti tahunan" in q or "annual leave" in q:
+        return (
+            "📌 **Cuti tahunan CA-7:**\n"
+            "• Khidmat kurang 2 tahun: **18 hari**\n"
+            "• 2 hingga 5 tahun: **22 hari**\n"
+            "• Lebih 5 tahun: **24 hari**\n\n"
+            "Rujukan: **Artikel 44 CA-7**."
+        )
+
+    return None
+
+
 async def _sahabat_tanya_ai(soalan: str) -> str:
+    # Soalan fakta mudah dijawab terus daripada CA-7 tanpa memanggil AI.
+    # Ini mengelakkan kelewatan 3-5 minit untuk FAQ biasa.
+    quick_answer = _sahabat_jawapan_pantas(soalan)
+    if quick_answer:
+        return quick_answer
+
     api_key = os.environ.get("GEMINI_API_KEY", "").strip()
     if not api_key:
         return (

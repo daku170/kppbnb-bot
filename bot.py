@@ -1387,7 +1387,7 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
                     break
                 except urllib.error.HTTPError as e:
                     last_error = e
-                    if e.code in (500, 502, 503):
+                    if e.code in (429, 500, 502, 503):
                         logging.warning(
                             f"Sahabat Gemini model {try_model} gagal HTTP {e.code}; "
                             "cuba model seterusnya."

@@ -1210,10 +1210,10 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
         # petikan/keyword atau had 60,000 aksara.
         store_name = os.environ.get("GEMINI_FILE_SEARCH_STORE", "").strip()
         model = "gemini-3.6-flash"
-        backup_model = os.environ.get("GEMINI_BACKUP_MODEL", "gemini-2.5-flash")
+        model_fallbacks = ["gemini-3.5-flash", "gemini-3.5-flash-lite"]
 
         if store_name:
-            payload = json.dumps({
+            payload_obj = {
                 "model": model,
                 "input": soalan,
                 "system_instruction": SAHABAT_SYSTEM_PROMPT + "\n\n"
@@ -1234,7 +1234,8 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
                     "temperature": 0.2,
                     "max_output_tokens": 1200
                 }
-            }).encode("utf-8")
+            }
+            payload = json.dumps(payload_obj).encode("utf-8")
             url = "https://generativelanguage.googleapis.com/v1beta/interactions"
         else:
             # Fallback: rujukan tempatan sedia ada jika File Search Store belum
@@ -1267,33 +1268,58 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
             }).encode("utf-8")
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
-        def make_request(current_model):
-            request_payload = payload
-            if store_name:
-                request_obj = json.loads(payload.decode("utf-8"))
-                request_obj["model"] = current_model
-                request_payload = json.dumps(request_obj).encode("utf-8")
-            req = urllib.request.Request(
-                url,
-                data=request_payload,
-                headers={
-                    "Content-Type": "application/json",
-                    "x-goog-api-key": api_key
-                },
-                method="POST"
-            )
-            with urllib.request.urlopen(req, timeout=60) as response:
-                return json.loads(response.read().decode("utf-8"))
+        req = urllib.request.Request(
+            url,
+            data=payload,
+            headers={
+                "Content-Type": "application/json",
+                "x-goog-api-key": api_key
+            },
+            method="POST"
+        )
 
         loop = asyncio.get_running_loop()
-        try:
-            data = await loop.run_in_executor(None, lambda: make_request(model))
-        except urllib.error.HTTPError as e:
-            if e.code in (500, 502, 503) and backup_model and backup_model != model:
-                logging.warning(f"Gemini {model} HTTP {e.code}; cuba backup {backup_model}")
-                data = await loop.run_in_executor(None, lambda: make_request(backup_model))
-            else:
-                raise
+
+        def call_api(request):
+            with urllib.request.urlopen(request, timeout=60) as response:
+                return json.loads(response.read().decode("utf-8"))
+
+        # File Search: cuba model utama dahulu. Jika Gemini sementara sibuk
+        # (HTTP 500/502/503), cuba model sandaran tanpa mengubah store atau
+        # fungsi bot lain.
+        if store_name:
+            models_to_try = [model] + model_fallbacks
+            data = None
+            last_error = None
+            for try_model in models_to_try:
+                payload_obj["model"] = try_model
+                try:
+                    try_payload = json.dumps(payload_obj).encode("utf-8")
+                    try_req = urllib.request.Request(
+                        url,
+                        data=try_payload,
+                        headers={
+                            "Content-Type": "application/json",
+                            "x-goog-api-key": api_key
+                        },
+                        method="POST"
+                    )
+                    data = await loop.run_in_executor(None, call_api, try_req)
+                    logging.info(f"Sahabat Gemini berjaya menggunakan model {try_model}")
+                    break
+                except urllib.error.HTTPError as e:
+                    last_error = e
+                    if e.code in (500, 502, 503):
+                        logging.warning(
+                            f"Sahabat Gemini model {try_model} gagal HTTP {e.code}; "
+                            "cuba model seterusnya."
+                        )
+                        continue
+                    raise
+            if data is None and last_error is not None:
+                raise last_error
+        else:
+            data = await loop.run_in_executor(None, call_api, req)
 
         answer = ""
         if store_name:

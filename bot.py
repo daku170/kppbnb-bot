@@ -1305,12 +1305,12 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
                 "tools": [{
                     "type": "file_search",
                     "file_search_store_names": [store_name],
-                    "top_k": 8
+                    "top_k": 4
                 }],
                 "store": False,
                 "generation_config": {
                     "temperature": 0.2,
-                    "max_output_tokens": 1200
+                    "max_output_tokens": 800
                 }
             }
             payload = json.dumps(payload_obj).encode("utf-8")
@@ -1359,7 +1359,7 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
         loop = asyncio.get_running_loop()
 
         def call_api(request):
-            with urllib.request.urlopen(request, timeout=60) as response:
+            with urllib.request.urlopen(request, timeout=20) as response:
                 return json.loads(response.read().decode("utf-8"))
 
         # File Search: cuba model utama dahulu. Jika Gemini sementara sibuk

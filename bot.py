@@ -1340,7 +1340,7 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
                     )}]
                 }],
                 "generationConfig": {
-                    "maxOutputTokens": 1200,
+                    "maxOutputTokens": 800,
                     "temperature": 0.3
                 }
             }).encode("utf-8")

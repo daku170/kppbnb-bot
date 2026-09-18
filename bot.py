@@ -1325,8 +1325,9 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
                 }],
                 "store": False,
                 "generation_config": {
+                   "thinking_level":"low",
                     "temperature": 0.2,
-                    "max_output_tokens": 800
+                    "max_output_tokens": 1200
                 }
             }
             payload = json.dumps(payload_obj).encode("utf-8")
@@ -1356,8 +1357,11 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
                     )}]
                 }],
                 "generationConfig": {
-                    "maxOutputTokens": 800,
-                    "temperature": 0.3
+                    "thinkingConfig": {
+        "thinkingLevel": "low"
+    },
+    "temperature": 0.3,
+    "maxOutputTokens": 1200
                 }
             }).encode("utf-8")
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"

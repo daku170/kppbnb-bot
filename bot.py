@@ -1102,6 +1102,14 @@ Tugas anda:
     dapat memastikan jawapan dengan tepat, jangan reka jawapan. Gunakan ayat:
     "🤝 Maaf, soalan ni agak mencabar untuk Sahabat jawab dengan tepat.
     Elok rujuk dengan pakar kita untuk jawapan yang lebih tepat. 👍"
+    14. Jika hasil carian dokumen tidak benar-benar berkaitan dengan soalan ahli,
+    JANGAN gunakan maklumat tersebut untuk menjawab. Jangan padankan soalan
+    dengan topik yang hampir sama secara paksa.
+15. Jika sumber tidak mengandungi jawapan yang tepat, gunakan ayat:
+    "🤝 Maaf, soalan ni agak mencabar untuk Sahabat jawab dengan tepat.
+    Elok rujuk dengan pakar kita untuk jawapan yang lebih tepat. 👍"
+16. Jangan meneka atau mengisi jawapan berdasarkan pengetahuan umum jika
+    maklumat tersebut tidak terdapat dalam sumber yang diberikan.
 """
 
 

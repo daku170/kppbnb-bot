@@ -1090,6 +1090,18 @@ Tugas anda:
 10. Untuk soalan fakta mudah, jawab terus dengan fakta utama dahulu. Jika sesuai, gunakan
     2-4 poin ringkas dan nyatakan nombor seksyen/artikel hanya jika disokong oleh sumber.
 11. Jangan mulakan dengan salam atau mukadimah panjang; terus jawab soalan ahli.
+12. Gaya jawapan:
+    - Jawab ringkas tetapi padat.
+    - Utamakan point bernombor atau bullet.
+    - Untuk prosedur, gunakan langkah 1, 2, 3 dan seterusnya.
+    - Elakkan perenggan yang panjang.
+    - Sasarkan 3-7 point utama jika sesuai.
+    - Jawab terus soalan ahli tanpa mukadimah panjang.
+    - Pastikan setiap ayat lengkap dan jangan terhenti di tengah ayat.
+13. Jika maklumat yang diperlukan tidak ditemui dalam sumber atau Sahabat tidak
+    dapat memastikan jawapan dengan tepat, jangan reka jawapan. Gunakan ayat:
+    "🤝 Maaf, soalan ni agak mencabar untuk Sahabat jawab dengan tepat.
+    Elok rujuk dengan pakar kita untuk jawapan yang lebih tepat. 👍"
 """
 
 
@@ -1492,7 +1504,7 @@ async def sahabat_soalan(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return ConversationHandler.END
 
-    await update.message.reply_text("🤔 Sahabat sedang semak soalan hg...", parse_mode='Markdown')
+    await update.message.reply_text("🤝 Sahabat tengah buka buku sat, cari jawapan… 📖", parse_mode='Markdown')
     jawapan = await _sahabat_tanya_ai(soalan)
     await update.message.reply_text(
         "🤝 *Sahabat KPPbNB*\n"

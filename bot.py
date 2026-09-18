@@ -1208,75 +1208,221 @@ def _sahabat_pilih_rujukan(soalan: str, ca7: str) -> str:
 
 
 def _sahabat_jawapan_pantas(soalan: str):
-    """Jawapan segera untuk soalan fakta CA-7 yang lazim.
-    Sumber fakta diambil daripada CA-7 KPPbNB; AI hanya digunakan untuk soalan
-    yang memerlukan carian/penjelasan lebih kompleks.
+    """Quick Answer CA-7 untuk semua Artikel 1-74.
+
+    Soalan yang jelas berkaitan dengan sesuatu artikel dijawab terus daripada
+    fail ca7_kppbnb.txt tanpa menunggu Gemini. Paparan/menu utama tidak terjejas.
     """
     import re
     q = soalan.lower().strip()
 
-    # Waktu kerja biasa — Artikel 29.1/29.4
-    if (re.search(r"\bberapa\s+jam\b", q) and ("waktu kerja" in q or "waktu bekerja" in q or "jam kerja" in q)) or "39 jam" in q:
+    ca7 = _sahabat_baca_ca7()
+    if not ca7:
+        return None
+
+    # Pecahkan dokumen CA-7 kepada Artikel 1-74.
+    matches = list(re.finditer(r"(?im)^ARTIKEL\s+(\d+)\s*[–-]\s*([^\n]+)", ca7))
+    sections = []
+    for i, m in enumerate(matches):
+        no = int(m.group(1))
+        if no < 1 or no > 74:
+            continue
+        end_pos = matches[i + 1].start() if i + 1 < len(matches) else len(ca7)
+        text = ca7[m.start():end_pos].strip()
+        title = m.group(2).strip()
+        sections.append((no, title, text))
+
+    if not sections:
+        return None
+
+    # 1) Jika ahli sebut nombor artikel secara terus, jawab artikel tersebut.
+    m_art = re.search(r"\b(?:artikel|art|article)\s*[-:]?\s*(\d{1,2})\b", q)
+    if m_art:
+        no = int(m_art.group(1))
+        for n, title, text in sections:
+            if n == no:
+                # Hadkan paparan supaya Telegram tidak menerima mesej terlalu panjang.
+                body = text[:12000].strip()
+                if len(text) > 12000:
+                    body += "\n\n[Petikan dipendekkan. Rujuk CA-7 penuh untuk keseluruhan artikel.]"
+                return f"📌 Artikel {n} – {title}\n━━━━━━━━━━━━━━━━━━━━\n{body}\n\nRujukan: CA-7 KPPbNB."
+        return None
+
+    # 2) Jawapan pantas untuk perkara yang memang sudah digunakan dalam bot.
+    if ((re.search(r"\bberapa\s+jam\b", q) and
+         any(x in q for x in ["waktu kerja", "waktu bekerja", "jam kerja"])) or
+            "39 jam" in q):
         return (
-            "📌 **Waktu kerja biasa mengikut CA-7:**\n"
-            "• Pekerja bukan syif: **39 jam seminggu**.\n"
-            "• Pekerja syif: **purata 42 jam seminggu**.\n"
-            "• Jadual biasa bergantung kepada lokasi/jabatan dan ditetapkan BERNAS.\n\n"
-            "Rujukan: **Artikel 29.1 CA-7**."
+            "📌 Waktu kerja biasa mengikut CA-7:\n"
+            "• Pekerja bukan syif: 39 jam seminggu.\n"
+            "• Pekerja syif: purata 42 jam seminggu.\n"
+            "• Jadual kerja ditetapkan mengikut lokasi/jabatan BERNAS.\n\n"
+            "Rujukan: Artikel 29 CA-7."
         )
 
-    # Mileage / perjalanan — Artikel 63
     if any(x in q for x in ["mileage", "elaun perjalanan", "berapa sen km", "berapa/km", "per km", "per kilometer"]):
         return (
-            "📌 **Elaun perjalanan CA-7:**\n"
-            "• Kereta sendiri: **RM0.75/km**\n"
-            "• Motosikal sendiri: **RM0.50/km**\n"
-            "• Tol, parking dan feri boleh dituntut dengan resit; kes tanpa resit tertakluk kepada pengesahan Ketua Bahagian.\n\n"
-            "Rujukan: **Artikel 63 CA-7**."
+            "📌 Elaun perjalanan CA-7:\n"
+            "• Kereta sendiri: RM0.75/km.\n"
+            "• Motosikal sendiri: RM0.50/km.\n"
+            "• Tol, parkir dan feri boleh dituntut tertakluk kepada syarat/resit.\n\n"
+            "Rujukan: Artikel 63 CA-7."
         )
 
-    # Chargeman — Artikel 71
     if "chargeman" in q:
         return (
-            "📌 **Elaun Chargeman:** **RM300 sebulan** bagi pekerja yang mempunyai sijil kelayakan Chargeman dan menjalankan tugas sebagai Chargeman.\n\n"
-            "Rujukan: **Artikel 71 CA-7**."
+            "📌 Elaun Chargeman: RM300 sebulan bagi pekerja yang mempunyai sijil kelayakan Chargeman dan menjalankan tugas sebagai Chargeman.\n\n"
+            "Rujukan: Artikel 71 CA-7."
         )
 
-    # Shift allowance — Artikel 72
     if any(x in q for x in ["elaun syif", "elaun shift", "shift allowance", "syif berapa"]):
         return (
-            "📌 **Elaun syif:** CA-7 memperuntukkan bayaran Elaun Syif kepada pekerja yang diarahkan bekerja secara syif.\n"
-            "Untuk kadar mengikut waktu/lokasi, sila beri **lokasi dan waktu syif** supaya Sahabat semak ketetapan yang tepat dalam Artikel 72.\n\n"
-            "Rujukan: **Artikel 72 CA-7**."
+            "📌 Elaun syif CA-7:\n"
+            "• Syif 4.00 petang–12.00 malam: RM6.50.\n"
+            "• Syif 12.00 malam–8.00 pagi: RM7.00.\n"
+            "• Syif 8.00 malam–8.00 pagi: RM7.00.\n\n"
+            "Rujukan: Artikel 72 CA-7."
         )
 
-    # OT limit — Artikel 31.4
-    if ("ot" in q or "kerja lebih masa" in q or "overtime" in q) and any(x in q for x in ["berapa jam", "had", "maksimum", "dibenarkan", "sebulan"]):
+    if (("ot" in q or "kerja lebih masa" in q or "overtime" in q) and
+            any(x in q for x in ["berapa jam", "had", "maksimum", "dibenarkan", "sebulan"])):
         return (
-            "📌 **Had kerja lebih masa CA-7:** pekerja dibenarkan membuat kerja lebih masa sehingga **104 jam sebulan**.\n"
-            "Artikel 31.4 menyatakan had ini tidak termasuk kerja lebih masa pada hari rehat atau hari cuti umum yang diwartakan, tertakluk kepada peraturan berkaitan.\n\n"
-            "Rujukan: **Artikel 31.4 CA-7**."
+            "📌 Had kerja lebih masa CA-7: sehingga 104 jam sebulan.\n"
+            "• Had ini tidak termasuk kerja lebih masa pada hari rehat atau cuti umum yang diwartakan, tertakluk kepada peruntukan CA-7.\n\n"
+            "Rujukan: Artikel 31.4 CA-7."
         )
 
-    # OT rate — Artikel 31.1
-    if ("ot" in q or "kerja lebih masa" in q or "overtime" in q) and any(x in q for x in ["kadar", "berapa", "rate", "bayaran", "cara kira", "macam mana kira", "formula", "pengiraan"]):
+    if (("ot" in q or "kerja lebih masa" in q or "overtime" in q) and
+            any(x in q for x in ["kadar", "berapa", "rate", "bayaran", "cara kira", "macam mana kira", "formula", "pengiraan"])):
         return (
-            "📌 **Kadar OT hari kerja biasa:** CA-7 menetapkan bayaran berdasarkan formula **gaji bulanan ÷ 26 × 1.5 × (jumlah jam kerja ÷ jumlah jam kerja biasa)**.\n"
-            "Untuk hari rehat/cuti am, pengiraan berbeza dan boleh dikira melalui menu **🧮 Kiraan OT & Elaun**.\n\n"
-            "Rujukan: **Artikel 31 CA-7**."
+            "📌 Kiraan OT hari kerja biasa:\n"
+            "Gaji bulanan ÷ 26 × 1.5 × (jumlah jam OT ÷ jumlah jam kerja biasa).\n"
+            "• Kiraan hari rehat/cuti am mempunyai peruntukan berbeza dalam Artikel 31.\n\n"
+            "Rujukan: Artikel 31 CA-7."
         )
 
-    # Leave annual — Article 44, using exact rates already embedded in bot's CA7 knowledge.
     if "cuti tahunan" in q or "annual leave" in q:
         return (
-            "📌 **Cuti tahunan CA-7:**\n"
-            "• Khidmat kurang 2 tahun: **18 hari**\n"
-            "• 2 hingga 5 tahun: **22 hari**\n"
-            "• Lebih 5 tahun: **24 hari**\n\n"
-            "Rujukan: **Artikel 44 CA-7**."
+            "📌 Cuti tahunan CA-7:\n"
+            "• Kurang 2 tahun: 18 hari.\n"
+            "• 2 hingga 5 tahun: 22 hari.\n"
+            "• Lebih 5 tahun: 24 hari.\n\n"
+            "Rujukan: Artikel 44 CA-7."
         )
 
-    return None
+    # 3) Semua Artikel 1-74: padanan tajuk + istilah soalan.
+    #    Ini membolehkan soalan seperti "KWSP berapa?", "bonus?", "notis berhenti?"
+    #    terus membuka artikel yang berkaitan tanpa menunggu Gemini.
+    aliases = {
+        1: ["pihak", "terikat", "pihak-pihak"],
+        2: ["objektif", "tujuan"],
+        3: ["tarikh kuatkuasa", "tempoh", "berkuatkuasa", "berkuat kuasa"],
+        4: ["pemakaian", "siapa terpakai", "terpakai kepada", "tunggakan"],
+        5: ["naskah sahih", "salinan sahih", "bahasa malaysia"],
+        6: ["salinan naskah", "salinan perjanjian", "laman sesawang"],
+        7: ["perundangan", "undang-undang", "pindaan undang"],
+        8: ["definisi", "takrif", "ertinya", "maksud"],
+        9: ["mengikat", "binding", "perjanjian mengikat"],
+        10: ["pengiktirafan bernas", "iktiraf bernas"],
+        11: ["pengiktirafan kesatuan", "ahli kesatuan", "wakil kesatuan", "bukan eksekutif"],
+        12: ["keharmonian perusahaan", "keharmonian", "hubungan perusahaan"],
+        13: ["penyelesaian muktamad", "tuntutan muktamad", "final settlement"],
+        14: ["timbangtara", "arbitration", "arbitraj"],
+        15: ["kilanan", "aduan", "grievance", "pertikaian", "proses aduan"],
+        16: ["keahlian", "keahlian kesatuan", "yuran ahli", "syarat ahli"],
+        17: ["tugas rasmi", "tugas kesatuan", "official duties"],
+        18: ["aktiviti kesatuan", "kegiatan kesatuan", "mesyuarat kesatuan"],
+        19: ["jaminan", "guarantee", "jaminan kesatuan"],
+        20: ["produktiviti", "prestasi", "performance"],
+        21: ["cuti kesatuan", "union leave", "cuti tugas kesatuan"],
+        22: ["papan kenyataan", "noticeboard", "notis kesatuan"],
+        23: ["yuran kesatuan", "potongan yuran", "potongan gaji kesatuan"],
+        24: ["kwsp", "perkeso", "sip", "caruman", "potongan kwsp", "socso"],
+        25: ["kenaikan gaji tahunan", "increment", "increment gaji", "merit", "kenaikan tahunan"],
+        26: ["bonus", "bonus kontraktual"],
+        27: ["notis berhenti", "notis perletakan jawatan", "resign", "berhenti kerja", "tempoh notis"],
+        28: ["ketidakhadiran", "tidak hadir", "ponteng", "absent", "absence"],
+        29: ["waktu kerja", "waktu bekerja", "jam kerja", "jam seminggu", "syif 12 jam"],
+        30: ["kerja lebih masa", "kerja lebihmasa", "ot", "overtime", "arahan ot"],
+        31: ["bayaran ot", "kadar ot", "kiraan ot", "kadar kerja lebih masa", "1.5", "2 kali", "3 kali", "formula ot"],
+        32: ["keperluan tugas", "tugas", "kerja hari rehat", "diarahkan bekerja", "tugas khas"],
+        33: ["kenaikan pangkat", "gred", "promosi", "naik pangkat", "promotion"],
+        34: ["elaun pemangku", "acting allowance", "elaun tugas", "duty allowance"],
+        35: ["tempoh pemangku", "tempoh acting", "acting period"],
+        36: ["umur persaraan", "persaraan", "retirement"],
+        37: ["faedah persaraan", "persaraan wajib", "persaraan pilihan"],
+        38: ["pemberhentian kerja", "retrenchment", "pemberhentian", "lebihan pekerja"],
+        39: ["hilang upaya", "disability", "ketidakupayaan"],
+        40: ["faedah kematian", "kematian", "insurans hayat", "life insurance"],
+        41: ["skim pemisahan sukarela", "vss", "voluntary separation", "pemisahan sukarela"],
+        42: ["kemalangan pekerjaan", "pampasan kemalangan", "kemalangan perusahaan"],
+        43: ["cuti am", "cuti umum", "public holiday"],
+        44: ["cuti tahunan", "annual leave"],
+        45: ["cuti tanpa gaji", "unpaid leave", "cuti tidak bergaji"],
+        46: ["kemalangan industri", "cuti kemalangan industri", "industrial accident"],
+        47: ["cuti sakit", "mc", "sick leave", "hospital sakit"],
+        48: ["cuti sakit lanjutan", "extended sick leave", "sakit lanjutan"],
+        49: ["cuti bersalin", "maternity", "bersalin"],
+        50: ["cuti ihsan", "compassionate", "kematian keluarga", "ahli keluarga meninggal"],
+        51: ["cuti kahwin", "cuti perkahwinan", "marriage leave"],
+        52: ["cuti paterniti", "paternity", "anak lahir", "isteri bersalin"],
+        53: ["cuti khas", "special leave"],
+        54: ["kuarantin", "quarantine", "cuti kuarantin"],
+        55: ["haji", "umrah", "cuti haji", "cuti umrah"],
+        56: ["cuti belajar", "peperiksaan", "exam", "study leave"],
+        57: ["elaun dobi", "dobi", "laundry allowance"],
+        58: ["perubatan", "medical", "tanggungan", "ibu bapa", "dependants", "benefit perubatan"],
+        59: ["rawatan pesakit luar", "outpatient", "pesakit luar", "rawatan luar"],
+        60: ["rawatan pesakit dalam", "inpatient", "hospital", "pesakit dalam"],
+        61: ["perubatan bersalin", "maternity medical", "rawatan bersalin"],
+        62: ["secondment", "penempatan semula", "pinjaman sementara", "lojing", "pertukaran"],
+        63: ["mileage", "elaun perjalanan", "kilometer", "kilometre", "kereta sendiri", "motosikal", "tol", "parkir", "parking", "feri", "teksi"],
+        64: ["elaun makan", "sarapan", "tengahari", "tengah hari", "makan malam", "rm115"],
+        65: ["hotel", "penginapan", "lojing", "4 bintang", "twin sharing"],
+        66: ["uniform", "pakaian seragam", "seragam"],
+        67: ["sumbangan beras", "beras", "rice contribution"],
+        68: ["anugerah cadangan", "cadangan", "suggestion award", "idea"],
+        69: ["keselamatan", "kesihatan pekerjaan", "persekitaran", "jawatan kuasa keselamatan", "osh", "alam sekitar"],
+        70: ["lesen memandu", "lesen memandu", "driving licence", "lesen"],
+        71: ["chargeman", "elaun chargeman"],
+        72: ["syif", "shift", "elaun syif", "shift allowance"],
+        73: ["disiplin", "tatatertib", "surat tunjuk sebab", "amaran", "hukuman", "tindakan disiplin"],
+        74: ["semakan gaji", "pelarasan gaji", "gaji bulanan", "salary review", "penyelarasan gaji"],
+    }
+
+    # Skor padanan. Nombor artikel mempunyai keutamaan tertinggi.
+    scores = []
+    q_words = set(w for w in re.findall(r"[a-zA-ZÀ-ÿ0-9]+", q) if len(w) >= 3)
+    for no, title, text in sections:
+        score = 0
+        for kw in aliases.get(no, []):
+            if kw in q:
+                score += 20 if " " in kw else 10
+        title_words = [w for w in re.findall(r"[a-zA-ZÀ-ÿ0-9]+", title.lower()) if len(w) >= 4]
+        score += 3 * sum(1 for w in title_words if w in q_words)
+        if score > 0:
+            scores.append((score, no, title, text))
+
+    if not scores:
+        return None
+
+    scores.sort(key=lambda x: (-x[0], x[1]))
+    score, no, title, text = scores[0]
+
+    # Artikel 24: CA-7 tidak menyatakan peratus potongan/caruman pekerja.
+    if no == 24 and any(x in q for x in ["berapa percent", "berapa peratus", "percent", "%", "kadar potongan"]):
+        return (
+            "📌 Artikel 24 – KWSP, SIP & PERKESO:\n"
+            "• CA-7 menyatakan caruman kepada KWSP, PERKESO dan SIP dibuat mengikut keperluan/ketetapan kerajaan.\n"
+            "• CA-7 sendiri tidak menyatakan peratus potongan pekerja.\n"
+            "• Jadi, jangan gunakan angka peratus tertentu sebagai jawapan berdasarkan CA-7 sahaja.\n\n"
+            "Rujukan: Artikel 24 CA-7."
+        )
+
+    body = text[:7000].strip()
+    if len(text) > 7000:
+        body += "\n\n[Petikan dipendekkan. Rujuk CA-7 penuh untuk keseluruhan artikel.]"
+    return f"📌 Artikel {no} – {title}\n━━━━━━━━━━━━━━━━━━━━\n{body}\n\nRujukan: CA-7 KPPbNB."
 
 
 async def _sahabat_tanya_ai(soalan: str) -> str:
@@ -1502,10 +1648,9 @@ async def sahabat_soalan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🤝 Sahabat tengah buka buku sat, cari jawapan… 📖", parse_mode='Markdown')
     jawapan = await _sahabat_tanya_ai(soalan)
     await update.message.reply_text(
-        "🤝 *Sahabat KPPbNB*\n"
+        "🤝 Sahabat KPPbNB\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
         + jawapan,
-        parse_mode='Markdown',
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')],
             [InlineKeyboardButton("🤝 Tanya Lagi", callback_data='menu_sahabat')]

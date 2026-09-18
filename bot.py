@@ -1308,7 +1308,6 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
         # petikan/keyword atau had 60,000 aksara.
         store_name = os.environ.get("GEMINI_FILE_SEARCH_STORE", "").strip()
         model = "gemini-3.6-flash"
-        model_fallbacks = ["gemini-3.5-flash", "gemini-3.5-flash-lite"]
 
         if store_name:
             payload_obj = {
@@ -1325,7 +1324,7 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
                 "tools": [{
                     "type": "file_search",
                     "file_search_store_names": [store_name],
-                    "top_k": 4
+                    "top_k": 2
                 }],
                 "store": False,
                 "generation_config": {
@@ -1382,40 +1381,26 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
             with urllib.request.urlopen(request, timeout=20) as response:
                 return json.loads(response.read().decode("utf-8"))
 
-        # File Search: cuba model utama dahulu. Jika Gemini sementara sibuk
-        # (HTTP 500/502/503), cuba model sandaran tanpa mengubah store atau
-        # fungsi bot lain.
+        # File Search: guna satu model sahaja supaya tidak menunggu
+        # model kedua/ketiga jika berlaku masalah.
         if store_name:
-            models_to_try = [model] + model_fallbacks
-            data = None
-            last_error = None
-            for try_model in models_to_try:
-                payload_obj["model"] = try_model
-                try:
-                    try_payload = json.dumps(payload_obj).encode("utf-8")
-                    try_req = urllib.request.Request(
-                        url,
-                        data=try_payload,
-                        headers={
-                            "Content-Type": "application/json",
-                            "x-goog-api-key": api_key
-                        },
-                        method="POST"
-                    )
-                    data = await loop.run_in_executor(None, call_api, try_req)
-                    logging.info(f"Sahabat Gemini berjaya menggunakan model {try_model}")
-                    break
-                except urllib.error.HTTPError as e:
-                    last_error = e
-                    if e.code in (429, 500, 502, 503):
-                        logging.warning(
-                            f"Sahabat Gemini model {try_model} gagal HTTP {e.code}; "
-                            "cuba model seterusnya."
-                        )
-                        continue
-                    raise
-            if data is None and last_error is not None:
-                raise last_error
+            try:
+                payload_obj["model"] = model
+                try_payload = json.dumps(payload_obj).encode("utf-8")
+                try_req = urllib.request.Request(
+                    url,
+                    data=try_payload,
+                    headers={
+                        "Content-Type": "application/json",
+                        "x-goog-api-key": api_key
+                    },
+                    method="POST"
+                )
+                data = await loop.run_in_executor(None, call_api, try_req)
+                logging.info(f"Sahabat Gemini berjaya menggunakan model {model}")
+            except urllib.error.HTTPError as e:
+                logging.error(f"Sahabat Gemini gagal HTTP {e.code}")
+                raise
         else:
             data = await loop.run_in_executor(None, call_api, req)
 
@@ -1479,7 +1464,7 @@ async def handle_sahabat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "━━━━━━━━━━━━━━━━━━━━\n"
         "Saya boleh bantu hg faham perkara berkaitan *CA-7, Akta & Peraturan Kerja, "
         "OT, gaji, elaun, cuti, disiplin, kilanan dan hubungan perusahaan*.\n\n"
-        "👉 Taip soalan hg dengan bahasa biasa. Contoh:\n"
+        "👉 Taip soalan dengan bahasa biasa. Contoh:\n"
         "• Saya kena surat tunjuk sebab, apa saya perlu buat?\n"
         "• Berapa kadar OT saya?\n"
         "• Kalau bos suruh kerja hari rehat macam mana?\n"

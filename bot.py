@@ -1090,6 +1090,22 @@ Tugas anda:
 10. Untuk soalan fakta mudah, jawab terus dengan fakta utama dahulu. Jika sesuai, gunakan
     2-4 poin ringkas dan nyatakan nombor seksyen/artikel hanya jika disokong oleh sumber.
 11. Jangan mulakan dengan salam atau mukadimah panjang; terus jawab soalan ahli.
+12. Gaya jawapan:
+    - Jawab ringkas tetapi padat.
+    - Utamakan point bernombor atau bullet.
+    - Untuk prosedur, gunakan langkah 1, 2, 3 dan seterusnya.
+    - Elakkan perenggan yang panjang.
+    - Sasarkan 3-7 point utama jika sesuai.
+    - Jawab terus soalan ahli tanpa mukadimah panjang.
+    - Pastikan setiap ayat lengkap dan jangan terhenti di tengah ayat.
+13. Jika hasil carian dokumen tidak benar-benar berkaitan dengan soalan ahli,
+    JANGAN gunakan maklumat tersebut untuk menjawab. Jangan padankan soalan
+    dengan topik yang hampir sama secara paksa.
+14. Jika sumber tidak mengandungi jawapan yang tepat atau Sahabat tidak dapat
+    memastikan jawapan dengan tepat, jangan reka atau gunakan pengetahuan umum.
+    Gunakan ayat:
+    "🤝 Maaf, soalan ni agak mencabar untuk Sahabat jawab dengan tepat.
+    Elok rujuk dengan pakar kita untuk jawapan yang lebih tepat. 👍"
 """
 
 
@@ -1243,7 +1259,7 @@ def _sahabat_jawapan_pantas(soalan: str):
         )
 
     # OT rate — Artikel 31.1
-    if ("ot" in q or "kerja lebih masa" in q or "overtime" in q) and any(x in q for x in ["kadar", "berapa", "rate", "bayaran", "cara kira", "kira"]):
+    if ("ot" in q or "kerja lebih masa" in q or "overtime" in q) and any(x in q for x in ["kadar", "berapa", "rate", "bayaran", "cara kira", "macam mana kira", "formula", "pengiraan"]):
         return (
             "📌 **Kadar OT hari kerja biasa:** CA-7 menetapkan bayaran berdasarkan formula **gaji bulanan ÷ 26 × 1.5 × (jumlah jam kerja ÷ jumlah jam kerja biasa)**.\n"
             "Untuk hari rehat/cuti am, pengiraan berbeza dan boleh dikira melalui menu **🧮 Kiraan OT & Elaun**.\n\n"
@@ -1288,7 +1304,6 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
         # petikan/keyword atau had 60,000 aksara.
         store_name = os.environ.get("GEMINI_FILE_SEARCH_STORE", "").strip()
         model = "gemini-3.6-flash"
-        model_fallbacks = ["gemini-3.5-flash", "gemini-3.5-flash-lite"]
 
         if store_name:
             payload_obj = {
@@ -1300,8 +1315,9 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
                     "Jika maklumat tidak ditemui, nyatakan dengan jelas bahawa "
                     "dokumen CA-7 tidak memberikan maklumat yang mencukupi. "
                     "Jika soalan meminta tafsiran/keputusan rasmi, rujuk pegawai Kesatuan. "
-                    "Pastikan jawapan lengkap, jangan berhenti di tengah ayat, dan jawab terus "
-                    "soalan ahli sebelum memberi penjelasan tambahan.",
+                    "Jawab ringkas tetapi lengkap. Gunakan 3-7 point pendek jika sesuai. "
+                    "Sasaran maksimum kira-kira 150 perkataan. Jangan berhenti di tengah ayat. "
+                    "Jika sumber tidak cukup, jangan teka; gunakan mesej rujuk pakar yang ditetapkan.",
                 "tools": [{
                     "type": "file_search",
                     "file_search_store_names": [store_name],
@@ -1309,9 +1325,8 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
                 }],
                 "store": False,
                 "generation_config": {
-                    "thinking_level": "low",
                     "temperature": 0.2,
-                    "max_output_tokens": 1200
+                    "max_output_tokens": 800
                 }
             }
             payload = json.dumps(payload_obj).encode("utf-8")
@@ -1337,15 +1352,12 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
                         "PETIKAN CA-7 YANG RELEVAN:\n"
                         + (rujukan if rujukan else "Sumber CA-7 tidak dapat dibaca sekarang.")
                         + "\n\nSOALAN AHLI:\n" + soalan
-                    + "\n\nPENTING: Berikan jawapan lengkap dan berhenti hanya selepas ayat terakhir selesai."
+                    + "\n\nPENTING: Jawab ringkas tetapi lengkap dalam 3-7 point jika sesuai. Sasaran maksimum kira-kira 150 perkataan. Jangan berhenti di tengah ayat."
                     )}]
                 }],
                 "generationConfig": {
-                    "thinkingConfig": {
-                        "thinkingLevel": "low"
-                    },
-                    "temperature": 0.3,
-                    "maxOutputTokens": 1200
+                    "maxOutputTokens": 800,
+                    "temperature": 0.3
                 }
             }).encode("utf-8")
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
@@ -1363,43 +1375,24 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
         loop = asyncio.get_running_loop()
 
         def call_api(request):
-            with urllib.request.urlopen(request, timeout=20) as response:
+            with urllib.request.urlopen(request, timeout=15) as response:
                 return json.loads(response.read().decode("utf-8"))
 
-        # File Search: cuba model utama dahulu. Jika Gemini sementara sibuk
-        # (HTTP 500/502/503), cuba model sandaran tanpa mengubah store atau
-        # fungsi bot lain.
+        # File Search: guna satu model sahaja supaya tidak menunggu model sandaran.
         if store_name:
-            models_to_try = [model] + model_fallbacks
-            data = None
-            last_error = None
-            for try_model in models_to_try:
-                payload_obj["model"] = try_model
-                try:
-                    try_payload = json.dumps(payload_obj).encode("utf-8")
-                    try_req = urllib.request.Request(
-                        url,
-                        data=try_payload,
-                        headers={
-                            "Content-Type": "application/json",
-                            "x-goog-api-key": api_key
-                        },
-                        method="POST"
-                    )
-                    data = await loop.run_in_executor(None, call_api, try_req)
-                    logging.info(f"Sahabat Gemini berjaya menggunakan model {try_model}")
-                    break
-                except urllib.error.HTTPError as e:
-                    last_error = e
-                    if e.code in (500, 502, 503):
-                        logging.warning(
-                            f"Sahabat Gemini model {try_model} gagal HTTP {e.code}; "
-                            "cuba model seterusnya."
-                        )
-                        continue
-                    raise
-            if data is None and last_error is not None:
-                raise last_error
+            payload_obj["model"] = model
+            try_payload = json.dumps(payload_obj).encode("utf-8")
+            try_req = urllib.request.Request(
+                url,
+                data=try_payload,
+                headers={
+                    "Content-Type": "application/json",
+                    "x-goog-api-key": api_key
+                },
+                method="POST"
+            )
+            data = await loop.run_in_executor(None, call_api, try_req)
+            logging.info(f"Sahabat Gemini berjaya menggunakan model {model}")
         else:
             data = await loop.run_in_executor(None, call_api, req)
 
@@ -1435,6 +1428,12 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
         if e.code == 429:
             return "⚠️ Had penggunaan Gemini API telah dicapai. Sila cuba semula kemudian."
         return "⚠️ Sahabat tidak dapat menghubungi Gemini sekarang. Sila cuba semula."
+    except TimeoutError as e:
+        logging.warning(f"Sahabat Gemini timeout: {e}")
+        return (
+            "🤝 Maaf, Sahabat mengambil masa terlalu lama untuk mendapatkan jawapan. "
+            "Elok cuba semula atau rujuk dengan pakar kita untuk jawapan yang lebih tepat. 👍"
+        )
     except Exception as e:
         logging.exception(f"Sahabat Gemini gagal: {e}")
         return "⚠️ Sahabat mengalami masalah teknikal. Sila cuba semula."
@@ -1461,9 +1460,9 @@ async def handle_sahabat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.message.reply_text(
         "🤝 *SAHABAT KPPbNB*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
-        "Saya boleh bantu hg faham perkara berkaitan *CA-7, Akta & Peraturan Kerja, "
+        "Saya boleh bantu faham perkara berkaitan *CA-7, Akta & Peraturan Kerja, "
         "OT, gaji, elaun, cuti, disiplin, kilanan dan hubungan perusahaan*.\n\n"
-        "👉 Taip soalan hg dengan bahasa biasa. Contoh:\n"
+        "👉 Taip soalan dengan bahasa biasa. Contoh:\n"
         "• Saya kena surat tunjuk sebab, apa saya perlu buat?\n"
         "• Berapa kadar OT saya?\n"
         "• Kalau bos suruh kerja hari rehat macam mana?\n"
@@ -1496,7 +1495,7 @@ async def sahabat_soalan(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return ConversationHandler.END
 
-    await update.message.reply_text("🤔 Sahabat sedang semak soalan hg...", parse_mode='Markdown')
+    await update.message.reply_text("🤝 Sahabat tengah buka buku sat, cari jawapan… 📖", parse_mode='Markdown')
     jawapan = await _sahabat_tanya_ai(soalan)
     await update.message.reply_text(
         "🤝 *Sahabat KPPbNB*\n"

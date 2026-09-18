@@ -191,13 +191,13 @@ async def handle_start_choice(update: Update, context: ContextTypes.DEFAULT_TYPE
     query = update.callback_query
     await query.answer()
     if query.data == 'start_ahli':
-        await query.message.reply_text(
+        await reply_below_button(
             "🔐 *PENGESAHAN KEAHLIAN KPPbNB*\n\n👉 Sila masukkan *Nombor Pekerja* sah anda:",
             parse_mode='Markdown'
         )
         return STATE_VERIFY_ID
     context.user_data.clear()
-    await query.message.reply_text(
+    await reply_below_button(
         "🤝 *BERMINAT MENJADI AHLI KPPbNB*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
         "Terima kasih kerana berminat untuk menyertai Kesatuan.\n\n"
@@ -323,7 +323,7 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Pilih topik di bawah untuk rujukan hak minimum di bawah undang-undang "
             "serta perbandingan dengan CA-7 BERNAS:"
         )
-        await query.message.reply_text(
+        await reply_below_button(
             text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
         )
 
@@ -344,7 +344,7 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "🟢 *KELEBIHAN CA-7*\n"
             "CA-7 menetapkan waktu bekerja mingguan yang khusus untuk pekerja BERNAS."
         )
-        await query.message.reply_text(
+        await reply_below_button(
             text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
         )
 
@@ -371,7 +371,7 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "🟢 *KELEBIHAN CA-7*\n"
             "Kemudahan cuti gantian OT dinyatakan secara khusus dalam CA-7."
         )
-        await query.message.reply_text(
+        await reply_below_button(
             text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
         )
 
@@ -394,7 +394,7 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "• Jika cuti sakit berlaku ketika cuti tahunan, hari yang dilindungi cuti sakit "
             "tidak dianggap telah menggunakan cuti tahunan."
         )
-        await query.message.reply_text(
+        await reply_below_button(
             text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
         )
 
@@ -419,7 +419,7 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "berdasarkan kes dan laporan doktor pakar.\n"
             "• Cuti ini tidak dikira sebagai cuti sakit biasa."
         )
-        await query.message.reply_text(
+        await reply_below_button(
             text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
         )
 
@@ -435,7 +435,7 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Bagi perkara yang tiada faedah khusus lebih baik dalam CA-7, "
             "minimum undang-undang terpakai."
         )
-        await query.message.reply_text(
+        await reply_below_button(
             text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
         )
 
@@ -456,7 +456,7 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Isu AWOL boleh membawa kepada tindakan tatatertib. Proses dan hukuman "
             "hendaklah dirujuk kepada peruntukan disiplin yang berkuat kuasa."
         )
-        await query.message.reply_text(
+        await reply_below_button(
             text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
         )
 
@@ -476,7 +476,7 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Kadar notis CA-7 adalah selaras dengan tempoh minimum yang dinyatakan "
             "dalam Akta."
         )
-        await query.message.reply_text(
+        await reply_below_button(
             text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
         )
 
@@ -497,7 +497,7 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "kerja yang dirasakan berisiko. Syarat dan keadaan yang ditetapkan undang-undang "
             "perlu dipenuhi."
         )
-        await query.message.reply_text(
+        await reply_below_button(
             text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
         )
 
@@ -517,7 +517,7 @@ async def handle_akta(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "• Kemalangan perusahaan yang bukan kerana kecuaian sendiri boleh dipertimbangkan "
             "untuk cuti sakit bergaji penuh sehingga sembuh, tertakluk kepada syarat CA-7."
         )
-        await query.message.reply_text(
+        await reply_below_button(
             text, parse_mode='Markdown', reply_markup=get_akta_keyboard()
         )
 
@@ -573,7 +573,7 @@ async def handle_ot_calculator(update: Update, context: ContextTypes.DEFAULT_TYP
             "• Waktu rehat: 1.00–2.00 petang\n\n"
             "📌 *Nota:* Ini ialah anggaran berdasarkan formula CA-7 Artikel 31."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ot_zone_keyboard())
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=get_ot_zone_keyboard())
         return STATE_OT_ZONE
 
     if data in ('ot_zon_a', 'ot_zon_b'):
@@ -599,7 +599,7 @@ async def handle_ot_calculator(update: Update, context: ContextTypes.DEFAULT_TYP
                 "• Cuti am\n\n"
                 "Artikel 29 CA-7 menetapkan Ahad–Rabu 8.00 pagi–5.00 petang dan Khamis 8.00 pagi–4.00 petang, dengan waktu makan 1.00–2.00 petang."
             )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ot_day_keyboard(zone))
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=get_ot_day_keyboard(zone))
         return STATE_OT_DAY
 
     if data in ('ot_hari_biasa', 'ot_hari_biasa_8', 'ot_hari_biasa_7'):
@@ -621,7 +621,7 @@ async def handle_ot_calculator(update: Update, context: ContextTypes.DEFAULT_TYP
     # lebihan jam = 2x kadar sejam. Cuti am: jam biasa = 2 hari; lebihan jam = 3x kadar sejam.
     # Untuk kedua-duanya, pengguna masih masukkan gaji dan jumlah jam bekerja.
 
-    await query.message.reply_text(
+    await reply_below_button(
         "💰 *Masukkan gaji bulanan asas (RM)*\n\n"
         "Contoh: `3000`",
         parse_mode='Markdown'
@@ -744,7 +744,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "📅 Berkuat kuasa: *1 Januari 2026 – 31 Disember 2028*\n\n"
             "Rujukan ringkas perkara penting CA-7. Pilih topik di bawah:"
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
 
     elif data == 'ca_gaji':
         text = (
@@ -762,7 +762,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "📌 *Artikel 74 – Semakan Gaji*\n"
             "• Dokumen CA-7 menyatakan gaji bulanan ahli Kesatuan diselaraskan *lima peratus (4.5%)*. Wording ini dikekalkan seperti naskhah CA-7 untuk rujukan."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
 
     elif data == 'ca_waktu_ot':
         text = (
@@ -784,7 +784,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("🧮 Kira Anggaran Bayaran OT", callback_data='menu_kiraan')],
             [InlineKeyboardButton("🔙 Kembali CA-7", callback_data='menu_ca')]
         ])
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=keyboard)
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=keyboard)
 
     elif data == 'ca_cuti':
         text = (
@@ -802,7 +802,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "📌 *Artikel 52 – Paterniti*: *7 hari berturut-turut* bergaji penuh bagi pekerja lelaki yang memenuhi syarat; 3 hari jika tempoh perkhidmatan kurang 1 tahun.\n"
             "📌 *Artikel 55 – Haji/Umrah*: *54 hari berturut-turut* bergaji penuh, sekali sepanjang perkhidmatan, tertakluk syarat kelayakan."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
 
     elif data == 'ca_perubatan':
         text = (
@@ -820,7 +820,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "• Bilik & makan: *RM150 sehari*.\n"
             "• Lebihan daripada had ditanggung pekerja, tertakluk syarat CA-7."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
 
     elif data == 'ca_pangkat':
         text = (
@@ -834,7 +834,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "• Jika tiada calon dalaman yang sesuai, pengambilan luar boleh dibuat.\n\n"
             "📌 *Nota:* Kelayakan sebenar tetap tertakluk kepada syarat jawatan, prosedur kenaikan pangkat dan kekosongan yang diluluskan."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
 
     elif data == 'ca_gred':
         text = (
@@ -854,7 +854,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "• *S5* – Penyelia II: RM2,800 – RM5,400\n\n"
             "📌 *Nota:* Struktur di atas adalah berdasarkan jadual gred jawatan dalam CA-7. Kelayakan seseorang pekerja kepada gred/jawatan tertentu tetap tertakluk kepada syarat jawatan dan peruntukan CA-7."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
 
     elif data == 'ca_awol':
         text = (
@@ -866,7 +866,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "• Artikel ini merujuk kepada peruntukan *Seksyen 15(2) Akta Kerja 1955*.\n\n"
             "⚠️ Jika berlaku masalah ketidakhadiran, simpan bukti komunikasi dan dokumen sokongan untuk rujukan Kesatuan/HR."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
 
     elif data == 'ca_disiplin':
         text = (
@@ -878,7 +878,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "• Status tindakan disiplin boleh memberi kesan kepada bayaran bonus mengikut syarat CA-7.\n\n"
             "💡 *Jika menerima surat tunjuk sebab/tindakan disiplin:* simpan surat, bukti dan jawapan yang dihantar serta dapatkan pandangan Kesatuan sebelum membuat keputusan lanjut."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
 
     elif data == 'ca_elaun':
         text = (
@@ -905,7 +905,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "📌 *Artikel 71 – Chargeman*: *RM300 sebulan* jika mempunyai sijil kelayakan dan menjalankan tugas sebagai Chargeman.\n"
             "📌 *Artikel 72 – Syif*: *RM6.50* (4pm–12am) dan *RM7.00* (12am–8am); bagi syif 8pm–8am = *RM7.00*, mengikut jadual/lokasi CA-7."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
 
     elif data == 'ca_keselamatan':
         text = (
@@ -919,7 +919,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "• BERNAS hendaklah mewujudkan jawatankuasa sejajar dengan Akta Keselamatan dan Kesihatan Pekerjaan 1994.\n"
             "• Jawatankuasa diwakili pihak BERNAS dan Kesatuan."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
 
     elif data == 'ca_kesatuan':
         text = (
@@ -935,7 +935,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "• Kemudahan berkaitan tugas Kesatuan adalah tertakluk kepada peruntukan CA-7 dan kelulusan yang ditetapkan.\n\n"
             "📌 *Rujukan:* Jika berlaku pertikaian berkaitan tafsiran/pelaksanaan CA-7, rujuk Kesatuan untuk tindakan dan saluran yang bersesuaian."
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=get_ca_keyboard())
 
 # ==================== MODUL LAPORAN / ADUAN ====================
 def get_aduan_keyboard():
@@ -955,7 +955,7 @@ async def handle_aduan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data
 
     if not is_session_active(context):
-        await query.message.reply_text(
+        await reply_below_button(
             "🔐 *Sesi anda telah tamat.*\n\nSila tekan /start untuk pengesahan semula.",
             parse_mode='Markdown'
         )
@@ -968,7 +968,7 @@ async def handle_aduan(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Saluran ini digunakan untuk ahli melaporkan isu, masalah atau perkara berkaitan pekerjaan kepada Kesatuan.\n\n"
             "📌 Pilih kategori laporan/aduan di bawah:"
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_aduan_keyboard())
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=get_aduan_keyboard())
         return STATE_ADUAN_JENIS
 
     jenis_map = {
@@ -981,7 +981,7 @@ async def handle_aduan(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if data in jenis_map:
         context.user_data['aduan_jenis'] = jenis_map[data]
-        await query.message.reply_text(
+        await reply_below_button(
             f"📝 *Kategori:* {jenis_map[data]}\n\n"
             "Sila taip *keterangan aduan/laporan* dengan jelas.\n\n"
             "Contoh:\n"
@@ -996,7 +996,7 @@ async def handle_aduan(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if data == 'menu_utama':
         nama = context.user_data.get('nama', 'Ahli')
-        await query.message.reply_text(
+        await reply_below_button(
             f"🏠 *MENU UTAMA KPPbNB*\n\nSelamat kembali, *{nama}*.\nSila pilih perkhidmatan di bawah:",
             parse_mode='Markdown', reply_markup=get_main_keyboard()
         )
@@ -1501,7 +1501,7 @@ async def handle_sahabat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
 
     if not is_session_active(context):
-        await query.message.reply_text(
+        await reply_below_button(
             "🔐 *Sesi anda telah tamat.*\n\nSila tekan /start untuk pengesahan semula.",
             parse_mode='Markdown'
         )
@@ -1509,13 +1509,13 @@ async def handle_sahabat(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if query.data == 'menu_utama':
         nama = context.user_data.get('nama', 'Ahli')
-        await query.message.reply_text(
+        await reply_below_button(
             f"🏠 *MENU UTAMA KPPbNB*\n\nSelamat kembali, *{nama}*.\nSila pilih perkhidmatan di bawah:",
             parse_mode='Markdown', reply_markup=get_main_keyboard()
         )
         return ConversationHandler.END
 
-    await query.message.reply_text(
+    await reply_below_button(
         "🤝 *SAHABAT KPPbNB*\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
         "Saya boleh bantu faham perkara berkaitan *CA-7, Akta & Peraturan Kerja, "
@@ -1566,6 +1566,13 @@ async def sahabat_soalan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     return STATE_SAHABAT_SOALAN
 
+async def reply_below_button(query, *args, **kwargs):
+    """Hantar jawapan callback sebagai reply kepada mesej butang yang ditekan.
+    Ini membantu pengguna nampak jawapan baharu di bawah mesej asal, terutama di telefon.
+    """
+    kwargs["reply_to_message_id"] = query.message.message_id
+    return await reply_below_button(*args, **kwargs)
+
 # ==================== MODUL LAIN (DOKUMEN, PROFIL, HUBUNGI) ====================
 async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -1584,10 +1591,10 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
             [InlineKeyboardButton("⚖️ Buku Tatatertib BERNAS Edisi 5", url=URL_TATATERTIB)],
             [InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')]
         ]
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=InlineKeyboardMarkup(keyboard))
     elif data == 'menu_hebahan':
         text = "📢 *HEBAHAN KESATUAN*\n• Perjanjian Bersama CA-7 berkuatkuasa bagi tahun 2026 – 2028."
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_back_button())
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=get_back_button())
     elif data == 'menu_profil':
         emp_id = context.user_data.get('emp_id', 'Tidak Diketahui')
         nama = context.user_data.get('nama', 'Belum Disahkan')
@@ -1600,7 +1607,7 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
             f"Lokasi: *{lokasi}*\n"
             "Status: 🟢 *Aktif (Disahkan)*"
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_back_button())
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=get_back_button())
     elif data == 'menu_hubungi':
         text = (
             "☎️ *HUBUNGI KESATUAN (KPPbNB)*\n"
@@ -1618,11 +1625,11 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
             "📧 khairulfaiz@bernas.com.my\n\n"
             "📧 *Email Kesatuan:* kppbnb@gmail.com"
         )
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_back_button())
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=get_back_button())
     elif data == 'menu_utama':
         nama = context.user_data.get('nama', 'Ahli')
         text = f"🏠 *MENU UTAMA KPPbNB*\n\nSelamat kembali, *{nama}*.\nSila pilih perkhidmatan di bawah:"
-        await query.message.reply_text(text, parse_mode='Markdown', reply_markup=get_main_keyboard())
+        await reply_below_button(text, parse_mode='Markdown', reply_markup=get_main_keyboard())
 
 # ==================== MAIN ====================
 async def async_main():

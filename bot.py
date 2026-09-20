@@ -1267,20 +1267,38 @@ def _sahabat_jawapan_pantas(soalan: str):
 
     by_no = {n: (title, body) for n, title, body in sections}
 
-    # Fakta KWSP: Artikel 24 tidak menyatakan peratus. Jika soalan menyebut
-    # caruman MAJIKAN/persaraan 13%, 16% atau 18%, itu ialah Artikel 37 dan
-    # jangan campurkan dengan Artikel 24.
-    if ("kwsp" in q or "kumpulan wang simpanan pekerja" in q) and any(
-        x in q for x in ["majikan", "persaraan", "13%", "16%", "18%"]
-    ):
-        return (
-            "📌 Artikel 37 – Faedah Persaraan\n"
-            "CA-7 menyatakan penggantian faedah persaraan dengan Caruman Majikan KWSP bagi kakitangan bukan eksekutif:\n"
-            "• Lebih 20 tahun: 18%\n"
-            "• Lebih 10 hingga 20 tahun: 16%\n"
-            "• Kurang 10 tahun: 13%\n"
-            "Rujukan: Artikel 37. Ini berbeza daripada Artikel 24 yang hanya menyatakan caruman KWSP/PERKESO/SIP tanpa kadar peratus."
-        )
+    # KWSP: gabungkan rujukan CA-7 + kadar KWSP. Jangan berhenti pada Artikel 24.
+    # Artikel 24 = CA-7 tidak menetapkan kadar potongan pekerja.
+    # Artikel 37 = kadar Caruman Majikan KWSP mengikut tempoh perkhidmatan.
+    # Rujukan KWSP semasa: pekerja warganegara bawah 60 tahun lazimnya 11%;
+    # syer majikan 13% bagi upah RM5,000 dan ke bawah, 12% bagi melebihi RM5,000.
+    if "kwsp" in q or "kumpulan wang simpanan pekerja" in q:
+        years = None
+        ym = re.search(r"(?:kerja|khidmat|perkhidmatan|servis)?\s*(\d{1,2})\s*tahun", q)
+        if ym:
+            years = int(ym.group(1))
+
+        # Kadar CA-7 Artikel 37 (caruman majikan untuk faedah persaraan).
+        ca7_rate = None
+        if years is not None:
+            if years > 20:
+                ca7_rate = "18%"
+            elif years > 10:
+                ca7_rate = "16%"
+            else:
+                ca7_rate = "13%"
+
+        # Jika soalan jelas meminta potongan/syer pekerja, beri syer pekerja
+        # bersama syer majikan dan CA-7, bukan jawapan Artikel 24 sahaja.
+        if any(x in q for x in ["potongan", "pekerja", "majikan", "berapa", "kadar", "peratus", "%", "gaji"]):
+            return (
+                "📌 KWSP – Rujukan KWSP + CA-7\n"
+                "• Syer pekerja KWSP: rujuk Jadual Ketiga KWSP. Bagi pekerja warganegara Malaysia bawah 60 tahun, kadar berkanun ialah 11%.\n"
+                "• Syer majikan KWSP: bagi pekerja warganegara Malaysia bawah 60 tahun, 13% untuk upah RM5,000 dan ke bawah; 12% untuk upah melebihi RM5,000. Jumlah RM sebenar hendaklah ikut jadual caruman KWSP, bukan semata-mata darab peratus bagi julat upah biasa.\n"
+                + (f"• CA-7 Artikel 37 – tempoh perkhidmatan {years} tahun: caruman majikan untuk faedah persaraan ialah {ca7_rate}.\n" if years is not None else "• CA-7 Artikel 37 – caruman majikan untuk faedah persaraan: <10 tahun = 13%; >10 hingga 20 tahun = 16%; >20 tahun = 18%.\n")
+                + "• Artikel 24 CA-7 tidak menetapkan peratus potongan pekerja; kadar potongan pekerja dirujuk kepada ketetapan/Jadual KWSP.\n\n"
+                "Jika nak kira JUMLAH RM potongan pekerja dan caruman majikan, beri gaji/upah bulanan dan umur supaya Sahabat boleh semak julat Jadual KWSP."
+            )
 
     # 1) Permintaan Artikel N — paling tepat dan tidak bergantung kepada AI.
     m = re.search(r"\b(?:artikel|art\.|article)\s*[-:]?\s*(\d{1,2})\b", q)

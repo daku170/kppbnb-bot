@@ -1260,6 +1260,143 @@ def _sahabat_baca_ca7():
 
 
 
+def _sahabat_baca_akta():
+    """Baca naskhah Akta Kerja 1955 yang dibekalkan oleh KPPbNB."""
+    candidates = [
+        "akta_kerja_1955.txt",
+        "/app/akta_kerja_1955.txt",
+        "/mnt/data/akta_kerja_1955.txt",
+    ]
+    for path in candidates:
+        try:
+            if os.path.exists(path):
+                with open(path, "r", encoding="utf-8") as f:
+                    return f.read()
+        except Exception as e:
+            logging.error(f"Gagal baca sumber Akta Kerja 1955: {e}")
+    return ""
+
+
+def _sahabat_akta_is_requested(soalan: str) -> bool:
+    """Kenal pasti apabila ahli secara jelas meminta rujukan Akta Kerja 1955."""
+    import re
+    q = re.sub(r"\s+", " ", (soalan or "").lower().strip())
+    akta_terms = [
+        "akta kerja", "akta 265", "employment act", "employment act 1955",
+        "akta buruh", "di bawah akta", "bawah akta", "ikut akta",
+        "mengikut akta", "minimum akta", "hak minimum", "seksyen ", "sek ",
+    ]
+    return any(term in q for term in akta_terms)
+
+
+def _sahabat_akta_compare_requested(soalan: str) -> bool:
+    import re
+    q = re.sub(r"\s+", " ", (soalan or "").lower().strip())
+    return ("akta" in q and any(x in q for x in ["ca-7", "ca7", "perjanjian bersama", "collective agreement", "banding", "beza", "compare"]))
+
+
+def _sahabat_akta_section_text(akta: str, section_no: str, max_chars: int = 12000) -> str:
+    """Ambil bahagian seksyen terakhir yang sepadan, mengelak entri TOC."""
+    import re
+    if not akta:
+        return ""
+    pat = re.compile(rf"(?im)^\s*{re.escape(section_no)}\.\s+[^\n]+")
+    matches = list(pat.finditer(akta))
+    if not matches:
+        return ""
+    start = matches[-1].start()
+    # Cari heading seksyen seterusnya yang lazim dalam naskhah sebenar.
+    next_pat = re.compile(r"(?im)^\s*(\d+[A-Z]?)\.\s+[^\n]+")
+    nexts = [m for m in next_pat.finditer(akta, matches[-1].end()) if m.start() > start]
+    end = nexts[0].start() if nexts else len(akta)
+    body = akta[start:end].strip()
+    return body[:max_chars]
+
+
+def _sahabat_jawapan_akta_pantas(soalan: str):
+    """Jawapan pantas untuk soalan Akta Kerja 1955 yang jelas."""
+    import re
+    q = re.sub(r"\s+", " ", (soalan or "").lower().strip())
+    akta = _sahabat_baca_akta()
+    if not akta or not _sahabat_akta_is_requested(q):
+        return None
+
+    # Soalan senarai cuti dalam Akta: jawab terus, tanpa memanggil Gemini.
+    if ("jenis cuti" in q or "senarai cuti" in q or "cuti apa" in q or
+        "cuti dalam akta" in q or "cuti dlm akta" in q):
+        return (
+            "⚖️ Akta Kerja 1955 (Akta 265) – peruntukan utama berkaitan cuti:\n"
+            "• Seksyen 37–44 – Cuti bersalin / maternity dan bayaran elaun bersalin.\n"
+            "• Seksyen 60D – Hari kelepasan am.\n"
+            "• Seksyen 60E – Cuti tahunan.\n"
+            "• Seksyen 60F – Cuti sakit dan hospitalisasi.\n"
+            "• Seksyen 60FA – Cuti paterniti.\n\n"
+            "📌 Untuk kelayakan, tempoh dan syarat setiap cuti, Sahabat akan rujuk seksyen berkenaan dalam naskhah Akta."
+        )
+
+    # Nombor seksyen disebut secara jelas.
+    m = re.search(r"\b(?:seksyen|sek\.?|section)\s*(\d+[A-Z]?)\b", q, re.I)
+    if m:
+        sec = m.group(1).upper()
+        body = _sahabat_akta_section_text(akta, sec)
+        if body:
+            return "⚖️ Akta Kerja 1955 – Seksyen " + sec + "\n\n" + body
+
+    section_keywords = [
+        ("60FA", ["paterniti", "paternity", "cuti bapa", "cuti ayah"]),
+        ("60F", ["cuti sakit", "sakit", "mc", "hospitalisasi", "hospital"]),
+        ("60E", ["cuti tahunan", "annual leave"]),
+        ("60D", ["cuti am", "cuti umum", "public holiday", "hari kelepasan am"]),
+        ("60A", ["waktu kerja", "jam kerja", "kerja lebih masa", "ot", "overtime", "waktu bekerja"]),
+        ("60C", ["kerja syif", "shift work", "syif"]),
+        ("37", ["cuti bersalin", "maternity", "bersalin"]),
+        ("15", ["tak hadir", "tidak hadir", "ketidakhadiran", "awol"]),
+        ("19", ["bayaran gaji", "gaji dibayar", "hari ke-7", "gaji"]),
+    ]
+    for sec, kws in section_keywords:
+        if any(k in q for k in kws):
+            body = _sahabat_akta_section_text(akta, sec)
+            if body:
+                return "⚖️ Akta Kerja 1955 – Seksyen " + sec + "\n\n" + body
+    return None
+
+
+def _sahabat_pilih_akta_rujukan(soalan: str, akta: str) -> str:
+    """Pilih petikan Akta Kerja 1955 yang berkaitan dengan soalan."""
+    import re
+    if not akta:
+        return ""
+    q = re.sub(r"\s+", " ", (soalan or "").lower().strip())
+    m = re.search(r"\b(?:seksyen|sek\.?|section)\s*(\d+[A-Z]?)\b", q, re.I)
+    if m:
+        body = _sahabat_akta_section_text(akta, m.group(1).upper())
+        if body:
+            return body
+    keys = [
+        ("60FA", ["paterniti", "paternity", "cuti bapa"]),
+        ("60F", ["cuti sakit", "mc", "hospitalisasi", "hospital"]),
+        ("60E", ["cuti tahunan", "annual leave"]),
+        ("60D", ["cuti am", "cuti umum", "public holiday"]),
+        ("60A", ["waktu kerja", "kerja lebih masa", "overtime", "ot"]),
+        ("60C", ["syif", "shift"]),
+        ("37", ["cuti bersalin", "maternity", "bersalin"]),
+        ("15", ["ketidakhadiran", "tidak hadir", "awol"]),
+        ("19", ["bayaran gaji", "gaji dibayar"]),
+    ]
+    for sec, kws in keys:
+        if any(k in q for k in kws):
+            body = _sahabat_akta_section_text(akta, sec)
+            if body:
+                return body
+    # Untuk soalan Akta umum, beri TOC/peruntukan utama sebagai konteks.
+    return (
+        "AKTA KERJA 1955 (AKTA 265)\n"
+        "Seksyen berkaitan: 37–44 (maternity), 59–60 (rest day), 60A (hours/OT), "
+        "60C (shift), 60D (holidays), 60E (annual leave), 60F (sick leave), "
+        "60FA (paternity), 7 dan 7A (more favourable conditions/collective agreement)."
+    )
+
+
 def _sahabat_ca7_sections(ca7: str):
     """Pecahkan CA-7 MASTER kepada 74 artikel secara automatik."""
     import re
@@ -1588,7 +1725,7 @@ def _sahabat_pilih_rujukan(soalan: str, ca7: str) -> str:
         return selected[0][2][:12000]
 
     return ""
-def _sahabat_kemas_jawapan(jawapan: str) -> str:
+def _sahabat_kemas_jawapan(jawapan: str, source_label: str = "CA-7") -> str:
     """Kemas jawapan Gemini supaya Telegram memaparkan teks biasa yang kemas.
     Tambah rujukan artikel dan peringatan semakan lanjut secara konsisten.
     """
@@ -1621,6 +1758,15 @@ def _sahabat_kemas_jawapan(jawapan: str) -> str:
     text = re.sub(r"\n*📚\s*Rujukan CA-7:.*?(?=\n|$)", "", text, flags=re.I)
     text = re.sub(r"\n*🔎\s*Semakan lanjut:.*$", "", text, flags=re.I | re.S).strip()
 
+    if source_label == "Akta Kerja 1955":
+        text = re.sub(r"\n*📚\s*Rujukan CA-7:.*?(?=\n|$)", "", text, flags=re.I)
+        text = re.sub(r"\n*🔎\s*Semakan lanjut:.*$", "", text, flags=re.I | re.S).strip()
+        text += (
+            "\n\n📚 Rujukan: Akta Kerja 1955 (Akta 265)"
+            "\n🔎 Semakan lanjut: Rujuk seksyen penuh dalam naskhah Akta yang dibekalkan dan pegawai Kesatuan jika melibatkan tafsiran, kes individu atau pertikaian."
+        )
+        return text
+
     if articles:
         ref = ", ".join(f"Artikel {n}" for n in articles)
     else:
@@ -1635,11 +1781,20 @@ def _sahabat_kemas_jawapan(jawapan: str) -> str:
 
 
 async def _sahabat_tanya_ai(soalan: str) -> str:
-    # Soalan fakta mudah dijawab terus daripada CA-7 tanpa memanggil AI.
-    # Ini mengelakkan kelewatan 3-5 minit untuk FAQ biasa.
-    quick_answer = _sahabat_jawapan_pantas(soalan)
-    if quick_answer:
-        return _sahabat_kemas_jawapan(quick_answer)
+    # Soalan fakta mudah dijawab terus daripada CA-7/Akta tanpa memanggil AI.
+    # Ini mengelakkan kelewatan untuk FAQ biasa dan memastikan sumber yang diminta digunakan.
+    akta_requested = _sahabat_akta_is_requested(soalan)
+    compare_requested = _sahabat_akta_compare_requested(soalan)
+
+    if akta_requested and not compare_requested:
+        akta_quick = _sahabat_jawapan_akta_pantas(soalan)
+        if akta_quick:
+            return _sahabat_kemas_jawapan(akta_quick, source_label="Akta Kerja 1955")
+
+    if not akta_requested:
+        quick_answer = _sahabat_jawapan_pantas(soalan)
+        if quick_answer:
+            return _sahabat_kemas_jawapan(quick_answer)
 
     api_key = os.environ.get("GEMINI_API_KEY", "").strip()
     if not api_key:
@@ -1666,13 +1821,27 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
             # jawapan AI tidak bercanggah jika store lama masih mengandungi
             # versi CA-7 terdahulu.
             ca7 = _sahabat_baca_ca7()
-            rujukan_master = _sahabat_pilih_rujukan(soalan, ca7)
-            if rujukan_master:
+            akta = _sahabat_baca_akta()
+            rujukan_master = _sahabat_pilih_rujukan(soalan, ca7) if not akta_requested else ""
+            rujukan_akta = _sahabat_pilih_akta_rujukan(soalan, akta) if akta_requested else ""
+            if compare_requested:
                 input_ahli = (
-                    "MASTER SOURCE CA-7 KPPbNB (UTAMA):\n"
-                    + rujukan_master
-                    + "\n\nSOALAN AHLI:\n"
-                    + soalan
+                    "SUMBER CA-7 KPPbNB (UTAMA UNTUK PERJANJIAN):\n"
+                    + (rujukan_master or "Sumber CA-7 berkaitan tidak ditemui dalam petikan tempatan.")
+                    + "\n\nSUMBER AKTA KERJA 1955 (UTAMA UNTUK UNDANG-UNDANG):\n"
+                    + (rujukan_akta or "Sumber Akta berkaitan tidak ditemui dalam petikan tempatan.")
+                    + "\n\nSOALAN AHLI:\n" + soalan
+                )
+            elif akta_requested:
+                input_ahli = (
+                    "SUMBER AKTA KERJA 1955 (UTAMA):\n"
+                    + (rujukan_akta or "Sumber Akta berkaitan tidak ditemui dalam petikan tempatan.")
+                    + "\n\nSOALAN AHLI:\n" + soalan
+                )
+            elif rujukan_master:
+                input_ahli = (
+                    "MASTER SOURCE CA-7 KPPbNB (UTAMA):\n" + rujukan_master
+                    + "\n\nSOALAN AHLI:\n" + soalan
                 )
             else:
                 input_ahli = soalan
@@ -1681,8 +1850,10 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
                 "model": model,
                 "input": input_ahli,
                 "system_instruction": SAHABAT_SYSTEM_PROMPT + "\n\n"
-                    "Untuk soalan CA-7, utamakan petikan MASTER SOURCE CA-7 yang diberikan "
-                    "bersama soalan. File Search ialah sumber sokongan. Jangan reka atau teka fakta. "
+                    "Untuk soalan CA-7, utamakan petikan MASTER SOURCE CA-7 yang diberikan bersama soalan. "
+                    "Untuk soalan yang menyebut Akta Kerja 1955/Akta 265/Seksyen, utamakan petikan SUMBER AKTA KERJA 1955 yang diberikan. "
+                    "Jika soalan meminta perbandingan, bezakan dengan jelas CA-7 dan Akta tanpa mencampurkan hak/syarat. "
+                    "File Search ialah sumber sokongan. Jangan reka atau teka fakta. "
                     "KHUSUS Artikel 74.1: untuk jawapan kepada ahli, gunakan angka pelarasan gaji "
                     "4.5% sahaja. Jangan paparkan, ulang atau sebut angka 5%/lima peratus kerana "
                     "ia boleh mengelirukan ahli. "
@@ -1707,7 +1878,18 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
             # Fallback: rujukan tempatan sedia ada jika File Search Store belum
             # ditetapkan. Fungsi bot lain tidak terjejas.
             ca7 = _sahabat_baca_ca7()
-            rujukan = _sahabat_pilih_rujukan(soalan, ca7)
+            akta = _sahabat_baca_akta()
+            rujukan = _sahabat_pilih_rujukan(soalan, ca7) if not akta_requested else ""
+            rujukan_akta = _sahabat_pilih_akta_rujukan(soalan, akta) if akta_requested else ""
+            if compare_requested:
+                source_instruction = (
+                    "SUMBER CA-7 KPPbNB:\n" + (rujukan or "Tidak ditemui.")
+                    + "\n\nSUMBER AKTA KERJA 1955:\n" + (rujukan_akta or "Tidak ditemui.")
+                )
+            elif akta_requested:
+                source_instruction = "SUMBER AKTA KERJA 1955:\n" + (rujukan_akta or "Tidak ditemui.")
+            else:
+                source_instruction = "PETIKAN CA-7 YANG RELEVAN:\n" + (rujukan or "Sumber CA-7 tidak dapat dibaca sekarang.")
             payload = json.dumps({
                 "systemInstruction": {
                     "parts": [{"text": SAHABAT_SYSTEM_PROMPT}]
@@ -1716,13 +1898,11 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
                     "role": "user",
                     "parts": [{"text": (
                         "ARAHAN RUJUKAN:\n"
-                        "Jawab berdasarkan teks CA-7 yang diberikan di bawah. Jangan reka kadar, "
-                        "nombor artikel, syarat atau hak yang tidak terdapat dalam rujukan. "
+                        "Jawab berdasarkan sumber yang diberikan di bawah. Jika soalan menyebut Akta Kerja 1955/Akta 265/Seksyen, utamakan sumber Akta. Jika soalan menyebut CA-7, utamakan CA-7. Jika membandingkan kedua-duanya, bezakan sumber dengan jelas. Jangan reka kadar, nombor seksyen/artikel, syarat atau hak yang tidak terdapat dalam rujukan. "
                         "Jika rujukan tidak cukup untuk menjawab, nyatakan dengan jelas bahawa "
                         "maklumat tidak ditemui dalam petikan yang dipilih dan cadangkan menu CA-7 "
                         "atau pegawai Kesatuan yang sesuai.\n\n"
-                        "PETIKAN CA-7 YANG RELEVAN:\n"
-                        + (rujukan if rujukan else "Sumber CA-7 tidak dapat dibaca sekarang.")
+                        + source_instruction
                         + "\n\nSOALAN AHLI:\n" + soalan
                     + "\n\nPENTING: Jawab ringkas tetapi lengkap dalam 3-7 point jika sesuai. Sasaran maksimum kira-kira 150 perkataan. Jangan berhenti di tengah ayat."
                     )}]
@@ -1788,7 +1968,7 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
                     part.get("text", "") for part in parts if part.get("text")
                 )
 
-        return _sahabat_kemas_jawapan(answer) if answer.strip() else "Maaf, Sahabat tidak dapat memberikan jawapan sekarang. Sila cuba semula."
+        return (_sahabat_kemas_jawapan(answer, source_label="Akta Kerja 1955") if akta_requested and not compare_requested else _sahabat_kemas_jawapan(answer)) if answer.strip() else "Maaf, Sahabat tidak dapat memberikan jawapan sekarang. Sila cuba semula."
 
     except urllib.error.HTTPError as e:
         try:

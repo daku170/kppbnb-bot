@@ -6,6 +6,9 @@ import socketserver
 import logging
 import csv
 import time
+import json
+from datetime import datetime, time as dt_time, timedelta
+from zoneinfo import ZoneInfo
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
@@ -21,6 +24,119 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN", "").strip()
 if not BOT_TOKEN:
     raise RuntimeError("BOT_TOKEN belum ditetapkan dalam Environment Variables")
 ADMIN_CHAT_ID = -1003958495436
+
+# ==================== AUDIT SAHABAT & STATISTIK ====================
+# Fungsi tambahan sahaja: tidak mengubah aliran fungsi bot sedia ada.
+STATS_FILE = "sahabat_stats.json"
+MALAYSIA_TZ = ZoneInfo("Asia/Kuala_Lumpur")
+
+def _load_sahabat_stats():
+    default = {"date": datetime.now(MALAYSIA_TZ).strftime("%Y-%m-%d"), "questions": 0, "users": []}
+    try:
+        if os.path.exists(STATS_FILE):
+            with open(STATS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if data.get("date") == default["date"]:
+                data.setdefault("questions", 0)
+                data.setdefault("users", [])
+                return data
+    except Exception as e:
+        logging.warning(f"Gagal baca statistik Sahabat: {e}")
+    return default
+
+SAHABAT_STATS = _load_sahabat_stats()
+
+def _save_sahabat_stats():
+    try:
+        with open(STATS_FILE, "w", encoding="utf-8") as f:
+            json.dump(SAHABAT_STATS, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logging.warning(f"Gagal simpan statistik Sahabat: {e}")
+
+def _rekod_penggunaan_sahabat(user_id):
+    today = datetime.now(MALAYSIA_TZ).strftime("%Y-%m-%d")
+    if SAHABAT_STATS.get("date") != today:
+        SAHABAT_STATS.clear()
+        SAHABAT_STATS.update({"date": today, "questions": 0, "users": []})
+    SAHABAT_STATS["questions"] = int(SAHABAT_STATS.get("questions", 0)) + 1
+    uid = str(user_id)
+    if uid not in SAHABAT_STATS.setdefault("users", []):
+        SAHABAT_STATS["users"].append(uid)
+    _save_sahabat_stats()
+
+def _ahli_audit_text(update, context):
+    user = update.effective_user
+    nama = context.user_data.get("nama", "Tidak dipadankan")
+    emp_id = context.user_data.get("emp_id", "Tidak dipadankan")
+    lokasi = context.user_data.get("lokasi", "Tidak dipadankan")
+    telegram_id = user.id if user else "Tidak diketahui"
+    return nama, emp_id, lokasi, telegram_id
+
+async def _hantar_audit_sahabat(update, context, soalan, jawapan):
+    """Hantar salinan soalan+jawapan Sahabat ke Group Aduan admin sahaja."""
+    try:
+        nama, emp_id, lokasi, telegram_id = _ahli_audit_text(update, context)
+        masa = datetime.now(MALAYSIA_TZ).strftime("%d/%m/%Y %H:%M:%S")
+        belum_padanan = not context.user_data.get("verified", False) or not context.user_data.get("emp_id")
+        status = "⚠️ AHLI BELUM DIPADANKAN" if belum_padanan else "🔎 UNTUK SEMAKAN ADMIN"
+        text = (
+            "🤖 SEMAKAN JAWAPAN SAHABAT KPPbNB\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            f"👤 Nama: {nama}\n"
+            f"🆔 No. Ahli: {emp_id}\n"
+            f"📍 Lokasi: {lokasi}\n"
+            f"📱 Telegram ID: {telegram_id}\n"
+            f"🕐 Masa: {masa}\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "❓ SOALAN AHLI\n"
+            f"{soalan}\n\n"
+            "🤖 JAWAPAN SAHABAT\n"
+            f"{jawapan}\n\n"
+            "📚 Rujukan: Berdasarkan sumber yang digunakan oleh Sahabat\n"
+            f"{status}"
+        )
+        # Telegram had mesej 4096 aksara; pecahkan tanpa mengubah kandungan.
+        for i in range(0, len(text), 3900):
+            await context.bot.send_message(chat_id=ADMIN_CHAT_ID, text=text[i:i+3900])
+    except Exception as e:
+        logging.error(f"Gagal hantar audit Sahabat ke group: {e}")
+
+def _next_0001_malaysia():
+    now = datetime.now(MALAYSIA_TZ)
+    target = now.replace(hour=0, minute=1, second=0, microsecond=0)
+    if target <= now:
+        target += timedelta(days=1)
+    return target
+
+async def _laporan_penggunaan_harian(app):
+    """Hantar statistik Sahabat setiap hari pada 00:01 waktu Malaysia."""
+    while True:
+        target = _next_0001_malaysia()
+        await asyncio.sleep(max(1, (target - datetime.now(MALAYSIA_TZ)).total_seconds()))
+        try:
+            today = datetime.now(MALAYSIA_TZ)
+            report_date = (today - timedelta(days=1)).strftime("%d/%m/%Y")
+            questions = int(SAHABAT_STATS.get("questions", 0))
+            users = len(SAHABAT_STATS.get("users", []))
+            report = (
+                "📊 LAPORAN PENGGUNAAN SAHABAT KPPbNB\n"
+                "━━━━━━━━━━━━━━━━━━━━\n"
+                f"📅 Tarikh: {report_date}\n"
+                f"👥 Pengguna unik: {users} orang\n"
+                f"💬 Jumlah soalan Sahabat: {questions}\n"
+                "━━━━━━━━━━━━━━━━━━━━\n"
+                "📌 Laporan ini untuk kegunaan dalaman admin Kesatuan."
+            )
+            await app.bot.send_message(chat_id=ADMIN_CHAT_ID, text=report)
+        except Exception as e:
+            logging.error(f"Gagal hantar laporan penggunaan harian: {e}")
+        finally:
+            # Mula kiraan hari baru selepas laporan dihantar.
+            new_date = datetime.now(MALAYSIA_TZ).strftime("%Y-%m-%d")
+            SAHABAT_STATS.clear()
+            SAHABAT_STATS.update({"date": new_date, "questions": 0, "users": []})
+            _save_sahabat_stats()
+
 
 # Pautan Dokumen Google Drive & SharePoint
 URL_KILANAN = "https://drive.google.com/file/d/1KLmiSGJcnV_Wmcwkfyj6LZ17KGdJp92w/view?usp=drive_link"
@@ -1734,6 +1850,9 @@ async def sahabat_soalan(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return ConversationHandler.END
 
+    # Rekod penggunaan hanya apabila ahli benar-benar menghantar soalan kepada Sahabat.
+    _rekod_penggunaan_sahabat(update.effective_user.id)
+
     await update.message.reply_text("🤝 Sahabat tengah buka buku sat, cari jawapan… 📖", parse_mode='Markdown')
     jawapan = await _sahabat_tanya_ai(soalan)
     await update.message.reply_text(
@@ -1745,6 +1864,10 @@ async def sahabat_soalan(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("🤝 Tanya Lagi", callback_data='menu_sahabat')]
         ])
     )
+
+    # Salinan audit dihantar ke Group Aduan admin sahaja.
+    # Jika penghantaran gagal, jawapan kepada ahli tetap tidak terganggu.
+    await _hantar_audit_sahabat(update, context, soalan, jawapan)
     return STATE_SAHABAT_SOALAN
 
 # ==================== MODUL LAIN (DOKUMEN, PROFIL, HUBUNGI) ====================
@@ -1891,6 +2014,10 @@ async def async_main():
         await app.bot.delete_webhook(drop_pending_updates=True)
         await app.start()
         await app.updater.start_polling()
+
+        # Laporan penggunaan harian 00:01 pagi waktu Malaysia.
+        asyncio.create_task(_laporan_penggunaan_harian(app))
+
         print("Bot KPPbNB LIVE penuh dari awal sampai akhir!")
         while True:
             await asyncio.sleep(3600)

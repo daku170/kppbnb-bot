@@ -1581,6 +1581,7 @@ async def handle_other_menus(update: Update, context: ContextTypes.DEFAULT_TYPE)
             [InlineKeyboardButton("📘 Buku CA-1", url=URL_CA1), InlineKeyboardButton("📗 Buku CA-2", url=URL_CA2)],
             [InlineKeyboardButton("📙 Buku CA-3", url=URL_CA3), InlineKeyboardButton("📕 Buku CA-4", url=URL_CA4)],
             [InlineKeyboardButton("📒 Buku CA-5", url=URL_CA5), InlineKeyboardButton("📓 Buku CA-6", url=URL_CA6)],
+            [InlineKeyboardButton("📔 Buku CA-7", url=URL_CA7)],
             [InlineKeyboardButton("📜 Buku Akta Kerja", url=URL_AKTA)],
             [InlineKeyboardButton("⚖️ Buku Tatatertib BERNAS Edisi 5", url=URL_TATATERTIB)],
             [InlineKeyboardButton("🏠 Menu Utama", callback_data='menu_utama')]

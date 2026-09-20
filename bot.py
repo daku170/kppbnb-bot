@@ -1435,7 +1435,27 @@ def _sahabat_jawapan_pantas(soalan: str):
                     return f"📌 Artikel 74 – Lampiran I, Gred {gred}\n{line.strip()}"
             return f"📌 Artikel 74 – Lampiran I\nSila rujuk jadual gred {gred} dalam naskhah CA-7."
 
-    # 2) Soalan fakta yang kita tahu CA-7 sendiri tidak menyatakan kadar.
+    # 2) Soalan umum tentang JENIS CUTI dalam CA-7 — jawab terus daripada
+    # MASTER SOURCE supaya tidak perlu menunggu Gemini untuk soalan senarai.
+    # Artikel cuti utama ialah 43 hingga 56; Artikel 21 ialah cuti kesatuan.
+    cuti_umum_markers = [
+        "jenis cuti", "senarai cuti", "cuti dalam ca", "cuti dlm ca",
+        "cuti dalam ca7", "cuti dlm ca7", "cuti apa ada",
+        "apa jenis cuti", "jenis-jenis cuti", "jenis2 cuti",
+        "senarai jenis cuti", "cuti yang ada dalam ca"
+    ]
+    if any(marker in q for marker in cuti_umum_markers):
+        nombor_cuti = [21, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56]
+        lines = ["🏖️ Jenis Cuti / Peruntukan Berkaitan Cuti Dalam CA-7", ""]
+        for no in nombor_cuti:
+            if no in by_no:
+                title = by_no[no][0].strip()
+                lines.append(f"• Artikel {no} – {title}")
+        lines.append("")
+        lines.append("📌 Untuk kelayakan, tempoh dan syarat setiap cuti, rujuk artikel berkenaan dalam CA-7.")
+        return "\n".join(lines)
+
+    # 3) Soalan fakta yang kita tahu CA-7 sendiri tidak menyatakan kadar.
     if ("kwsp" in q or "kumpulan wang simpanan pekerja" in q) and any(
         x in q for x in ["potongan", "berapa peratus", "berapa %", "kadar pekerja", "percent", "%"]
     ):
@@ -1446,7 +1466,7 @@ def _sahabat_jawapan_pantas(soalan: str):
             "• Jadi, jangan gunakan Artikel 24 untuk mendakwa satu peratus tertentu."
         )
 
-    # 3) Kadar khusus yang boleh dijawab terus daripada naskhah.
+    # 4) Kadar khusus yang boleh dijawab terus daripada naskhah.
     if ("syif" in q or "shift" in q) and any(x in q for x in ["berapa", "kadar", "rate", "rm", "4 petang", "12 malam", "8 malam"]):
         return (
             "📌 Artikel 72 – Elaun Syif\n"
@@ -1498,7 +1518,7 @@ def _sahabat_jawapan_pantas(soalan: str):
             "• Gaji bulanan ahli Kesatuan sahaja diselaraskan sebanyak 4.5%."
         )
 
-    # 4) Padanan topik untuk semua 74 artikel.
+    # 5) Padanan topik untuk semua 74 artikel.
     scores = []
     for no, title, body in sections:
         score = 0

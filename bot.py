@@ -870,7 +870,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "📌 *Artikel 25 – Kenaikan Gaji Tahunan*\n"
             "• Pekerja disahkan layak menerima kenaikan pada 1 Januari sehingga capai maksimum gaji.\n"
             "• Penilaian *Memenuhi Jangkaan dan ke atas*: *3.5% + merit*.\n"
-            "• *Di Bawah Jangkaan / Tidak Memuaskan*: *1.5%*.\n"
+            "• *Di Bawah Jangkaan / Tidak Memuaskan*: *2%*.\n"
             "• Kenaikan pertama selepas disahkan: pro rata mengikut bulan perkhidmatan hingga 31 Disember.\n"
             "• Gaji maksimum boleh dipertimbang EIP mengikut prestasi; EIP tidak kumulatif.\n\n"
             "📌 *Artikel 26 – Bonus*\n"
@@ -1209,19 +1209,20 @@ Tugas anda:
    - Jika tidak pasti: rujuk Setiausaha Agung.
 7. Jika soalan berkaitan kiraan OT, arahkan ahli menggunakan menu Kiraan OT & Elaun
    kerana modul tersebut mempunyai pengiraan khusus CA-7.
-8. Jangan mendakwa sebagai peguam atau membuat keputusan rasmi bagi KPPbNB.
-9. Pastikan jawapan SENTIASA lengkap dan tidak terhenti di tengah ayat. Sebelum menghantar,
+8. Jika ahli bertanya cara menghubungi pihak Kesatuan, minta ahli gunakan Menu Utama → 📝 Laporan / Aduan untuk merekodkan isu. Boleh juga beri e-mel Setiausaha Agung KPPbNB: aqilah@bernas.com.my. Untuk isu gaji, elaun, OT atau isu perkhidmatan, galakkan ahli gunakan Laporan / Aduan terlebih dahulu.
+9. Jangan mendakwa sebagai peguam atau membuat keputusan rasmi bagi KPPbNB.
+10. Pastikan jawapan SENTIASA lengkap dan tidak terhenti di tengah ayat. Sebelum menghantar,
    semak bahawa ayat terakhir telah selesai.
-10. Untuk soalan fakta mudah, jawab terus dengan fakta utama dahulu. Jika sesuai, gunakan
+11. Untuk soalan fakta mudah, jawab terus dengan fakta utama dahulu. Jika sesuai, gunakan
     2-4 poin ringkas.
-11. WAJIB nyatakan nombor ARTIKEL CA-7 yang menjadi rujukan jika jawapan berkaitan CA-7.
+12. WAJIB nyatakan nombor ARTIKEL CA-7 yang menjadi rujukan jika jawapan berkaitan CA-7.
     Jika lebih daripada satu artikel digunakan, nyatakan semua artikel yang berkaitan.
-12. Selepas jawapan, WAJIB letakkan bahagian:
+13. Selepas jawapan, WAJIB letakkan bahagian:
     "📚 Rujukan CA-7: Artikel XX"
     dan kemudian:
     "🔎 Semakan lanjut: Ahli disaran semak naskhah CA-7 dan rujuk pegawai Kesatuan
     jika melibatkan tafsiran, kes individu atau pertikaian."
-13. JANGAN gunakan format Markdown seperti **tebal**, __tebal__, _italic_, atau [link].
+14. JANGAN gunakan format Markdown seperti **tebal**, __tebal__, _italic_, atau [link].
     Jawapan mesti dalam teks biasa supaya paparan Telegram kemas dan tidak rosak.
 14. Gaya jawapan:
     - Jawab ringkas tetapi padat.
@@ -1592,6 +1593,41 @@ CA7_TOPIC_MAP = {1: ['pihak terikat', 'pihak-pihak', 'siapa terikat'],
  74: ['semakan gaji', 'pelarasan gaji', '4.5%', 'lima peratus', 'gaji ahli kesatuan']}
 
 
+def _sahabat_jawapan_hubungi(soalan: str):
+    """Jawapan terus untuk soalan cara menghubungi pihak Kesatuan."""
+    import re
+    q = re.sub(r"\s+", " ", (soalan or "").lower().strip())
+    contact_terms = [
+        "hubungi", "contact", "nak contact", "nak hubungi", "cara hubungi",
+        "macam mana nak hubungi", "macam mana nak contact", "nak jumpa",
+        "nak telefon", "nombor telefon", "email", "e-mel", "emel",
+        "khairul", "bro khairul", "setiausaha agung", "farah aqilah"
+    ]
+    action_terms = [
+        "laporan", "aduan", "masalah", "isu", "gaji", "elaun", "ot",
+        "kilanan", "tindakan", "bantuan", "pertanyaan", "nak minta bantuan"
+    ]
+    if not any(t in q for t in contact_terms):
+        return None
+    # Elakkan menangkap soalan CA-7 biasa yang hanya menyebut perkataan 'email'
+    # dalam konteks lain; perlu ada unsur hubungan/tindakan yang jelas.
+    if not any(t in q for t in action_terms + ["hubungi", "contact", "email", "e-mel", "emel", "khairul", "farah aqilah", "setiausaha agung"]):
+        return None
+    return (
+        "🤝 Untuk hubungi pihak Kesatuan, anda boleh pilih salah satu cara berikut:\n\n"
+        "📝 1. Laporan / Aduan melalui Bot KPPbNB\n"
+        "Kembali ke Menu Utama → 📝 Laporan / Aduan dan masukkan perkara yang ingin disampaikan. "
+        "Maklumat tersebut akan dihantar terus kepada pihak Kesatuan untuk semakan dan tindakan.\n\n"
+        "📧 2. Hubungi melalui e-mel\n"
+        "Setiausaha Agung KPPbNB: aqilah@bernas.com.my\n\n"
+        "📱 3. Hubungi pihak Kesatuan secara terus\n"
+        "Jika perkara berkaitan gaji, elaun, OT atau isu perkhidmatan, sila gunakan bahagian "
+        "📝 Laporan / Aduan terlebih dahulu supaya maklumat anda dapat direkodkan dengan lengkap.\n\n"
+        "🤝 Sahabat boleh bantu beri maklumat berdasarkan CA-7 dan sumber rasmi. "
+        "Perkara yang memerlukan tindakan atau semakan individu hendaklah dirujuk kepada pihak Kesatuan."
+    )
+
+
 def _sahabat_jawapan_pantas(soalan: str):
     """Quick Answer CA-7 berasaskan MASTER SOURCE 74 artikel.
     - Soalan 'Artikel N' terus mengambil Artikel N.
@@ -1606,6 +1642,11 @@ def _sahabat_jawapan_pantas(soalan: str):
         return None
 
     by_no = {n: (title, body) for n, title, body in sections}
+
+    # Soalan cara menghubungi pihak Kesatuan dijawab terus tanpa Gemini.
+    contact_answer = _sahabat_jawapan_hubungi(soalan)
+    if contact_answer:
+        return contact_answer
 
     # Angka CA-7 dikunci sebelum padanan AI/keyword biasa.
     numeric_answer = _sahabat_numeric_quick_answer(soalan, sections)

@@ -1429,6 +1429,93 @@ def _sahabat_ringkas_artikel(body: str, max_chars: int = 1500) -> str:
     return cut + "\n… Untuk syarat lengkap, rujuk naskhah CA-7."
 
 
+# ==================== CA-7 NUMERIC MASTER / ANGKA TERKUNCI ====================
+# Dibina daripada naskhah CA-7 yang telah disemak. Nilai di sini digunakan
+# sebagai kunci untuk soalan yang meminta kadar, hari, RM, peratus, tempoh,
+# gred/gaji dan angka lain supaya Gemini tidak menggantikan angka sumber.
+CA7_NUMERIC_MASTER_TEXT = "CA-7 NUMERIC MASTER KPPbNB — RUJUKAN ANGKA TERKUNCI\nSumber: Perjanjian Bersama Yang Ke-Tujuh KPPbNB-BERNAS, berkuat kuasa 1.1.2026–31.12.2028.\nArahan: Nilai angka di bawah ialah nilai terkunci untuk jawapan bot. Jangan tukar, bulatkan, meneka atau menggantikan dengan angka lain.\n\nArtikel 3: 1 Januari 2026 – 31 Disember 2028.\nArtikel 15: Level 1 = 7 hari bekerja; Level 2 = 7 hari bekerja; Level 3 perbincangan = 14 hari; Level 4 = 60 hari; aduan awal dalam 7 hari dari kejadian.\nArtikel 18: Permohonan aktiviti kesatuan sekurang-kurangnya 10 hari sebelum aktiviti.\nArtikel 21: Cuti tugas kesatuan 7 hari setahun bagi setiap Exco; maksimum 3 Exco pada satu masa.\nArtikel 23: Penarikan persetujuan potongan yuran memerlukan notis bertulis 2 bulan.\nArtikel 25: Memenuhi Jangkaan dan ke atas = 3.5% + merit; Di Bawah Jangkaan/Tidak Memuaskan = 1.5%; EIP tidak kumulatif.\nArtikel 26: Bonus = 1 bulan gaji; perkhidmatan kurang 1 tahun = prorata; disahkan selewat-lewatnya 31 Disember setiap tahun.\nArtikel 27: Notis <2 tahun = 4 minggu; 2–5 tahun = 6 minggu; >5 tahun = 8 minggu.\nArtikel 28: Tidak hadir lebih 2 hari bekerja berturut-turut tanpa kebenaran awal, kecuali alasan munasabah/notifikasi seperti diperuntukkan.\nArtikel 29: Syif purata 42 jam/minggu; bukan syif 39 jam/minggu; 2 syif = 12 jam/syif; 3 syif = 8 jam/syif; rehat 30 minit bagi setiap 5 jam kerja berterusan jika OT dijadualkan; perubahan jadual dimaklumkan sekurang-kurangnya 3 hari.\nArtikel 31: OT hari kerja biasa = 1.5 × kadar jam biasa; had OT = 104 jam/bulan; cuti gantian 6–8 jam = 1 hari; 4–5 jam = 1/2 hari; cuti gantian boleh dikumpul dalam 6 bulan tahun berkenaan.\nArtikel 34: Tempoh memangku >28 hari berturut-turut; cuti tahunan/sakit 14 hari atau lebih berturut-turut semasa memangku = tiada elaun; elaun 15%–25% daripada gaji permulaan gred yang ditanggung.\nArtikel 35: Tempoh memangku maksimum 6 bulan.\nArtikel 36: Persaraan pilihan lelaki 50 tahun; wajib 60 tahun; wanita pilihan 45 tahun; wajib 60 tahun.\nArtikel 37: Caruman majikan/faedah persaraan >20 tahun = 18%; >10 hingga 20 tahun = 16%; <10 tahun = 13%. Ini peruntukan CA-7 dan berbeza daripada kadar statutori KWSP biasa.\nArtikel 38: Pekerja tetap dengan tempoh perkhidmatan <1 tahun tidak layak di bawah skim faedah retrenchment tersebut.\nArtikel 40: Insurans = 36 bulan × gaji terakhir.\nArtikel 44: Cuti tahunan <2 tahun = 18 hari/tahun; 2–5 tahun = 22 hari/tahun; >5 tahun = 24 hari/tahun; bawa ke hadapan sehingga 30 Jun tahun berikutnya; maksimum carry-forward = 50% kelayakan sebenar.\nArtikel 45: Cuti tanpa gaji maksimum 3 bulan sepanjang perkhidmatan.\nArtikel 47: Cuti sakit tanpa hospital = 22 hari/tahun; jika perlu hospital = 60 hari/tahun.\nArtikel 48: Cuti sakit berpanjangan: 6 bulan pertama gaji penuh; 6 bulan kedua separuh gaji; 6 bulan ketiga tanpa gaji.\nArtikel 49: Cuti bersalin = 98 hari berturut-turut; maksimum 5 kelahiran hidup; keguguran sebelum minggu 22 = cuti sakit biasa; boleh bermula pada/selepas minggu 28; cuti tanpa gaji selepas bersalin = 90 hari.\nArtikel 50: Kematian keluarga = 3 hari bekerja; menjaga/mengiringi pasangan/anak/ibu bapa di hospital = maksimum 5 hari bekerja/tahun; bencana alam = 2 hari bekerja; kuarantin anak = 3 hari; bantuan pengurusan pengebumian = RM1,000.\nArtikel 51: Cuti kahwin = 4 hari bekerja berturut-turut; permohonan sekurang-kurangnya 1 minggu sebelum cuti.\nArtikel 52: Paterniti ≥1 tahun perkhidmatan = 7 hari berturut-turut; <1 tahun = 3 hari berturut-turut; maksimum 5 kelahiran; notis sekurang-kurangnya 30 hari sebelum kelahiran isteri.\nArtikel 53: Cuti khas maksimum 30 hari dalam satu tahun kalendar.\nArtikel 55: Haji/Umrah = 54 hari berturut-turut, maksimum keseluruhan dan sekali sahaja; pekerja kontrak ≥1 tahun; pekerja tetap ≥3 tahun dan telah disahkan.\nArtikel 56: Cuti peperiksaan = 1 hari pada hari peperiksaan; cuti belajar = 2 hari bagi setiap peperiksaan; maksimum 5 hari/tahun; jika 2 atau lebih peperiksaan pada hari sama, 2 hari cuti belajar boleh diberi dalam seminggu sebelum peperiksaan.\nArtikel 57: Dobi = RM20/hari; tugas rasmi luar kawasan >3 hari berturut-turut; resit diperlukan; dobi layan diri tidak boleh dituntut.\nArtikel 58: Anak ≤19 tahun jika tidak belajar/tidak berkahwin; anak pendidikan tinggi sepenuh masa sehingga 23 tahun; anak tiri/anak angkat sah; ibu bapa kandung bagi pekerja dilantik sebelum 1 Januari 2023; anak OKU tiada had umur; rawatan bersalin maksimum 5 kali sepanjang perkhidmatan.\nArtikel 59: Pesakit luar = RM3,500/tahun; dalam jumlah itu RM1,000 untuk pergigian, cermin mata dan rawatan berkala, bagi pekerja sendiri.\nArtikel 60: Sehingga 31 Disember 2026 = RM35,000/tahun untuk pekerja + tanggungan; BERNAS boleh mempertimbangkan kes sehingga RM200,000; mulai 1 Januari 2027 = RM45,000/tahun bagi setiap individu yang layak; bilik & makan = RM150/hari; mulai 2027 anak biasa ≤17 tahun jika tidak belajar/tidak berkahwin; anak pendidikan tinggi sepenuh masa sehingga 23 tahun.\nArtikel 61: Bersalin normal pekerja = RM3,000; Caesarean pekerja di hospital swasta = RM6,000; isteri pekerja normal = RM3,000; isteri Caesarean = RM6,000.\nArtikel 62: Makan = 3 hari sebelum + 5 hari selepas; hotel = 3 hari sebelum + 5 hari selepas; maksimum 3 bilik; jika tiada tuntutan hotel, lojing untuk pekerja sahaja bagi tempoh 3 + 5 hari.\nArtikel 63: Kereta = RM0.75/km; motosikal = RM0.50/km; tol/parkir/feri dibayar balik tertakluk resit/pengesahan.\nArtikel 64: Tugas rasmi >50 km dan 8 jam atau lebih; elaun makan RM115/hari; sarapan 20%=RM23; makan tengah hari 40%=RM46; makan malam 40%=RM46; gaji RM4,000+ tanpa OT: hari bekerja >2–5 jam=RM25; >5 jam=RM50; hari rehat/cuti umum >4–8 jam=RM25 atau 1/2 hari gantian; >8 jam=RM50 atau 1 hari gantian.\nArtikel 65: Hotel standard 4 bintang; twin sharing; lojing tanpa resit RM100/malam; hotel maksimum 3 bulan berturut-turut.\nArtikel 66: Operasi = 4 T-shirt + 2 seluar + 1 pasang kasut keselamatan; pejabat = 1 baju BERNAS.\nArtikel 67: 2 pek beras Super Tempatan; minimum 15%; 1 pek = 10kg; bulanan.\nArtikel 71: Elaun Chargeman = RM300/bulan.\nArtikel 72: 8 pagi–4 petang = RM0.00; 4 petang–12 malam = RM6.50; 12 malam–8 pagi = RM7.00; 2 syif 8 pagi–8 malam = RM0.00; 2 syif 8 malam–8 pagi = RM7.00.\nArtikel 74: Pelarasan gaji ahli Kesatuan = 4.5%. Jangan gunakan 5% sebagai kadar jawapan. Lampiran I: T5 RM3,000–6,300; T4 RM2,600–5,200; T3 RM2,100–4,000; T2 RM1,900–3,200; T1 RM1,700–2,800; S5 RM2,800–5,400; S4 RM2,400–4,500; S3 RM2,100–3,600; S2 RM1,900–3,000; S1 RM1,700–2,800.\n\nLOCK KHAS:\n- Artikel 25.5(b) = 1.5%, bukan 2%.\n- Artikel 74.1 = 4.5% sebagai angka yang digunakan bot; jangan paparkan 5%.\n- Artikel 60 berubah pada 1 Januari 2027: RM35,000 pekerja+tanggungan sehingga 31/12/2026, kemudian RM45,000 seorang yang layak.\n"
+
+
+def _sahabat_numeric_master_by_article(no: int):
+    import re
+    m = re.search(rf"(?m)^Artikel {no}: (.+)$", CA7_NUMERIC_MASTER_TEXT)
+    return m.group(1).strip() if m else None
+
+
+def _sahabat_numeric_query(soalan: str) -> bool:
+    q = (soalan or "").lower()
+    markers = [
+        "berapa", "kadar", "rate", "rm", "%", "peratus", "hari", "jam",
+        "tahun", "bulan", "minggu", "minggu", "tempoh", "umur", "gaji",
+        "minimum", "maksimum", "layak", "kelayakan", "notis", "caruman",
+        "elaun", "mileage", "km", "kg", "syif", "shift", "increment",
+        "kenaikan", "potongan", "bawa ke hadapan", "carry forward"
+    ]
+    return any(x in q for x in markers)
+
+
+def _sahabat_numeric_grade_answer(soalan: str):
+    import re
+    q = (soalan or "").lower()
+    if not any(x in q for x in ["gred", "gaji", "minimum", "maksimum", "tangga"]):
+        return None
+    m = re.search(r"\b([st][1-5])\b", q)
+    if not m:
+        return None
+    g = m.group(1).upper()
+    # Nilai Lampiran I dikunci terus.
+    grades = {
+        "T5":"RM3,000–6,300", "T4":"RM2,600–5,200", "T3":"RM2,100–4,000",
+        "T2":"RM1,900–3,200", "T1":"RM1,700–2,800",
+        "S5":"RM2,800–5,400", "S4":"RM2,400–4,500", "S3":"RM2,100–3,600",
+        "S2":"RM1,900–3,000", "S1":"RM1,700–2,800"
+    }
+    if g in grades:
+        return f"📌 Artikel 74 – Lampiran I, Gred {g}\n• Julat gaji: {grades[g]}."
+    return None
+
+
+def _sahabat_numeric_quick_answer(soalan: str, sections):
+    import re
+    q = re.sub(r"\s+", " ", (soalan or "").lower().strip())
+    if not _sahabat_numeric_query(q):
+        return None
+
+    grade = _sahabat_numeric_grade_answer(q)
+    if grade:
+        return grade
+
+    # Jika ahli menyebut Artikel N, guna angka terkunci artikel itu.
+    m = re.search(r"\b(?:artikel|art\.|article)\s*[-:]?\s*(\d{1,2})\b", q)
+    if m:
+        no = int(m.group(1))
+        value = _sahabat_numeric_master_by_article(no)
+        if value:
+            return f"📌 Artikel {no} – Angka CA-7 terkunci\n• {value}"
+
+    # Untuk soalan topik tanpa nombor artikel, skor topik seperti Quick Answer sedia ada.
+    scores = []
+    for no, title, body in sections:
+        score = 0
+        for kw in CA7_TOPIC_MAP.get(no, []):
+            if kw in q:
+                score += 12 if (" " in kw or "%" in kw) else 7
+        title_words = [w for w in re.findall(r"[a-zA-ZÀ-ÿ0-9]+", title.lower()) if len(w) >= 5]
+        score += min(6, sum(1 for w in title_words if w in q))
+        scores.append((score, no, title))
+    scores.sort(key=lambda x: (x[0], -x[1]), reverse=True)
+    if not scores or scores[0][0] < 12:
+        return None
+    if len(scores) > 1 and scores[0][0] == scores[1][0] and scores[0][0] < 18:
+        return None
+
+    no = scores[0][1]
+    value = _sahabat_numeric_master_by_article(no)
+    if value:
+        return f"📌 Artikel {no} – {scores[0][2]}\n• {value}"
+    return None
+
+
 CA7_TOPIC_MAP = {1: ['pihak terikat', 'pihak-pihak', 'siapa terikat'],
  2: ['objektif perjanjian', 'tujuan perjanjian'],
  3: ['tempoh ca7', 'tempoh perjanjian', 'tarikh kuatkuasa', 'berkuatkuasa'],
@@ -1453,7 +1540,7 @@ CA7_TOPIC_MAP = {1: ['pihak terikat', 'pihak-pihak', 'siapa terikat'],
  22: ['papan kenyataan kesatuan', 'noticeboard kesatuan'],
  23: ['yuran kesatuan', 'potongan yuran'],
  24: ['kwsp', 'perkeso', 'sip', 'caruman kwsp', 'caruman perkeso'],
- 25: ['kenaikan gaji tahunan', 'increment', 'annual increment', '3.5%', '2%', 'merit', 'eip'],
+ 25: ['kenaikan gaji tahunan', 'increment', 'annual increment', '3.5%', '1.5%', 'merit', 'eip'],
  26: ['bonus', 'bonus kontraktual'],
  27: ['notis berhenti', 'notis penamatan', 'letak jawatan', 'perletakan jawatan'],
  28: ['ketidakhadiran', 'tidak hadir', 'absent', 'awol'],
@@ -1519,6 +1606,11 @@ def _sahabat_jawapan_pantas(soalan: str):
         return None
 
     by_no = {n: (title, body) for n, title, body in sections}
+
+    # Angka CA-7 dikunci sebelum padanan AI/keyword biasa.
+    numeric_answer = _sahabat_numeric_quick_answer(soalan, sections)
+    if numeric_answer:
+        return numeric_answer
 
     # KWSP: gabungkan rujukan CA-7 + kadar KWSP. Jangan berhenti pada Artikel 24.
     # Artikel 24 = CA-7 tidak menetapkan kadar potongan pekerja.
@@ -1824,6 +1916,7 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
             akta = _sahabat_baca_akta()
             rujukan_master = _sahabat_pilih_rujukan(soalan, ca7) if not akta_requested else ""
             rujukan_akta = _sahabat_pilih_akta_rujukan(soalan, akta) if akta_requested else ""
+            numeric_lock = (CA7_NUMERIC_MASTER_TEXT if (not akta_requested and _sahabat_numeric_query(soalan)) else "")
             if compare_requested:
                 input_ahli = (
                     "SUMBER CA-7 KPPbNB (UTAMA UNTUK PERJANJIAN):\n"
@@ -1841,6 +1934,7 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
             elif rujukan_master:
                 input_ahli = (
                     "MASTER SOURCE CA-7 KPPbNB (UTAMA):\n" + rujukan_master
+                    + (("\n\nNUMERIC MASTER CA-7 (ANGKA TERKUNCI):\n" + numeric_lock) if numeric_lock else "")
                     + "\n\nSOALAN AHLI:\n" + soalan
                 )
             else:
@@ -1854,9 +1948,10 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
                     "Untuk soalan yang menyebut Akta Kerja 1955/Akta 265/Seksyen, utamakan petikan SUMBER AKTA KERJA 1955 yang diberikan. "
                     "Jika soalan meminta perbandingan, bezakan dengan jelas CA-7 dan Akta tanpa mencampurkan hak/syarat. "
                     "File Search ialah sumber sokongan. Jangan reka atau teka fakta. "
-                    "KHUSUS Artikel 74.1: untuk jawapan kepada ahli, gunakan angka pelarasan gaji "
-                    "4.5% sahaja. Jangan paparkan, ulang atau sebut angka 5%/lima peratus kerana "
-                    "ia boleh mengelirukan ahli. "
+                    "ANGKA TERKUNCI: jika soalan meminta angka CA-7, utamakan NUMERIC MASTER CA-7. "
+                    "Artikel 25.5(b) = 1.5%, bukan 2%. Artikel 74.1 = 4.5% sebagai angka jawapan bot. "
+                    "Jangan menggantikan angka terkunci dengan angka lain daripada memori/model. "
+                    "Jangan paparkan 5% untuk Artikel 74.1. "
                     "Jawab ringkas tetapi lengkap. Gunakan 3-7 point pendek jika sesuai. "
                     "Sasaran maksimum kira-kira 150 perkataan. Jangan berhenti di tengah ayat. "
                     "Jika sumber tidak cukup, gunakan mesej rujuk pakar yang ditetapkan.",
@@ -1881,6 +1976,7 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
             akta = _sahabat_baca_akta()
             rujukan = _sahabat_pilih_rujukan(soalan, ca7) if not akta_requested else ""
             rujukan_akta = _sahabat_pilih_akta_rujukan(soalan, akta) if akta_requested else ""
+            numeric_lock = (CA7_NUMERIC_MASTER_TEXT if (not akta_requested and _sahabat_numeric_query(soalan)) else "")
             if compare_requested:
                 source_instruction = (
                     "SUMBER CA-7 KPPbNB:\n" + (rujukan or "Tidak ditemui.")
@@ -1892,7 +1988,7 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
                 source_instruction = "PETIKAN CA-7 YANG RELEVAN:\n" + (rujukan or "Sumber CA-7 tidak dapat dibaca sekarang.")
             payload = json.dumps({
                 "systemInstruction": {
-                    "parts": [{"text": SAHABAT_SYSTEM_PROMPT}]
+                    "parts": [{"text": SAHABAT_SYSTEM_PROMPT + "\n\nANGKA TERKUNCI CA-7: Artikel 25.5(b)=1.5%; Artikel 74.1=4.5%. Untuk soalan angka, utamakan NUMERIC MASTER CA-7 yang dibekalkan. Jangan reka atau tukar angka."}]
                 },
                 "contents": [{
                     "role": "user",
@@ -1903,6 +1999,7 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
                         "maklumat tidak ditemui dalam petikan yang dipilih dan cadangkan menu CA-7 "
                         "atau pegawai Kesatuan yang sesuai.\n\n"
                         + source_instruction
+                        + (("\n\nNUMERIC MASTER CA-7 (ANGKA TERKUNCI):\n" + numeric_lock) if numeric_lock else "")
                         + "\n\nSOALAN AHLI:\n" + soalan
                     + "\n\nPENTING: Jawab ringkas tetapi lengkap dalam 3-7 point jika sesuai. Sasaran maksimum kira-kira 150 perkataan. Jangan berhenti di tengah ayat."
                     )}]

@@ -28,7 +28,76 @@ ADMIN_CHAT_ID = -1003958495436
 # ==================== AUDIT SAHABAT & STATISTIK ====================
 # Fungsi tambahan sahaja: tidak mengubah aliran fungsi bot sedia ada.
 STATS_FILE = "sahabat_stats.json"
+WEEKLY_STATS_FILE = "sahabat_weekly_stats.json"
 MALAYSIA_TZ = ZoneInfo("Asia/Kuala_Lumpur")
+
+def _week_start_date(dt=None):
+    dt = dt or datetime.now(MALAYSIA_TZ)
+    return (dt - timedelta(days=dt.weekday())).strftime("%Y-%m-%d")
+
+def _default_weekly_stats():
+    return {
+        "week_start": _week_start_date(),
+        "questions": 0,
+        "users": [],
+        "gemini_calls": 0,
+        "successful_answers": 0,
+        "error_answers": 0,
+        "daily": {}
+    }
+
+def _load_weekly_stats():
+    default = _default_weekly_stats()
+    try:
+        if os.path.exists(WEEKLY_STATS_FILE):
+            with open(WEEKLY_STATS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if data.get("week_start") == default["week_start"]:
+                for k, v in default.items():
+                    data.setdefault(k, v)
+                return data
+    except Exception as e:
+        logging.warning(f"Gagal baca statistik mingguan: {e}")
+    return default
+
+WEEKLY_STATS = _load_weekly_stats()
+
+def _save_weekly_stats():
+    try:
+        with open(WEEKLY_STATS_FILE, "w", encoding="utf-8") as f:
+            json.dump(WEEKLY_STATS, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logging.warning(f"Gagal simpan statistik mingguan: {e}")
+
+def _rekod_statistik_mingguan(user_id, success=True):
+    now = datetime.now(MALAYSIA_TZ)
+    week = _week_start_date(now)
+    if WEEKLY_STATS.get("week_start") != week:
+        WEEKLY_STATS.clear()
+        WEEKLY_STATS.update(_default_weekly_stats())
+        WEEKLY_STATS["week_start"] = week
+    uid = str(user_id)
+    WEEKLY_STATS["questions"] = int(WEEKLY_STATS.get("questions", 0)) + 1
+    if uid not in WEEKLY_STATS.setdefault("users", []):
+        WEEKLY_STATS["users"].append(uid)
+    day = now.strftime("%Y-%m-%d")
+    daily = WEEKLY_STATS.setdefault("daily", {})
+    daily[day] = int(daily.get(day, 0)) + 1
+    if success:
+        WEEKLY_STATS["successful_answers"] = int(WEEKLY_STATS.get("successful_answers", 0)) + 1
+    else:
+        WEEKLY_STATS["error_answers"] = int(WEEKLY_STATS.get("error_answers", 0)) + 1
+    _save_weekly_stats()
+
+def _rekod_gemini_call():
+    now = datetime.now(MALAYSIA_TZ)
+    week = _week_start_date(now)
+    if WEEKLY_STATS.get("week_start") != week:
+        WEEKLY_STATS.clear()
+        WEEKLY_STATS.update(_default_weekly_stats())
+        WEEKLY_STATS["week_start"] = week
+    WEEKLY_STATS["gemini_calls"] = int(WEEKLY_STATS.get("gemini_calls", 0)) + 1
+    _save_weekly_stats()
 
 def _load_sahabat_stats():
     default = {"date": datetime.now(MALAYSIA_TZ).strftime("%Y-%m-%d"), "questions": 0, "users": []}
@@ -101,21 +170,79 @@ async def _hantar_audit_sahabat(update, context, soalan, jawapan):
     except Exception as e:
         logging.error(f"Gagal hantar audit Sahabat ke group: {e}")
 
-def _next_0001_malaysia():
+def _next_2359_malaysia():
+    """Kira masa laporan seterusnya: 23:59 waktu Malaysia."""
     now = datetime.now(MALAYSIA_TZ)
-    target = now.replace(hour=0, minute=1, second=0, microsecond=0)
+    target = now.replace(hour=23, minute=59, second=0, microsecond=0)
     if target <= now:
         target += timedelta(days=1)
     return target
 
-async def _laporan_penggunaan_harian(app):
-    """Hantar statistik Sahabat setiap hari pada 00:01 waktu Malaysia."""
+def _next_sunday_2359_malaysia():
+    now = datetime.now(MALAYSIA_TZ)
+    days_until_sunday = 6 - now.weekday()
+    target = now.replace(hour=23, minute=59, second=0, microsecond=0) + timedelta(days=days_until_sunday)
+    if target <= now:
+        target += timedelta(days=7)
+    return target
+
+async def _laporan_penggunaan_mingguan(app):
+    """Hantar laporan penggunaan mingguan setiap Ahad 23:59 waktu Malaysia."""
     while True:
-        target = _next_0001_malaysia()
+        target = _next_sunday_2359_malaysia()
+        await asyncio.sleep(max(1, (target - datetime.now(MALAYSIA_TZ)).total_seconds()))
+        try:
+            end_date = datetime.now(MALAYSIA_TZ).strftime("%d/%m/%Y")
+            week_start = WEEKLY_STATS.get("week_start", _week_start_date())
+            questions = int(WEEKLY_STATS.get("questions", 0))
+            users = len(WEEKLY_STATS.get("users", []))
+            gemini_calls = int(WEEKLY_STATS.get("gemini_calls", 0))
+            success = int(WEEKLY_STATS.get("successful_answers", 0))
+            errors = int(WEEKLY_STATS.get("error_answers", 0))
+            avg_per_day = questions / 7 if questions else 0
+            avg_per_user = questions / users if users else 0
+            success_rate = (success / questions * 100) if questions else 0
+            daily_lines = []
+            for day, count in sorted(WEEKLY_STATS.get("daily", {}).items()):
+                daily_lines.append(f"• {datetime.strptime(day, '%Y-%m-%d').strftime('%d/%m')}: {count} soalan")
+            daily_text = "\n".join(daily_lines) if daily_lines else "• Tiada soalan direkodkan."
+            report = (
+                "📈 LAPORAN MINGGUAN PENGGUNAAN SAHABAT KPPbNB\n"
+                "━━━━━━━━━━━━━━━━━━━━\n"
+                f"📅 Minggu: {datetime.strptime(week_start, '%Y-%m-%d').strftime('%d/%m/%Y')} – {end_date}\n"
+                f"👥 Pengguna unik: {users} orang\n"
+                f"💬 Jumlah soalan: {questions}\n"
+                f"🤖 Panggilan Gemini: {gemini_calls}\n"
+                f"✅ Jawapan berjaya: {success} ({success_rate:.1f}%)\n"
+                f"⚠️ Jawapan bermasalah: {errors}\n"
+                f"📊 Purata soalan/hari: {avg_per_day:.1f}\n"
+                f"👤 Purata soalan/pengguna: {avg_per_user:.1f}\n"
+                "━━━━━━━━━━━━━━━━━━━━\n"
+                "📆 Pecahan harian:\n" + daily_text + "\n"
+                "━━━━━━━━━━━━━━━━━━━━\n"
+                "💡 Data ini boleh digunakan untuk menilai tahap penggunaan AI dan keperluan pelaburan seterusnya.\n"
+                "📌 Kos RM sebenar Gemini tidak dikira di sini kerana laporan bot tidak mempunyai data bil API."
+            )
+            await app.bot.send_message(chat_id=ADMIN_CHAT_ID, text=report)
+        except Exception as e:
+            logging.error(f"Gagal hantar laporan penggunaan mingguan: {e}")
+        finally:
+            # Mulakan minggu baharu pada Isnin.
+            next_monday = (datetime.now(MALAYSIA_TZ) + timedelta(days=1)).strftime("%Y-%m-%d")
+            WEEKLY_STATS.clear()
+            WEEKLY_STATS.update(_default_weekly_stats())
+            WEEKLY_STATS["week_start"] = next_monday
+            _save_weekly_stats()
+
+
+async def _laporan_penggunaan_harian(app):
+    """Hantar statistik Sahabat setiap hari pada 23:59 waktu Malaysia."""
+    while True:
+        target = _next_2359_malaysia()
         await asyncio.sleep(max(1, (target - datetime.now(MALAYSIA_TZ)).total_seconds()))
         try:
             today = datetime.now(MALAYSIA_TZ)
-            report_date = (today - timedelta(days=1)).strftime("%d/%m/%Y")
+            report_date = today.strftime("%d/%m/%Y")
             questions = int(SAHABAT_STATS.get("questions", 0))
             users = len(SAHABAT_STATS.get("users", []))
             report = (
@@ -125,14 +252,16 @@ async def _laporan_penggunaan_harian(app):
                 f"👥 Pengguna unik: {users} orang\n"
                 f"💬 Jumlah soalan Sahabat: {questions}\n"
                 "━━━━━━━━━━━━━━━━━━━━\n"
-                "📌 Laporan ini untuk kegunaan dalaman admin Kesatuan."
+                "📌 Laporan ini untuk kegunaan dalaman admin Kesatuan.\n"
+                "🕚 Masa laporan: 23:59 waktu Malaysia."
             )
             await app.bot.send_message(chat_id=ADMIN_CHAT_ID, text=report)
         except Exception as e:
             logging.error(f"Gagal hantar laporan penggunaan harian: {e}")
         finally:
-            # Mula kiraan hari baru selepas laporan dihantar.
-            new_date = datetime.now(MALAYSIA_TZ).strftime("%Y-%m-%d")
+            # Selepas laporan 23:59, kosongkan kaunter supaya sesi hari berikutnya
+            # bermula dengan kiraan baharu.
+            new_date = (datetime.now(MALAYSIA_TZ) + timedelta(days=1)).strftime("%Y-%m-%d")
             SAHABAT_STATS.clear()
             SAHABAT_STATS.update({"date": new_date, "questions": 0, "users": []})
             _save_sahabat_stats()
@@ -1209,20 +1338,19 @@ Tugas anda:
    - Jika tidak pasti: rujuk Setiausaha Agung.
 7. Jika soalan berkaitan kiraan OT, arahkan ahli menggunakan menu Kiraan OT & Elaun
    kerana modul tersebut mempunyai pengiraan khusus CA-7.
-8. Jika ahli bertanya cara menghubungi pihak Kesatuan, minta ahli gunakan Menu Utama → 📝 Laporan / Aduan untuk merekodkan isu. Boleh juga beri e-mel Setiausaha Agung KPPbNB: aqilah@bernas.com.my. Untuk isu gaji, elaun, OT atau isu perkhidmatan, galakkan ahli gunakan Laporan / Aduan terlebih dahulu.
-9. Jangan mendakwa sebagai peguam atau membuat keputusan rasmi bagi KPPbNB.
-10. Pastikan jawapan SENTIASA lengkap dan tidak terhenti di tengah ayat. Sebelum menghantar,
+8. Jangan mendakwa sebagai peguam atau membuat keputusan rasmi bagi KPPbNB.
+9. Pastikan jawapan SENTIASA lengkap dan tidak terhenti di tengah ayat. Sebelum menghantar,
    semak bahawa ayat terakhir telah selesai.
-11. Untuk soalan fakta mudah, jawab terus dengan fakta utama dahulu. Jika sesuai, gunakan
+10. Untuk soalan fakta mudah, jawab terus dengan fakta utama dahulu. Jika sesuai, gunakan
     2-4 poin ringkas.
-12. WAJIB nyatakan nombor ARTIKEL CA-7 yang menjadi rujukan jika jawapan berkaitan CA-7.
+11. WAJIB nyatakan nombor ARTIKEL CA-7 yang menjadi rujukan jika jawapan berkaitan CA-7.
     Jika lebih daripada satu artikel digunakan, nyatakan semua artikel yang berkaitan.
-13. Selepas jawapan, WAJIB letakkan bahagian:
+12. Selepas jawapan, WAJIB letakkan bahagian:
     "📚 Rujukan CA-7: Artikel XX"
     dan kemudian:
     "🔎 Semakan lanjut: Ahli disaran semak naskhah CA-7 dan rujuk pegawai Kesatuan
     jika melibatkan tafsiran, kes individu atau pertikaian."
-14. JANGAN gunakan format Markdown seperti **tebal**, __tebal__, _italic_, atau [link].
+13. JANGAN gunakan format Markdown seperti **tebal**, __tebal__, _italic_, atau [link].
     Jawapan mesti dalam teks biasa supaya paparan Telegram kemas dan tidak rosak.
 14. Gaya jawapan:
     - Jawab ringkas tetapi padat.
@@ -1593,41 +1721,6 @@ CA7_TOPIC_MAP = {1: ['pihak terikat', 'pihak-pihak', 'siapa terikat'],
  74: ['semakan gaji', 'pelarasan gaji', '4.5%', 'lima peratus', 'gaji ahli kesatuan']}
 
 
-def _sahabat_jawapan_hubungi(soalan: str):
-    """Jawapan terus untuk soalan cara menghubungi pihak Kesatuan."""
-    import re
-    q = re.sub(r"\s+", " ", (soalan or "").lower().strip())
-    contact_terms = [
-        "hubungi", "contact", "nak contact", "nak hubungi", "cara hubungi",
-        "macam mana nak hubungi", "macam mana nak contact", "nak jumpa",
-        "nak telefon", "nombor telefon", "email", "e-mel", "emel",
-        "khairul", "bro khairul", "setiausaha agung", "farah aqilah"
-    ]
-    action_terms = [
-        "laporan", "aduan", "masalah", "isu", "gaji", "elaun", "ot",
-        "kilanan", "tindakan", "bantuan", "pertanyaan", "nak minta bantuan"
-    ]
-    if not any(t in q for t in contact_terms):
-        return None
-    # Elakkan menangkap soalan CA-7 biasa yang hanya menyebut perkataan 'email'
-    # dalam konteks lain; perlu ada unsur hubungan/tindakan yang jelas.
-    if not any(t in q for t in action_terms + ["hubungi", "contact", "email", "e-mel", "emel", "khairul", "farah aqilah", "setiausaha agung"]):
-        return None
-    return (
-        "🤝 Untuk hubungi pihak Kesatuan, anda boleh pilih salah satu cara berikut:\n\n"
-        "📝 1. Laporan / Aduan melalui Bot KPPbNB\n"
-        "Kembali ke Menu Utama → 📝 Laporan / Aduan dan masukkan perkara yang ingin disampaikan. "
-        "Maklumat tersebut akan dihantar terus kepada pihak Kesatuan untuk semakan dan tindakan.\n\n"
-        "📧 2. Hubungi melalui e-mel\n"
-        "Setiausaha Agung KPPbNB: aqilah@bernas.com.my\n\n"
-        "📱 3. Hubungi pihak Kesatuan secara terus\n"
-        "Jika perkara berkaitan gaji, elaun, OT atau isu perkhidmatan, sila gunakan bahagian "
-        "📝 Laporan / Aduan terlebih dahulu supaya maklumat anda dapat direkodkan dengan lengkap.\n\n"
-        "🤝 Sahabat boleh bantu beri maklumat berdasarkan CA-7 dan sumber rasmi. "
-        "Perkara yang memerlukan tindakan atau semakan individu hendaklah dirujuk kepada pihak Kesatuan."
-    )
-
-
 def _sahabat_jawapan_pantas(soalan: str):
     """Quick Answer CA-7 berasaskan MASTER SOURCE 74 artikel.
     - Soalan 'Artikel N' terus mengambil Artikel N.
@@ -1642,11 +1735,6 @@ def _sahabat_jawapan_pantas(soalan: str):
         return None
 
     by_no = {n: (title, body) for n, title, body in sections}
-
-    # Soalan cara menghubungi pihak Kesatuan dijawab terus tanpa Gemini.
-    contact_answer = _sahabat_jawapan_hubungi(soalan)
-    if contact_answer:
-        return contact_answer
 
     # Angka CA-7 dikunci sebelum padanan AI/keyword biasa.
     numeric_answer = _sahabat_numeric_quick_answer(soalan, sections)
@@ -2071,6 +2159,9 @@ async def _sahabat_tanya_ai(soalan: str) -> str:
             with urllib.request.urlopen(request, timeout=15) as response:
                 return json.loads(response.read().decode("utf-8"))
 
+        # Rekod satu panggilan Gemini sebenar untuk analisis penggunaan AI mingguan.
+        _rekod_gemini_call()
+
         # File Search: guna satu model sahaja supaya tidak menunggu model sandaran.
         if store_name:
             payload_obj["model"] = model
@@ -2193,6 +2284,8 @@ async def sahabat_soalan(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text("🤝 Sahabat tengah buka buku sat, cari jawapan… 📖", parse_mode='Markdown')
     jawapan = await _sahabat_tanya_ai(soalan)
+    error_answer = jawapan.startswith(("⚠️", "Maaf, Sahabat tidak dapat", "🤝 Maaf, Sahabat mengambil"))
+    _rekod_statistik_mingguan(update.effective_user.id, success=not error_answer)
     await update.message.reply_text(
         "🤝 Sahabat KPPbNB\n"
         "━━━━━━━━━━━━━━━━━━━━\n"
@@ -2354,8 +2447,10 @@ async def async_main():
         await app.start()
         await app.updater.start_polling()
 
-        # Laporan penggunaan harian 00:01 pagi waktu Malaysia.
+        # Laporan penggunaan harian 23:59 malam waktu Malaysia.
         asyncio.create_task(_laporan_penggunaan_harian(app))
+        # Laporan penggunaan mingguan setiap Ahad 23:59 malam waktu Malaysia.
+        asyncio.create_task(_laporan_penggunaan_mingguan(app))
 
         print("Bot KPPbNB LIVE penuh dari awal sampai akhir!")
         while True:

@@ -870,7 +870,7 @@ async def handle_ca(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "📌 *Artikel 25 – Kenaikan Gaji Tahunan*\n"
             "• Pekerja disahkan layak menerima kenaikan pada 1 Januari sehingga capai maksimum gaji.\n"
             "• Penilaian *Memenuhi Jangkaan dan ke atas*: *3.5% + merit*.\n"
-            "• *Di Bawah Jangkaan / Tidak Memuaskan*: *2%*.\n"
+            "• *Di Bawah Jangkaan / Tidak Memuaskan*: *1.5%*.\n"
             "• Kenaikan pertama selepas disahkan: pro rata mengikut bulan perkhidmatan hingga 31 Disember.\n"
             "• Gaji maksimum boleh dipertimbang EIP mengikut prestasi; EIP tidak kumulatif.\n\n"
             "📌 *Artikel 26 – Bonus*\n"
